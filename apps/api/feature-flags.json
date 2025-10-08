@@ -1,7 +1,0 @@
-{
-  "enableVault": true,
-  "enablePulse": true,
-  "enableSignal": false,
-  "enableBeaconRecast": true,
-  "enableTrust": false
-}
