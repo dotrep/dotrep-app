@@ -3,11 +3,10 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": ["vite/client"]
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

@@ -1,6 +1,11 @@
-modules = ["nodejs-20", "web"]
-[agent]
-expertMode = true
-
+run = "bash -lc './start.sh'"
 [nix]
-channel = "stable-25_05"
+channel = "stable-23_11"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 5173
