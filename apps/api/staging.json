@@ -1,0 +1,7 @@
+{
+  "features": {
+    "newParticles": { "enabled": true, "rollout": 50 },
+    "cbWalletDeepLink": { "enabled": true, "rollout": 100 },
+    "pwaOffline": { "enabled": true, "rollout": 100 }
+  }
+}

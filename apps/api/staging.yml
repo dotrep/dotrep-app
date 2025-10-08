@@ -1,0 +1,104 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  staging-deploy:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fsn_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/fsn_test
+      SESSION_SECRET: test-session-secret-for-ci-only
+      NODE_ENV: production
+      STAGE: staging
+      PORT: 5000
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+          
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Run type checking
+      run: pnpm run check
+      
+    - name: Build production bundle
+      run: pnpm run build
+      
+    - name: Run database migrations
+      run: pnpm run db:push
+      
+    - name: Start application
+      run: |
+        STAGE=staging NODE_ENV=production PORT=5000 node dist/index.js &
+        APP_PID=$!
+        echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+        sleep 15
+        
+    - name: Health check
+      run: |
+        curl -f http://localhost:5000/health || exit 1
+        curl -f http://localhost:5000/metrics || exit 1
+        echo "✅ Health checks passed"
+        
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: staging-build-${{ github.sha }}
+        path: |
+          dist/
+          package*.json
+        retention-days: 30
+        
+    - name: Stop application
+      if: always()
+      run: |
+        if [ -n "$APP_PID" ]; then
+          kill $APP_PID || true
+        fi
+
+  staging-integration-tests:
+    needs: staging-deploy
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: Download build artifacts  
+      uses: actions/download-artifact@v4
+      with:
+        name: staging-build-${{ github.sha }}
+        
+    - name: Run integration tests
+      run: |
+        echo "🧪 Running integration tests against staging build"
+        echo "✅ Integration tests would run here"
+        # Add actual integration tests when ready
