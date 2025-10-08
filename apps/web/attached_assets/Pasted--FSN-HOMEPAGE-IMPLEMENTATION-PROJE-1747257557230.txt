@@ -1,0 +1,223 @@
+==============================
+FSN HOMEPAGE IMPLEMENTATION
+==============================
+
+PROJECT GOAL:
+-------------
+Build a full-screen, professional-grade crypto landing page for FreeSpace Network (FSN). The page must match the provided design reference (“Homepage.png”) with precise layout, typography, colors, and interactivity. This is the FIRST impression of a Web3 product, and it must feel slick, clean, and futuristic.
+
+=====================
+1. LAYOUT STRUCTURE
+=====================
+
+- The entire layout should be a two-column responsive hero section.
+- Left Column: logo, headline, subheadline, CTA button or input
+- Right Column: glowing .fsn hexagon image
+- On mobile: stack everything vertically and center it
+
+HTML STRUCTURE:
+---------------
+<body>
+  <section class="hero">
+    <div class="hero-content">
+      <img src="/assets/fsn-logo.svg" class="logo" alt="FreeSpace Network Logo" />
+      <h1>Crypto starts with your <span class="highlight">.fsn</span> name</h1>
+      <p class="subtext">
+        Claim your Web3 identity.<br>
+        Earn XP. Emit your Signal.
+      </p>
+      <button id="claim-btn" class="cta">Claim your .fsn name</button>
+    </div>
+    <div class="hero-graphic">
+      <img src="/assets/fsn-hex.png" class="fsn-hex" alt=".fsn Hex" />
+    </div>
+  </section>
+</body>
+
+=====================
+2. CORE CSS STYLING
+=====================
+
+BODY + BASE LAYOUT:
+-------------------
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Manrope', sans-serif;
+  background: radial-gradient(circle at center, #0a0f1c, #04070b);
+  background-size: cover;
+  background-attachment: fixed;
+  overflow-x: hidden;
+  color: #00f0ff;
+}
+
+.hero {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: 0 5vw;
+  box-sizing: border-box;
+  gap: 4vw;
+}
+
+=====================
+3. LEFT COLUMN (TEXT)
+=====================
+
+.logo {
+  width: 60px;
+  filter: drop-shadow(0 0 8px #00f0ff);
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+  margin-bottom: 1rem;
+}
+
+h1 .highlight {
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba(0, 255, 255, 0.6);
+  color: #00f0ff;
+}
+
+.subtext {
+  font-size: 1.25rem;
+  color: #c0faff;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+=====================
+4. CTA BUTTON & INPUT
+=====================
+
+.cta {
+  padding: 0.75em 2em;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  background: transparent;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.cta:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+}
+
+.fsn-input {
+  padding: 0.75em 2em;
+  font-size: 1rem;
+  color: #00f0ff;
+  background: transparent;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  width: 300px;
+}
+
+.fsn-input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+=====================
+5. RIGHT COLUMN (HEX)
+=====================
+
+.hero-graphic {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fsn-hex {
+  width: 320px;
+  filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.6));
+}
+
+=====================
+6. INTERACTIVITY (JS)
+=====================
+
+This JavaScript will replace the button with the input field when clicked:
+
+<script>
+  document.getElementById("claim-btn").addEventListener("click", function () {
+    const input = document.createElement("input");
+    input.setAttribute("type", "text");
+    input.setAttribute("placeholder", "This will be your Signal");
+    input.classList.add("fsn-input");
+    this.replaceWith(input);
+  });
+</script>
+
+=====================
+7. RESPONSIVENESS
+=====================
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .hero-content, .hero-graphic {
+    width: 100%;
+    align-items: center;
+  }
+
+  .cta, .fsn-input {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .fsn-hex {
+    width: 240px;
+    margin-top: 2rem;
+  }
+}
+
+=====================
+8. ERROR HANDLING (Optional)
+=====================
+
+Add a simple name validation if needed:
+
+<script>
+  function isValidName(name) {
+    return /^[a-zA-Z0-9_-]{3,20}$/.test(name);
+  }
+</script>
+
+=====================
+9. REQUIRED ASSETS
+=====================
+- `/assets/fsn-logo.svg` → logo (60px wide, left-aligned)
+- `/assets/fsn-hex.png`  → glowing .fsn hex graphic
+
+=====================
+10. REMINDERS
+=====================
+- Match spacing and font sizes to `Homepage.png`
+- Do not upper-case any letters unless shown
+- Do not use default system fonts
+- The layout should look pixel-perfect
+- It should feel like a *real crypto brand* website
+
+=====================
+✅ END OF INSTRUCTIONS
+=====================

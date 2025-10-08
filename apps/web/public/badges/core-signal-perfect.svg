@@ -1,0 +1,35 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Perfect Core Signal shield - matches reference -->
+  <g transform="translate(100,100)">
+    <!-- Main shield outline -->
+    <path d="M0,-75 L-45,-55 L-45,20 L0,75 L45,20 L45,-55 Z" 
+          fill="#1a0033" stroke="#cc00ff" stroke-width="4"/>
+    
+    <!-- Inner shield glow -->
+    <path d="M0,-65 L-35,-45 L-35,15 L0,65 L35,15 L35,-45 Z" 
+          fill="rgba(204,0,255,0.2)" stroke="#dd44ff" stroke-width="2"/>
+    
+    <!-- Central core orb -->
+    <circle cx="0" cy="0" r="20" fill="#cc00ff" stroke="#ffffff" stroke-width="3"/>
+    <circle cx="0" cy="0" r="15" fill="#dd44ff" opacity="0.8"/>
+    <circle cx="0" cy="0" r="8" fill="#ffffff"/>
+    
+    <!-- Signal wave rings -->
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#cc00ff" stroke-width="3" opacity="0.7"/>
+    <circle cx="0" cy="0" r="40" fill="none" stroke="#cc00ff" stroke-width="2" opacity="0.5"/>
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#cc00ff" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Signal emanation beams -->
+    <line x1="0" y1="-75" x2="0" y2="-90" stroke="#cc00ff" stroke-width="3" opacity="0.8"/>
+    <line x1="45" y1="-55" x2="55" y2="-65" stroke="#cc00ff" stroke-width="3" opacity="0.8"/>
+    <line x1="45" y1="20" x2="55" y2="30" stroke="#cc00ff" stroke-width="3" opacity="0.8"/>
+    <line x1="-45" y1="20" x2="-55" y2="30" stroke="#cc00ff" stroke-width="3" opacity="0.8"/>
+    <line x1="-45" y1="-55" x2="-55" y2="-65" stroke="#cc00ff" stroke-width="3" opacity="0.8"/>
+    
+    <!-- Shield details -->
+    <path d="M-25,-35 L25,-35" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <path d="M-25,-15 L25,-15" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <path d="M-25,5 L25,5" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <path d="M-25,25 L25,25" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+  </g>
+</svg>

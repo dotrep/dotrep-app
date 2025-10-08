@@ -1,0 +1,100 @@
+## ✅ Task #6 – Replit Instructions  
+**Title**: Build Backend XP Engine (FSN Phase 0 – Task 6)
+
+---
+
+### 🎯 Objective  
+Create a backend XP engine that awards XP based on defined actions, stores total XP per user in Firestore, and logs each XP event for future analytics, reward audits, and behavior tracking.
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Create `awardXP.js` inside `/lib` or `/utils`
+
+```js
+// lib/awardXP.js
+
+import { doc, getDoc, updateDoc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase/initFirebase";
+import XP_ACTIONS from "./xpActions";
+
+export const awardXP = async (uid, actionName) => {
+  const xpValue = XP_ACTIONS[actionName] || 0;
+  if (xpValue === 0) return; // invalid action, do nothing
+
+  const userRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userRef);
+
+  const currentXP = userSnap.exists() ? (userSnap.data().xp || 0) : 0;
+  const newXP = currentXP + xpValue;
+
+  // Store new total XP
+  await updateDoc(userRef, {
+    xp: newXP
+  });
+
+  // Log the XP event
+  await addDoc(collection(db, "xpLogs"), {
+    uid,
+    action: actionName,
+    xpEarned: xpValue,
+    timestamp: serverTimestamp()
+  });
+};
+```
+
+---
+
+### ✅ 2. Add `xp` field to new users (optional default on sign-up)
+
+If you haven’t yet, initialize `xp = 0` in `/users/{uid}` on registration or first login:
+
+```js
+await setDoc(doc(db, "users", uid), {
+  xp: 0,
+  ...otherFields
+}, { merge: true });
+```
+
+---
+
+### ✅ 3. Example: Award XP in Upload Flow
+
+Anywhere a user action triggers XP, add:
+
+```js
+await awardXP(user.uid, "upload_file");
+```
+
+---
+
+### ✅ 4. Structure of Firestore After This Task
+
+| Collection       | Document/Field              | Description                        |
+|------------------|-----------------------------|------------------------------------|
+| users/{uid}      | xp                          | Total XP value                     |
+| xpLogs           | { uid, action, xp, time }   | Every XP-earning event (append-only log) |
+
+---
+
+### 🧪 QA Checklist
+
+| Test Case                          | Expected Outcome                   |
+|-----------------------------------|------------------------------------|
+| Award valid action XP             | ✅ `users/{uid}.xp` increases       |
+| Log created in `xpLogs`           | ✅ One log entry per action         |
+| Award invalid XP action           | ✅ Skipped silently (no log)        |
+| XP awarded multiple times         | ✅ Increments each time             |
+| Check new XP total in Dashboard   | ✅ Matches Firestore `xp` field     |
+
+---
+
+### ✅ Summary
+
+- XP is now centrally awarded using one engine
+- XP is stored in the user profile
+- Logs are saved for behavior/audit tracking
+- Ready to plug into login streaks, uploads, chat, games, and referrals

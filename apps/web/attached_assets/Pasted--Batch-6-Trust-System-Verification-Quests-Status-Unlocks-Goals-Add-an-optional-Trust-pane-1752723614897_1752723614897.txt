@@ -1,0 +1,126 @@
+🛡️ Batch 6: Trust System + Verification Quests + Status Unlocks
+🎯 Goals
+Add an optional Trust panel for identity verification
+
+Gate specific features or quests behind verification
+
+Reward verified users with XP, badges, and enhanced Signal
+
+Use this to simulate the future KYC/AML + governance unlock path
+
+✅ 1. Add Trust Panel (TrustPanel.jsx)
+This is a new panel (like Vault, Pulse, etc.) that opens when you click the shield icon (🛡️).
+
+Panel Shows:
+What Trust is:
+
+“Verification lets you unlock higher tiers of FSN — including enhanced Signal, governance tools, and staking boosts. You remain pseudonymous, but trusted.”
+
+Progress Status:
+
+Requirement	Status
+Add recovery email	✅ or 🔲
+Enable 2FA (Google Auth)	✅ or 🔲
+Complete Profile Info	✅ or 🔲
+Identity check (mock)	✅ or 🔲
+
+Reward:
+
+“🏅 Verified Status Unlocked: +100 XP, Trust Badge, Signal Core Amplified”
+
+✅ 2. Create Trust Status in userProgress
+js
+Copy
+Edit
+userProgress.trust = {
+  verified: false,
+  requirements: {
+    emailAdded: true,
+    twoFactor: false,
+    profileFilled: true,
+    idVerified: false
+  },
+  xpRewarded: false
+};
+✅ 3. Add Trust Badge + XP + Signal Boost
+When user completes all 4 requirements:
+
+js
+Copy
+Edit
+if (!userProgress.trust.verified && allRequirementsMet) {
+  userProgress.trust.verified = true;
+  userProgress.xp += 100;
+  userProgress.earnedBadges.push('trustVerified');
+
+  showToast({
+    message: `🛡️ Trust Verified — You earned +100 XP`,
+    type: 'badge'
+  });
+}
+Also:
+
+Add Trust badge to FSN Library
+
+Auto-equip badge if no other badge is active
+
+Add glowing aura to Signal if user is verified
+
+✅ 4. Simulate Identity Verification (No Real KYC Yet)
+Since this is MVP/Phase 0.1:
+
+Replace actual identity upload with a placeholder modal:
+
+“In the future, this step will let you verify with AI or zero-knowledge KYC. For now, click to simulate.”
+
+Include Confirm Verification button that toggles:
+
+js
+Copy
+Edit
+userProgress.trust.requirements.idVerified = true;
+✅ 5. Gate Quests and Vault Upgrades by Trust (Optional)
+To incentivize opt-in verification:
+
+Add “Trust Required” label on:
+
+Tier 3 vault upgrade
+
+Beacon Level 3
+
+Special XP quests
+
+Premium skins or effects
+
+Example:
+
+js
+Copy
+Edit
+if (!userProgress.trust.verified) {
+  lockFeature('BeaconTier3');
+}
+✅ 6. FSN Social Signal Boost (Cosmetic Only)
+If user.trust.verified === true, then:
+
+Signal color = enhanced glow (e.g., white or gold)
+
+Add tooltip on hover:
+
+“🛡️ This user is FSN-Verified”
+
+In social feed or map: small shield icon next to .fsn name
+
+✅ 7. Observer AI Tooltip Integration
+If user opens Signal or Vault and isn’t verified:
+
+“🔒 You’re seeing standard tier access. To unlock advanced features, complete your Trust Verification.”
+
+🏁 What You’ll Have After Batch 6
+Feature	Description
+Trust Panel	Optional pseudonymous verification path
+Trust Requirements	Recovery, 2FA, identity placeholder
+Trust Badge + XP	100 XP reward + badge + glow aura
+Signal Enhancement	Amplified signal appearance for verified users
+Future-Gating Ready	Lets you hide vault tiers or features behind verification
+Social Trust Signal	Shield icon on feed, map, and user profiles

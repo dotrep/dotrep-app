@@ -1,0 +1,99 @@
+/* FSN Design Tokens - Additive Theme System */
+
+/* Base tokens - neutral names only */
+:root {
+  /* Colors */
+  --bg: #000000;
+  --bg-2: #111111;
+  --text: #ffffff;
+  --muted: #888888;
+  --accent: #00f0ff;
+  --accent-2: #0099cc;
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --border: #333333;
+  --ring: #00f0ff;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --line-height-body: 1.6;
+  --letter-spacing-wide: 0.025em;
+
+  /* Spacing (8pt base) */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-24: 6rem;     /* 96px */
+
+  /* Radius */
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.5rem;   /* 24px */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.3);
+
+  /* Z-index */
+  --z-nav: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+/* Dark theme (Tron/cyberpunk) - default FSN aesthetic */
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg-2: #0a0a0a;
+  --text: #ffffff;
+  --muted: #888888;
+  --accent: #00f0ff;
+  --accent-2: #0099cc;
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --border: #333333;
+  --ring: #00f0ff;
+  --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+/* Light theme - accessible variant */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-2: #f8f9fa;
+  --text: #1a1a1a;
+  --muted: #6c757d;
+  --accent: #0066cc;
+  --accent-2: #004499;
+  --success: #198754;
+  --warning: #fd7e14;
+  --danger: #dc3545;
+  --border: #dee2e6;
+  --ring: #0066cc;
+  --shadow-glow: 0 0 20px rgba(0, 102, 204, 0.2);
+}
+
+/* Breakpoints for reference */
+:root {
+  --breakpoint-sm: 360px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}

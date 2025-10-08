@@ -1,0 +1,177 @@
+🎉 Batch 5: XP Popups + Reward Feedback Flow
+🎯 Goals
+Show XP earned visually after each action (upload, quest, signal, etc.)
+
+Add level-up popup + XP ring glow
+
+Display badge unlocked overlay
+
+Enable sound FX and subtle screen feedback for XP/level moments
+
+Reuse the system across Mission Tracker, Game Center, and Pulse/Signal events
+
+✅ 1. Create ToastManager.jsx Component
+Reusable notification/toast system.
+
+🔧 components/ToastManager.jsx
+jsx
+Copy
+Edit
+import React, { useEffect, useState } from 'react';
+
+const ToastManager = ({ toasts }) => {
+  return (
+    <div className="toast-container">
+      {toasts.map((toast, index) => (
+        <div key={index} className={`toast ${toast.type}`}>
+          {toast.icon && <span className="toast-icon">{toast.icon}</span>}
+          <span className="toast-message">{toast.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ToastManager;
+🔧 In global state:
+Add a new array activeToasts and a function to push:
+
+js
+Copy
+Edit
+function showToast({ message, icon = '', type = 'xp', duration = 2500 }) {
+  activeToasts.push({ message, icon, type });
+  setTimeout(() => removeToast(), duration);
+}
+CSS styles (in toast.css or inline):
+css
+Copy
+Edit
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: rgba(0,255,255,0.1);
+  color: #0ff;
+  font-family: 'Orbitron', sans-serif;
+  box-shadow: 0 0 10px #0ff;
+  animation: fadeInOut 2.5s ease-in-out;
+}
+
+.toast.level-up {
+  background: rgba(255, 255, 0, 0.15);
+  color: #ff0;
+  box-shadow: 0 0 12px #ff0;
+}
+
+.toast.badge {
+  background: rgba(255, 0, 255, 0.1);
+  color: #f0f;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+✅ 2. XP Feedback Hook
+Whenever XP is earned, call:
+
+js
+Copy
+Edit
+showToast({
+  message: '+50 XP Earned!',
+  icon: '⚡',
+  type: 'xp'
+});
+Insert into:
+
+Vault upload (UploadPanel.jsx)
+
+Game completion (GameCenter.jsx)
+
+Signal broadcast (SignalPanel.jsx)
+
+MissionTracker task complete
+
+✅ 3. Add Level-Up Detection
+In your XP update function:
+
+js
+Copy
+Edit
+const newLevel = getUserLevel(user.xp + xpGain);
+if (newLevel > currentLevel) {
+  showToast({
+    message: `🎉 Level Up! You are now Lvl ${newLevel}`,
+    type: 'level-up'
+  });
+}
+Also trigger:
+
+Glow ring animation on XP header
+
+Subtle pulse glow on Pulse gauge
+
+✅ 4. Badge Unlock Visuals
+When user earns a new badge:
+
+js
+Copy
+Edit
+showToast({
+  message: `🏅 Badge Unlocked: Core Signal`,
+  type: 'badge'
+});
+Also:
+
+Animate badge appearing in Profile or Library
+
+Brief glow/ping near equipped badge slot
+
+✅ 5. Add Sound Effects (Optional but Powerful)
+In audio/ directory, add:
+
+Sound	File	Trigger
+XP Earned	xp_gain.wav	Upload, signal, quest
+Level Up	level_up.wav	Level change
+Badge Unlocked	badge_unlocked.wav	New badge earned
+
+Use new Audio('/audio/xp_gain.wav').play() on toast triggers.
+Throttle or debounce if too frequent.
+
+🌀 Optional: XP Ring Animation
+In XP HUD (top right):
+
+Add ring or glow pulse on XP gain
+
+On level-up, briefly expand ring with bright glow and text:
+
+“LEVEL 2 UNLOCKED — Navigator Tier Ready”
+
+🧠 Bonus: XP Gain Summary Modal
+Add a modal panel (optional now) to show historical XP log:
+
+Last 10 events:
++50 XP — Uploaded file
++30 XP — Broadcast Signal
++10 XP — Equipped badge
+
+✅ Summary of What You’ll Have After Batch 5
+Feature	Result
+XP popups	Instant visual reward after action
+Level-up pulse	Makes XP and leveling feel tangible
+Badge overlay	Adds anticipation and pride to badge collection
+Sound FX	Makes system feel alive and immersive
+Reusable toast system	Can be applied to future token drops, alerts, etc.

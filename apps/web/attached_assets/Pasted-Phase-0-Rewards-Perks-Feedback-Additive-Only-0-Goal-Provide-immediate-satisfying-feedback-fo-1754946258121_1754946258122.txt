@@ -1,0 +1,141 @@
+Phase 0 – Rewards / Perks Feedback (Additive Only)
+0) Goal
+Provide immediate, satisfying feedback for XP gains and streaks using toasts, progress animations, milestone celebrations, and a perks panel, without changing existing endpoints, reducers, or UI flows.
+
+1) Feature flags (env)
+Create these environment variables:
+
+FEATURE_REWARDS_FEEDBACK=on
+
+XP_LEVELS_JSON (JSON string of level thresholds; e.g., [0,100,250,500,1000,2000])
+
+STREAK_MILESTONES_JSON (e.g., [3,7,14,30,60,100])
+
+XP_TOAST_DURATION_MS=1800
+
+CELEBRATION_MODAL_DURATION_MS=2200
+
+All UI below must read these flags; if FEATURE_REWARDS_FEEDBACK=off, system silently degrades to current behavior.
+
+2) Do not change existing data sources
+Keep the current XP ledger as the single source of truth.
+
+Do not alter existing XP award endpoints or client reducers; only subscribe/listen to their success events/state updates.
+
+3) Event hooks (listen-only)
+Add a client-side rewards listener that subscribes to already-dispatched success events (examples; rename to match your app):
+
+xp/award/success (payload includes amount, newTotal)
+
+beacon/recast/success (payload includes xp_awarded, streak_days)
+
+vault/upload/success (payload may include xp_awarded)
+
+.fsn/claim/success
+
+profile/update/success
+The listener triggers UI feedback without dispatching new mutations (except for opening/closing local UI).
+
+4) XP progress bar (header or dashboard card)
+Add a small XP progress bar component that reads the current XP total and the next threshold from XP_LEVELS_JSON.
+
+On any xp/award/success, animate the bar from previous value to new value; if it crosses a threshold, trigger a Level Up micro-banner (see §6).
+
+5) XP toast (immediate feedback)
+On any XP gain event, show a compact toast:
+
+Content: “+{amount} XP” and a subline with the action name (e.g., “Beacon recast”).
+
+Auto-dismiss after XP_TOAST_DURATION_MS.
+
+Do not block user input; multiple gains in quick succession should queue.
+
+6) Level Up micro‑banner
+When newTotal crosses a threshold in XP_LEVELS_JSON:
+
+Slide‑in banner (top-right or header bar) with copy: “Level {N} reached” and a short sparkle animation.
+
+Auto-dismiss after 2 seconds.
+
+If a perk is tied to that level (see §8), show “New perk available” chip that opens the perks panel.
+
+7) Streak milestone celebration
+When beacon/recast/success returns a streak_days that matches any value in STREAK_MILESTONES_JSON:
+
+Show a celebration modal (confetti animation) with:
+
+Title: “Streak {N} days”
+
+Subtitle: “+{bonusXP} XP bonus” (if you award any; if not, omit).
+
+Auto-dismiss after CELEBRATION_MODAL_DURATION_MS, or “Close” button immediately.
+
+Do not navigate; return user to current screen.
+
+8) Perks panel (read-only; no gating)
+Add a right-side Perks panel accessible via a small “Perks” chip next to the XP progress:
+
+Lists current level, next level, and unlocked perks (read from a static JSON config; do not add gating).
+
+Each perk row: icon, title, short description, requirement (e.g., “Level 3”).
+
+If no real perks are live yet, show cosmetic entries like “Profile theme” or “Early access badge” with “Coming online in Phase 1” subtext; do not block or upsell.
+
+9) Action-specific micro‑animations (non-blocking)
+Beacon recast: reuse your current pulse/glow; extend by ~300ms when XP is awarded.
+
+Vault upload: show a quick checkmark overlay on the file tile with “+XP” chip.
+
+.fsn claim: emit a brief halo effect around the claimed name.
+These animations must be purely visual; do not alter existing click handlers or navigation.
+
+10) Copy (exact, concise)
+Toast (generic): “+{amount} XP” · subline: "{actionName}"
+
+Level up: “Level {N} reached”
+
+Streak toast: “Streak {N} days”
+
+Streak celebration (modal): “Streak {N} days — keep it going.”
+
+Perks panel header: “Perks & Levels”; subline: “Reach new levels to unlock perks.”
+
+11) Accessibility and performance
+All toasts and banners must be keyboard-dismissible via Esc.
+
+Prefer CSS animations over heavy JS; avoid reflow-thrashing; batch DOM updates.
+
+Respect reduced-motion preferences; if prefers-reduced-motion, disable confetti and use static visuals.
+
+12) Analytics (non‑PII)
+Emit client analytics (listen-only):
+
+xp_toast_shown { amount, source }
+
+level_up_banner_shown { level }
+
+streak_milestone_shown { days }
+
+perks_panel_opened
+No PII; do not log wallet addresses or names.
+
+13) QA acceptance
+Trigger any XP event: see toast, progress bar animate, totals correct.
+
+Crossing a level threshold: level banner appears once only, not duplicated.
+
+Hitting a configured streak: celebration modal appears, auto‑dismisses, no navigation.
+
+Perks panel opens/closes and reads static config; does not gate or change existing flows.
+
+With FEATURE_REWARDS_FEEDBACK=off, all new UI elements remain hidden and the app behaves exactly as before.
+
+14) Documentation
+Add a small README section: “Rewards Feedback Layer (Phase 0)” describing:
+
+Flags, JSON configs, and where to edit level thresholds and milestones.
+
+Event names listened to and where to add future event mappings.
+
+Statement: “This layer is additive UI; it does not modify XP business logic.”
+

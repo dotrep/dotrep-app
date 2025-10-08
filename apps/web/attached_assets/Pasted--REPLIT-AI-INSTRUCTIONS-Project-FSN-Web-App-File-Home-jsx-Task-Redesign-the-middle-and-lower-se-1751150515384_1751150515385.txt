@@ -1,0 +1,177 @@
+🔁 REPLIT AI INSTRUCTIONS
+Project: FSN Web App
+File: Home.jsx
+Task: Redesign the middle and lower sections of the FSN Home screen to support a tiered identity journey — Pulse → Signal → Beacon — using a tabbed quest system, without altering the visual architecture of the existing glyph, Pulse ring, nav bar, XP bar, or “IDENTITY INCENTIVIZED” styling.
+
+✅ ELEMENTS YOU MUST NOT CHANGE:
+Do not modify or reposition the following:
+
+🔷 The glyph (identity symbol, animated or static)
+
+🌀 The animated Pulse ring behind the identity card
+
+🧭 The global navigation bar (top or side)
+
+🆔 The .fsn name (e.g., jason.fsn) and level bar
+
+💡 The glowing phrase “IDENTITY INCENTIVIZED”
+
+These components form the core identity visual system and must remain visually and spatially anchored at the top section of the Home page.
+
+🧠 OBJECTIVE:
+Transform the area below the .fsn identity block into a dynamic, gamified “Identity Journey” tracker consisting of three unlockable stages:
+
+🫀 Pulse – user presence and minimal effort
+
+📡 Signal – behavioral trust and XP consistency
+
+🛰️ Beacon – future-ready visibility and trust-based unlocks
+
+Each stage includes its own quests, unlock conditions, and rewards, presented as a glowing tabbed interface with checklist logic and visual state transitions.
+
+🖥️ UI INSTRUCTIONS
+🔳 1. ADD A GLOWING TAB STRIP BENEATH THE XP BAR
+This should be centered and styled to match FSN’s neon grid aesthetic:
+
+css
+Copy
+Edit
+[ 🫀 Pulse ]   [ 📡 Signal ]   [ 🛰️ Beacon ]
+Default active tab = Pulse
+
+Disable Signal tab unless pulseComplete === true
+
+Disable Beacon tab unless signalComplete === true
+
+Apply glowing visual effect for completed stages, e.g.:
+
+✅ Pulse complete = cyan glow
+
+🔄 In progress = flickering ring or white pulse
+
+🔒 Locked = grayed out + tooltip
+
+Tooltips on hover (for locked tabs):
+“Unlock the previous stage to activate this one.”
+
+📋 2. DYNAMIC QUEST BLOCK (PER ACTIVE TAB)
+Each tab reveals a full-screen card-style checklist of quests.
+
+🫀 PULSE (UNLOCKED BY DEFAULT)
+Goal: Show up, interact, create a footprint
+
+Quests:
+
+ Upload your first file to your Vault (50 XP)
+
+ Verify your email (25 XP)
+
+ Set a profile picture (10 XP)
+
+ Maintain a 3-day login streak (30 XP)
+
+ Invite 1 user (30 XP)
+
+When all complete:
+
+Show ✅ Pulse Complete toast
+
+Animate glow around Pulse tab
+
+Unlock 📡 Signal tab
+
+Badge: Pulse Active
+
+📡 SIGNAL (LOCKED UNTIL PULSE COMPLETE)
+Goal: Build trust through consistent behavior
+
+Quests:
+
+ Upload 5 files total (50 XP)
+
+ Reach 500 XP (25 XP)
+
+ Maintain a 5-day login streak (40 XP)
+
+ Complete a Game Center mission (50 XP)
+
+ Refer 2 users who activate Pulse (75 XP)
+
+On complete:
+
+Show ✅ Signal Complete animation
+
+Unlock 🛰️ Beacon tab
+
+Badge: Signal Online
+
+Optional: enable FSN map preview (if supported)
+
+🛰️ BEACON (LOCKED IN PHASE 0)
+Tease for future features, but no actual quests yet
+
+Show locked view:
+
+text
+Copy
+Edit
+🛰️ BEACON STATUS: LOCKED
+
+Coming Soon:
+– Airdrop eligibility
+– Map visibility
+– Trust-based rewards
+– Advanced Vault powers
+Optional:
+
+“Join Trustlist” button (can open modal or save interest)
+
+Disabled until signalComplete === true
+
+⚙️ LOGIC TO TRACK
+Create React state booleans or Firebase flags:
+
+js
+Copy
+Edit
+pulseComplete = allPulseQuestsCompleted && xp >= 100
+signalComplete = pulseComplete && allSignalQuestsCompleted && xp >= 500
+beaconEligible = signalComplete
+These control:
+
+Tab locking/unlocking
+
+Badge awarding
+
+XP logic
+
+Optional UI effects (like map previews)
+
+✨ UX + ANIMATION
+Checkmarks animate on quest completion
+
+XP bar updates in real-time
+
+When Pulse or Signal completes, trigger glow/spark animation on corresponding tab
+
+Keep “IDENTITY INCENTIVIZED” centered and unblocked by quest UI
+
+Use cards or capsule-style buttons for quests — do not use basic bullet lists
+
+Match glow aesthetic with FSN brand (neon cyan, white light, digital flicker)
+
+✅ DO NOT REMOVE OR TOUCH:
+Glyph
+
+Pulse animation
+
+XP bar
+
+Username
+
+Identity banner and tagline
+
+Nav bar (top or left)
+
+🧠 PURPOSE:
+This layout transforms the Home page into the narrative backbone of the FSN onboarding experience. It gives users visual confirmation of their progress through a crypto-native identity evolution arc — all without KYC, token claims, or outside data vendors. It rewards behavior, not credentials, and visually motivates completion.

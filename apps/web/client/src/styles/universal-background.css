@@ -1,0 +1,117 @@
+/**
+ * Universal FSN Background Template
+ * This file defines the standard background appearance for ALL pages in the FSN project
+ * - Deep space gradient background matching homepage exactly
+ * - Consistent particle animation brightness and opacity
+ * - Standardized color scheme across all components
+ */
+
+/* Universal Background Gradient - Applied to ALL pages */
+.fsn-universal-background {
+  /* Primary background - deep space gradient */
+  background: 
+    /* Main radial gradient */
+    radial-gradient(circle at top center, #081220 0%, #050a12 40%, #030509 100%),
+    /* Secondary gradient adds depth */
+    linear-gradient(45deg, rgba(8, 24, 40, 0.3) 0%, rgba(4, 12, 20, 0.3) 100%);
+  
+  background-size: cover;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Ensure ALL page containers use the universal background */
+body,
+.hero,
+.mobile-friendly-hero,
+.dashboard-container,
+.dashboard-page,
+.register-page,
+.login-page,
+.admin-page,
+.forge-page,
+.vault-page {
+  /* Primary background - deep space gradient */
+  background: 
+    /* Main radial gradient */
+    radial-gradient(circle at top center, #081220 0%, #050a12 40%, #030509 100%),
+    /* Secondary gradient adds depth */
+    linear-gradient(45deg, rgba(8, 24, 40, 0.3) 0%, rgba(4, 12, 20, 0.3) 100%);
+  
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Standardized particle animation opacity for ALL pages */
+.network-background {
+  opacity: 0.15 !important; /* Standard particle opacity */
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+/* Color accent overlays - consistent across all pages */
+.fsn-universal-background::before,
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    /* Soft cyan glow at top */
+    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.03) 0%, rgba(0, 240, 255, 0) 50%),
+    /* Almost invisible purple accent from bottom right */
+    radial-gradient(circle at 90% 90%, rgba(118, 0, 255, 0.05) 0%, rgba(118, 0, 255, 0) 50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle noise texture overlay - consistent across all pages */
+.fsn-universal-background::after,
+body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure content is always above background elements */
+.hero-left,
+.hero-right,
+.dashboard-content,
+.register-content,
+.login-content,
+.admin-content,
+.forge-content,
+.vault-content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Standard FSN color scheme - used throughout project */
+:root {
+  --fsn-primary: #00f0ff;
+  --fsn-secondary: #4dd0e1;
+  --fsn-accent: #26c6da;
+  --fsn-background-primary: #081220;
+  --fsn-background-secondary: #050a12;
+  --fsn-background-tertiary: #030509;
+  --fsn-text-primary: #ffffff;
+  --fsn-text-secondary: rgba(255, 255, 255, 0.8);
+  --fsn-text-tertiary: rgba(255, 255, 255, 0.6);
+}
+
+/* Override any conflicting backgrounds */
+.dashboard-container,
+.dashboard-page,
+.register-page {
+  background-color: transparent !important; /* Remove solid color backgrounds */
+}

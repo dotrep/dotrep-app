@@ -1,0 +1,122 @@
+🎧 FSN Signal Listen Mode — Enhancement Instructions for Replit AI
+🔩 OVERVIEW
+We are upgrading the SIGNAL module by:
+
+Making LISTEN mode immersive with ambient effects
+
+Adding frequency-locked secret messages (some puzzles)
+
+Introducing frequency limits: broadcastable vs. listen-only zones
+
+Linking rewards to frequency-based discovery
+
+1. 🎛️ Frequency Range Logic
+Broadcast Range:
+
+Only allow user-initiated broadcasts between 00.00 MHz → 49.99 MHz.
+
+Listen Range:
+
+User may listen to the full spectrum: 00.00 MHz → 99.99 MHz.
+
+UI must reflect this — grey out unavailable "CAST" button if outside broadcast range.
+
+When user dials to listen-only bands, the interface should say:
+
+arduino
+Copy
+Edit
+"Listen-only frequency. Broadcasting disabled."
+2. 📡 Special Frequencies & Signal Types
+Introduce predefined "mystery" frequencies with various signal behaviors:
+
+Frequency	Type	Audio/Visual Behavior	Notes & Reward Logic
+13.00 MHz	Secret Broadcast	Distorted robotic voice with a cipher	If decoded (e.g. a code or puzzle), user earns +50 XP and a unique badge. Show message like: “✅ Message Decoded! +50 XP”
+32.40 MHz	Ambient Noise	Light static with intermittent beeps	No reward — this is atmospheric
+47.77 MHz	Echo Signal	Deep tone with echo and chime	Hint appears: “🔑 Seek the Beacon of Origin”
+66.66 MHz	Forbidden Zone	Harsh interference noise	Show modal: “⛔ Broadcasting here is restricted”
+
+Add more over time — keep them stored in a config object/JSON for easy editing.
+
+3. 🔊 Ambient Audio Effects (LISTEN Mode)
+When LISTEN mode is active:
+
+Load ambient sound overlays depending on frequency:
+
+Static / signal tone / digital chirps / shortwave hiss
+
+Use lightweight audio clips (loopable mp3/ogg/wav)
+
+Display animated signal equalizer or waveform UI to show "activity" on channel
+
+Add label in top corner of signal panel:
+
+vbnet
+Copy
+Edit
+Listening to: 32.40 MHz
+Signal: Ambient Noise
+If signal is inactive:
+
+vbnet
+Copy
+Edit
+Listening to: 87.10 MHz
+Signal: None Detected
+4. 🧩 Puzzle/Message Mechanics
+Some frequencies should display encoded messages visually (in modal or HUD):
+
+Example: Morse code-like text
+
+Decoding may involve:
+
+Clicking a “Decode” button (opens minigame or puzzle)
+
+Viewing the message and solving externally (e.g. Telegram)
+
+If decoded:
+
+Award XP: e.g. +50 XP
+
+Store solution result in user’s XP modal
+
+Show badge earned or visual confetti pop-up
+
+Encourage social solving by hinting:
+
+vbnet
+Copy
+Edit
+Hint: Join other Signal Solvers on Telegram
+5. 🔐 Broadcast Blocking
+On listen-only frequencies:
+
+Disable "CAST" button in UI
+
+Color the button grey
+
+Tooltip: “Broadcasting disabled on this channel.”
+
+If user tries to bypass by typing in a frequency and clicking CAST:
+
+Show error modal: “Cannot broadcast to protected spectrum.”
+
+6. 🧠 Optional (for polish/future):
+Rotate daily “active” puzzle frequencies (e.g., 1 new per day)
+
+Add unlockable “Spectrum Tuning Kit” for advanced users
+
+Add cosmetic tuning effects (e.g. waveform glow)
+
+Support broadcast drift where some signals are harder to keep tuned (pulse drops?)
+
+✅ Visual Style
+Maintain existing FSN UI guidelines:
+
+Font: Orbitron or matching FSN display typeface
+
+Color: Cyan/neon blue tones on dark background
+
+Effect styling: Use glow or neon border for active frequencies
+
+Avoid: Harsh pure white; ensure consistency with other FSN signal panels

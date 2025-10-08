@@ -1,0 +1,181 @@
+🛠️ FSN Phase 0 – Task #1: Implement .fsn Name Claim UI
+Replit Instructions (Identity-Incentivized Edition)
+🎯 Goal
+Implement a secure, behavior-gated .fsn name claim flow that:
+
+Rewards real users, not bots
+
+Requires identity proof instead of cash
+
+Fully enforces soulbinding via UID, device, and IP
+
+Begins the IIA (Identity-Incentivized Access) model for FSN
+
+✅ What This Task Does
+Builds a claim interface for .fsn names (e.g., jason.fsn)
+
+Enforces frontend + backend rules for name format, availability, and uniqueness
+
+Requires verified email or phone before allowing claim
+
+Locks name to user via UID + device fingerprint + IP address
+
+Prevents bots and Sybil farms through behavior + metadata gating
+
+Stores all relevant metadata in Firestore for trust scoring and audits
+
+📁 Files to Modify or Create
+File	Purpose
+components/ClaimName.jsx	Core UI + validation logic
+firebase/initFirebase.js	Firebase setup
+lib/generateFingerprint.js	Device fingerprint utility (use FingerprintJS or similar)
+api/getUserIP.js	IP address retrieval
+firestore.rules	Enforce immutability and uniqueness
+
+🔡 Allowed .fsn Name Format
+Rule	Value
+Characters	a–z, 0–9, and hyphens (-) only
+Case	Lowercase only
+Length	3 to 20 characters
+Suffix	Automatically ends in .fsn
+Reserved	Filter names like admin, support, nazi, etc.
+
+💻 Frontend: ClaimName.jsx Component
+🧩 Input Field
+jsx
+Copy
+Edit
+<input
+  type="text"
+  placeholder="Choose your name"
+  value={fsnInput}
+  onChange={(e) => {
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setFsnInput(value);
+  }}
+  minLength={3}
+  maxLength={20}
+/>
+<span>.fsn</span>
+✅ Validation Logic
+js
+Copy
+Edit
+const reservedNames = ['admin', 'support', 'nazi', 'fsn', 'coinbase'];
+
+const isValidFsnName = (name) => {
+  return /^[a-z0-9-]{3,20}$/.test(name) && !reservedNames.includes(name);
+};
+🔐 Required: Email or Phone Verification
+This screen should only appear after the user is logged in via Firebase with verified email or phone
+
+If user is anonymous or unverified:
+
+Redirect to login screen
+
+Or display: "You must verify your identity to earn your .fsn name"
+
+🔒 Backend Claim Logic
+🧬 Data Collected on Claim
+Field	Source
+ownerUID	Firebase current user UID
+email/phone	From auth object
+fingerprint	From client (FingerprintJS, hashed)
+ip	From /api/getUserIP.js route
+claimedAt	serverTimestamp()
+xpAtClaim	Optional: fetch from user XP log
+
+🔁 Submission Flow
+js
+Copy
+Edit
+const handleClaim = async () => {
+  if (!isValidFsnName(fsnInput)) {
+    setError("Invalid name format.");
+    return;
+  }
+
+  const fullName = `${fsnInput}.fsn`;
+  const fsnDoc = doc(db, "fsnNames", fullName);
+  const snapshot = await getDoc(fsnDoc);
+  if (snapshot.exists()) {
+    setError("That name is already taken.");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user?.email && !user?.phoneNumber) {
+    setError("You must verify your email or phone before claiming.");
+    return;
+  }
+
+  const ipRes = await fetch('/api/getUserIP');
+  const { ip } = await ipRes.json();
+  const fingerprint = await generateDeviceFingerprint();
+
+  await setDoc(fsnDoc, {
+    ownerUID: user.uid,
+    email: user.email || null,
+    phone: user.phoneNumber || null,
+    fingerprint,
+    ip,
+    claimedAt: serverTimestamp(),
+    xpAtClaim: await fetchUserXP(user.uid),
+  });
+
+  await updateDoc(doc(db, "users", user.uid), {
+    fsnName: fullName
+  });
+
+  setSuccess(`You've earned ${fullName}! Welcome to FSN.`);
+};
+🚨 Firestore Security Rules
+js
+Copy
+Edit
+match /fsnNames/{name} {
+  allow create: if request.auth != null && !exists(/databases/$(database)/documents/fsnNames/$(name));
+  allow update: if false;
+  allow delete: if false;
+}
+🎯 Behavioral Lock-In (IIA Enforcement)
+User must:
+
+Be logged in with verified identity (email or phone)
+
+Pass frontend format checks
+
+Not be reusing same device/IP/email from another claim
+
+Once .fsn is claimed:
+
+No editing
+
+No transfer
+
+No second claim
+
+No unlinking
+
+🛡️ Trust Check (Optional)
+Use metadata to prevent identity hijacks:
+
+If verified email/phone was used on multiple UIDs → flag
+
+If device fingerprint matches multiple names → flag
+
+Only allow 1 verified email/phone = 1 .fsn claim
+
+🧪 QA Test Cases (Replit AI)
+Test	Expected Result
+Invalid format	Rejected
+Reserved name	Rejected
+Reused device/IP/email	Rejected or flagged
+Valid name + verified email	Claimed successfully
+Second claim attempt	UI blocked
+Change .fsn post-claim	Not allowed
+
+🧠 FSN Philosophy Reminder (In-Code Prompt for UI Copy)
+“Your .fsn isn’t bought. It’s earned — through identity, action, and trust.”
+
+Display this under the claim button to reinforce the Identity-Incentivized Access model.

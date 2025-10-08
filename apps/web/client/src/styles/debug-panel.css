@@ -1,0 +1,195 @@
+/* Phase 0 ONLY - Debug Panel Styles */
+
+.debug-panel {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0A1A2F, #0F2848);
+  color: #00f0ff;
+  padding: 2rem;
+  font-family: 'Courier New', monospace;
+}
+
+.debug-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+}
+
+.debug-header h1 {
+  color: #00f0ff;
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.debug-header p {
+  color: rgba(0, 240, 255, 0.7);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.debug-loading, .debug-error {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.debug-loading {
+  background: rgba(0, 120, 255, 0.1);
+  border: 1px solid rgba(0, 120, 255, 0.3);
+  color: #0078ff;
+}
+
+.debug-error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+}
+
+.debug-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.debug-section {
+  background: rgba(0, 30, 60, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.debug-section h2 {
+  color: #00f0ff;
+  font-size: 1.2rem;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.debug-data {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.debug-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border-left: 3px solid rgba(0, 240, 255, 0.3);
+}
+
+.debug-label {
+  font-weight: bold;
+  color: rgba(0, 240, 255, 0.8);
+  min-width: 120px;
+}
+
+.debug-value {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  flex: 1;
+}
+
+.debug-value.success {
+  color: #00ff88;
+}
+
+.debug-value.error {
+  color: #ff6b6b;
+}
+
+.vault-files-debug {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
+}
+
+.debug-vault-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid rgba(0, 255, 136, 0.5);
+}
+
+.debug-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.debug-btn {
+  background: linear-gradient(135deg, #00f0ff, #0077ff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+.debug-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.debug-btn.secondary {
+  background: linear-gradient(135deg, #666, #888);
+  box-shadow: 0 0 15px rgba(128, 128, 128, 0.3);
+}
+
+.debug-btn.secondary:hover {
+  box-shadow: 0 0 20px rgba(128, 128, 128, 0.5);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .debug-panel {
+    padding: 1rem;
+  }
+  
+  .debug-sections {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .debug-section {
+    padding: 1rem;
+  }
+  
+  .debug-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .debug-label {
+    min-width: auto;
+  }
+  
+  .debug-value {
+    text-align: left;
+  }
+  
+  .debug-actions {
+    flex-direction: column;
+  }
+  
+  .debug-btn {
+    width: 100%;
+  }
+}

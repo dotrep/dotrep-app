@@ -1,0 +1,135 @@
+Beacon RECAST – Phase 0 Simplification (No Trust)
+0) Objective
+Remove the RECAST → Trust/KYC handoff.
+
+Keep Beacon interactive with a lightweight XP/streak broadcast.
+
+Preserve all Trust code behind flags so it can be re‑enabled in Phase 1 without redesign.
+
+1) Create feature flags (env)
+Add these environment variables in Replit (Secrets):
+
+FEATURE_TRUST=off
+
+FEATURE_BEACON_RECAST=phase0 (values: phase0 or trust)
+
+XP_RECAST_AWARD=10 (or your chosen value)
+
+RECAST_COOLDOWN_SECONDS=86400 (24h; adjust as needed)
+
+Confirm the app reads envs on both server and client sides (via public config where appropriate).
+
+2) Locate current RECAST flow
+Identify the Beacon component and its RECAST onClick handler.
+
+Identify any router/navigation calls that send users to /trust, verify, or an external KYC URL.
+
+Identify any API call made when RECAST is pressed (e.g., /api/trust/initiate, /api/beacon/recast).
+
+Document these file paths in a short internal note so the team knows exactly where the change happened.
+
+3) Replace RECAST behavior under flag
+When FEATURE_BEACON_RECAST=phase0:
+
+Do not navigate to /trust or any KYC page.
+
+Call the existing Beacon endpoint (or add one if already present) to:
+
+Increment Broadcasts count (server‑side, idempotent).
+
+Update Streak if recast is within the allowed window.
+
+Enforce cooldown using RECAST_COOLDOWN_SECONDS.
+
+Award XP using XP_RECAST_AWARD.
+
+Return a compact response with: broadcasts_total, streak_days, xp_awarded, cooldown_remaining.
+
+When FEATURE_BEACON_RECAST=trust (Phase 1 later):
+
+Restore the current Trust/KYC handoff (no changes now; just keep this path inactive).
+
+4) UI adjustments (no new art)
+Keep the RECAST button exactly where it is.
+
+Under phase0:
+
+Show a micro‑animation/glow on the Beacon ring for ~800ms.
+
+Show a small toast/mini‑modal: “Broadcast sent. +{XP_RECAST_AWARD} XP • Streak {streak_days}.”
+
+Disable the button during cooldown; show timer text “Recast in HH:MM:SS.”
+
+Remove or hide any Trust/KYC hint text around Beacon. No references to verification in tooltips, labels, or banners.
+
+5) Remove Trust handoffs elsewhere (Phase 0 consistency)
+Search the codebase for links/buttons that route to /trust, verify, or vendor KYC when Beacon is on screen (header pills, side CTAs, success modals).
+
+If they’re Beacon‑related, guard them behind FEATURE_TRUST=on.
+
+Keep any standalone Trust page hidden from menus in Phase 0 (do not delete it).
+
+6) Backend hardening
+If there’s an endpoint only used to initiate Trust from RECAST, guard it:
+
+If FEATURE_TRUST=off, return 403 with message trust_disabled_phase0.
+
+Ensure no PII/Trust rows are created by accidental calls in Phase 0.
+
+Add rate‑limit to the Beacon recast endpoint to match RECAST_COOLDOWN_SECONDS and prevent XP abuse.
+
+7) Data & XP integrity
+Ensure the XP grant for recast writes a labeled transaction:
+
+type: "beacon_recast"
+
+amount: XP_RECAST_AWARD
+
+source: "beacon"
+
+metadata: { cooldown_seconds, client_ts }
+
+Ensure Broadcasts and Streak persistence match what’s displayed in the UI (no client‑only counters).
+
+8) Copy review (exact phrases)
+Button: RECAST
+
+Cooldown label: Recast in {HH:MM:SS}
+
+Toast (success): Broadcast sent. +{XP} XP • Streak {N}.
+
+Tooltip (if used): Send a broadcast once per day to extend your streak and earn XP.
+
+Remove any Trust/KYC mentions from Beacon area.
+
+9) Analytics (non‑PII)
+Fire events:
+
+beacon_recast_clicked
+
+beacon_recast_success (props: xp_awarded, streak_days)
+
+beacon_recast_cooldown_blocked (props: cooldown_remaining)
+Do not send PII.
+
+10) QA checklist
+RECAST does not navigate to Trust or any KYC page with FEATURE_TRUST=off.
+
+On first click: XP awarded, broadcasts+streak update, animation/toast show.
+
+During cooldown: button disabled, timer visible, no XP granted, event logged as blocked.
+
+Streak logic: increments correctly across day boundaries and resets if user misses the window (confirm your rule).
+
+Mobile responsiveness: button tap area is large, toast readable.
+
+Console clean: no warnings or failed network calls.
+
+Regression: toggling FEATURE_BEACON_RECAST=trust (locally) still follows the old Trust handoff (used later in Phase 1).
+
+11) Documentation & rollback
+Add a short README section: “Beacon RECAST – Phase 0 mode” describing the flags and behavior.
+
+Note the single‑line change required to re‑enable Trust later: set FEATURE_TRUST=on and FEATURE_BEACON_RECAST=trust.
+
+Keep Trust codepaths intact; do not delete vendor keys or routes—just keep them disabled.

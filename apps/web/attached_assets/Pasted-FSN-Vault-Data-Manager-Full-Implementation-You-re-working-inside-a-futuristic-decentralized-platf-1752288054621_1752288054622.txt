@@ -1,0 +1,111 @@
+FSN Vault + Data Manager Full Implementation
+
+You're working inside a futuristic decentralized platform called FreeSpace Network (FSN). Your task is to upgrade the Vault page and Data Manager modal to match the polished visual design and behavior shown in the user's screenshots.
+
+🔷 GOAL SUMMARY
+Overhaul the Vault homepage UI to match FSN's latest theme
+
+Implement a Data Manager modal with file and NFT tabs
+
+Add full NFT management features (Phase 0.5/1)
+
+Fix navigation inconsistencies and polish design
+
+Ensure all elements are neon, cyberpunk, gamified — Tron/Web3 aesthetic
+
+🧩 STEP 1: Vault Homepage UI
+Redesign the Vault homepage to match the “Upload File / Add NFT” block layout, as seen in the final screenshot provided. Key requirements:
+
+Use “Secure Vault” as the title in large, glowing font
+
+Subtitle: Decentralized storage YOU control
+
+Rename "DATA" → DATA PANEL
+
+Below, add two animated square buttons:
+
+🔹 Upload File (with folder + icon, label: 8 Files)
+
+🔹 Add NFT (with diamond icon, label: 0 NFTs)
+
+Use correct icons (NOT placeholder or broken ones)
+
+These buttons should trigger the Data Manager modal
+
+✅ Make sure the top nav bar (HOME / VAULT / SOCIAL / GAME CENTER) and Pulse glyph match other tabs for consistency.
+
+🧩 STEP 2: Data Manager Modal
+Create a modal titled 📁 Data Manager with this sublabel: Secure decentralized storage view.
+
+Tabs at the top:
+
+FILES (default active)
+
+NFTS
+
+Files Tab:
+Table layout: Filename | Size | Date Uploaded | Actions
+
+Each row should show mock data or pulled data:
+
+Filename: e.g. "report.pdf"
+
+Size: e.g. "1.2 MB"
+
+Date Uploaded: Fix bug (currently says “Invalid Date”) and show readable upload date
+
+Actions:
+
+📥 Download (working button)
+
+🗑️ Delete (working button)
+
+Use futuristic, properly aligned buttons with hover/active states
+
+Scroll behavior must be smooth and styled neon
+
+NFTs Tab:
+Card grid layout
+
+For each NFT show:
+
+📛 Name (e.g. FSN Genesis Badge)
+
+🧾 Token ID (e.g. #001)
+
+📦 Collection (e.g. FSN Core)
+
+🔗 Button: View on Chain (dummy or working link)
+
+Add placeholder thumbnail with fallback if needed
+
+🧩 STEP 3: NFT Management (Phase 1 features)
+Inside each NFT card (or on hover), add three actions:
+
+🔁 Transfer — triggers input for destination wallet
+
+🔥 Burn — shows confirmation before deletion
+
+📌 Pin to Profile — sets this NFT as primary badge/avatar
+
+These may be stubbed (mocked) for now if real NFT data isn’t wired.
+
+⚠️ If you're not yet pulling real NFT metadata, simulate behavior using dummy cards and placeholders.
+
+🧩 STEP 4: Fixes & Polish
+✅ FIX: Replace all “Invalid Date” placeholders with readable timestamps
+
+✅ FIX: Ensure all icons render correctly (especially Upload/NFT icons)
+
+✅ FIX: Neon-glow button styling must match FSN UI on other tabs
+
+✅ FIX: Responsive layout on all modals + vault homepage
+
+✅ FIX: Nav bar + Pulse glyph identical to other tabs
+
+🎯 STYLING + THEME
+Neon blue, dark mode, Web3 cyberpunk aesthetic
+
+Typography should match Pulse/Signal/Beacon design
+
+Hover effects, animated glows, UI sound effects optional

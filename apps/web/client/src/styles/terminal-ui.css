@@ -1,0 +1,359 @@
+/* Terminal UI and Signal Animation Styles */
+
+/* Signal overlay animation with smooth transitions */
+#signal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+  pointer-events: none;
+}
+
+#signal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.pulse-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid #00ffff;
+  background-color: rgba(0, 255, 255, 0.1);
+  animation: pulse 1.2s infinite ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.signal-text {
+  color: #00ffff;
+  font-size: 1.5rem;
+  margin-top: 20px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Terminal UI with smooth transitions - now with semi-transparent background */
+#terminal-ui {
+  background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent to see background animation */
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+  pointer-events: none;
+  backdrop-filter: blur(3px); /* Subtle blur effect */
+}
+
+#terminal-ui.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.terminal-glow-frame {
+  background: linear-gradient(to bottom right, #0ff1ff22, #00f0ff11);
+  border: 2px solid #00ffff;
+  border-radius: 10px;
+  padding: 40px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 0 15px #00ffff55;
+  color: #ffffff;
+  font-family: 'Orbitron', monospace;
+  transform: scale(0.95);
+  transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+}
+
+#terminal-ui.active .terminal-glow-frame {
+  transform: scale(1);
+  box-shadow: 0 0 20px #00ffff99;
+}
+
+.terminal-header {
+  color: #00ffff;
+  margin-bottom: 30px;
+  font-size: 1.4rem;
+  text-shadow: 0 0 5px #00ffff88;
+  text-align: center;
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.terminal-header:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  right: 25%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #00ffff, transparent);
+}
+
+#terminal-form label {
+  display: block;
+  margin-top: 15px;
+  color: #00ffff;
+  font-size: 0.9rem;
+}
+
+#terminal-form input {
+  background-color: #000;
+  border: 1px solid #00ffff88;
+  color: #0ff;
+  padding: 8px;
+  width: 100%;
+  margin-top: 5px;
+  font-family: monospace;
+  outline: none;
+}
+
+/* Password input styling */
+.password-input-container {
+  position: relative;
+  margin-top: 5px;
+}
+
+.password-input-container input {
+  width: calc(100% - 40px);
+  margin-top: 0;
+  padding-right: 40px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+/* Password toggle button styling */
+.pwd-toggle-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  color: #00ffff;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  transition: all 0.2s ease;
+}
+
+.show-text, .hide-text {
+  display: none;
+}
+
+.pwd-toggle-icon.show .show-text {
+  display: inline;
+}
+
+.pwd-toggle-icon.hide .hide-text {
+  display: inline;
+}
+
+/* Hover effect */
+.password-toggle-btn:hover .pwd-toggle-icon {
+  background: rgba(0, 255, 255, 0.2);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+}
+
+.password-requirements {
+  color: rgba(0, 240, 255, 0.7);
+  font-size: 0.8rem;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.terminal-error-message {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6060;
+  font-family: monospace;
+  font-size: 0.9rem;
+  border-radius: 3px;
+  text-align: center;
+}
+
+#terminal-form button {
+  margin-top: 25px;
+  width: 100%;
+  background-color: transparent;
+  border: 2px solid #00ffff;
+  color: #00ffff;
+  font-weight: bold;
+  padding: 12px;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px #00ffff33;
+  text-shadow: 0 0 4px #00ffff88;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+#terminal-form button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+#terminal-form button:hover {
+  background-color: #00ffff;
+  color: #000;
+  box-shadow: 0 0 20px #00ffff99;
+}
+
+#terminal-form button:hover:before {
+  left: 100%;
+}
+
+/* TRON Light Cycle animation */
+@keyframes lightCycle {
+  0% {
+    left: -5%;
+    width: 5%;
+  }
+  50% {
+    width: 110%;
+  }
+  100% {
+    left: 100%;
+    width: 5%;
+  }
+}
+
+.light-cycle {
+  position: fixed;
+  top: 0;
+  left: -5%;
+  width: 5%;
+  height: 100vh;
+  background: linear-gradient(to right, 
+    rgba(0, 180, 255, 0),
+    rgba(0, 180, 255, 0.1),
+    rgba(0, 220, 255, 0.4),
+    rgba(0, 240, 255, 0.8),
+    rgba(0, 255, 255, 1),
+    rgba(0, 240, 255, 0.8),
+    rgba(0, 220, 255, 0.4),
+    rgba(0, 180, 255, 0.1),
+    rgba(0, 180, 255, 0)
+  );
+  z-index: 9990;
+  pointer-events: none;
+  animation: lightCycle 1.2s ease-in forwards;
+}
+
+.light-trail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 0;
+  background: linear-gradient(to right, 
+    rgba(0, 180, 255, 0),
+    rgba(0, 200, 255, 0.05),
+    rgba(0, 220, 255, 0.1),
+    rgba(0, 240, 255, 0.15)
+  );
+  z-index: 9985;
+  pointer-events: none;
+  animation: trailExpand 1.2s ease-in forwards;
+}
+
+@keyframes trailExpand {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Success message styling */
+.success-message {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  text-align: center;
+  border-radius: 5px;
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px #00ffff33;
+  }
+  to {
+    box-shadow: 0 0 15px #00ffff99;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .terminal-glow-frame {
+    width: 90%;
+    padding: 25px;
+  }
+  
+  .terminal-header {
+    font-size: 1rem;
+  }
+  
+  .pulse-ring {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .signal-text {
+    font-size: 1.2rem;
+  }
+}

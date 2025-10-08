@@ -1,0 +1,108 @@
+Vault Page Overhaul
+🔁 1. Reset Vault Page Layout
+Completely clear the current layout and styling of the existing vault page.
+
+Inherit global structure and layout from the other pages (like Home):
+
+Reuse the same background, pulse glyph header, and nav bar component.
+
+Ensure the Vault tab is highlighted in cyan just like Home and others when selected.
+
+🧭 2. Header and Navigation Bar Matching
+Ensure top nav bar contains:
+
+HOME, VAULT (highlighted), SOCIAL, GAME CENTER
+
+Include the XP counter on the top right (865 XP as placeholder) with the same style as on the Home tab.
+
+Reuse the Pulse glyph animation directly from Home, keeping it centered and glowing.
+
+🧊 3. Main Vault Section Redesign
+Centered Title Block
+Title: SECURE VAULT in cyan neon
+
+Subtext: "Decentralized storage YOU control"
+
+Use same typographic styling as other tabs
+
+Below That: DATA PANEL
+Create two modular square buttons centered under the "DATA" heading.
+
+Use a flex row with spacing between them.
+
+🔲 4. Replace Old Icons + Add Boxes
+Left Box – Upload File
+
+Label: Upload File
+
+Icon: Folder with "+" (adjust styling to match your Files modal)
+
+Subtext: 15 Files (this can be dynamically populated later)
+
+Right Box – Add NFT
+
+Label: Add NFT
+
+Icon: Diamond or Ethereum-shaped icon (stylized)
+
+Subtext: 3 NFTs
+
+Add hover effects:
+
+Glow effect on hover (light cyan)
+
+Smooth expand/shrink animation
+
+💾 5. Vault Functional Modal: Data Manager
+When either square is clicked:
+
+Open the existing Data Manager modal as shown in your screenshot.
+
+Include two tabs inside:
+
+FILES – default selected
+
+NFTs
+
+In FILES tab:
+Table headers: Filename, Size, Date Uploaded, Actions
+
+Each row should display:
+
+Label: File
+
+0 Bytes
+
+Placeholder: Invalid Date (until data is connected)
+
+Icons for Download and Delete (fix any broken/fallback icons)
+
+In NFT tab:
+Placeholder message: "No NFTs added yet" or show grid of NFTs with title & image
+
+🧩 6. Functional Triggers
+Make each Upload File and Add NFT box trigger opening of the Data Manager modal with correct tab selected:
+
+Click “Upload File” → open modal on FILES tab
+
+Click “Add NFT” → open modal on NFTs tab
+
+🖼️ 7. Design Polish
+Match color palette: cyan-blue neon, deep navy background, Tron-style aesthetic
+
+Keep padding/margins consistent with Home page
+
+Buttons and modal borders should have subtle outer glow
+
+Add hover state to NFTs/files list if feasible (optional)
+
+🔄 8. Make It Reusable
+Modularize:
+
+VaultPage
+
+DataManagerModal
+
+NavBar (reuse from HomePage)
+
+Components should allow state toggling for visibility/modal logic.

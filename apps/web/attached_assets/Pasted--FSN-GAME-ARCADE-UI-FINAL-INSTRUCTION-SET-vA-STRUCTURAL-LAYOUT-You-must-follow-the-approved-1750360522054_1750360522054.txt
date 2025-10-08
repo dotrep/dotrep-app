@@ -1,0 +1,230 @@
+✅ FSN GAME ARCADE UI – FINAL INSTRUCTION SET (vA+)
+📐 STRUCTURAL LAYOUT
+You must follow the approved wireframe exactly.
+
+Layout: Top logo and header, two angled arcade cabinets flanking a single mascot, and three mode cards aligned along the bottom.
+
+All elements must be symmetrically aligned and properly scaled.
+
+Design resolution: 1920x1080, must scale down to 1366x768 without distortion.
+
+🎮 ARCADE CABINETS (DAILY QUEST / MINI MISSIONS)
+Geometry & View:
+
+Use 3D isometric ¾ view from above
+
+Shape: Trapezoidal wedge
+
+Features:
+
+Tilted screen
+
+Sloped control deck with joystick + 2 buttons
+
+Top glowing marquee:
+
+LEFT = “DAILY QUEST”
+
+RIGHT = “MINI MISSIONS”
+
+Screen Effects:
+
+Add CRT scanlines
+
+8-bit glitch flicker (simulate analog interference)
+
+Pixel fuzz/static layer
+
+Glow pulse (2s animation loop)
+
+Icons only:
+
+LEFT screen = glowing smiley face
+
+RIGHT screen = glowing star
+
+⚠️ Do NOT reuse mascot on these screens
+
+Ground FX:
+
+Each cabinet sits on a glowing circular floor ring
+
+Add rising mist or fog
+
+Click & Hover Interactivity:
+
+Cabinets must be clickable
+
+On hover: glow intensifies, floor ring pulses, screen flickers stronger
+
+🔹 MASCOT (CENTER)
+One mascot only. Centered between cabinets.
+
+Shape: glowing blue flame or teardrop
+
+Pose: arms raised, joyful
+
+FX:
+
+Glow aura
+
+Particle shimmer
+
+Soft pulse ring (2s loop)
+
+Text (Around Mascot):
+
+Above: +12 SIGNAL POINTS! (glowing)
+
+Below: New Quest in... (fainter glow)
+
+⚠️ Mascot must NOT appear in mode cards or cabinet screens.
+
+📦 MODE CARDS (BOTTOM, 3 ONLY)
+Structure:
+
+Three equally sized, spaced, and vertically aligned cards
+
+Each card includes:
+
+Title
+
+Centered icon
+
+Description (placeholder)
+
+Glowing button
+
+Card 1 – QUEST CHALLENGES
+
+Icon: ⭐ Star
+
+Button: ENTER QUEST
+
+Card 2 – CRYPTO PUZZLES
+
+Icon: 🧩 Puzzle
+
+Button: SOLVE PUZZLES
+
+Card 3 – NETWORK WARS
+
+Icon: 🛡️ Shield
+
+Button: JOIN BATTLE
+
+Design FX:
+
+Neon borders (blue or cyan)
+
+Rounded corners
+
+Soft inner shadow
+
+Glow pulse on hover
+
+Button has glowing hover state
+
+⚠️ Do NOT use mascot or character art in cards. Use clean icon-only graphics.
+
+🌌 BACKGROUND & AMBIENCE
+Deep black-blue cosmic backdrop
+
+Constellation nodes + lines (subtle)
+
+Light shimmer, fog particles
+
+Optional ambient trails or flickers near top
+
+✨ INTERACTIVITY & ENERGY
+Even if fully static, simulate motion using:
+
+CRT screen flicker
+
+Mascot pulse loop (2s)
+
+Particle shimmer on mascot and cards
+
+Hover-triggered glow shifts on cabinets and card buttons
+
+Breathing neon edge glow
+
+✅ QA & DEBUGGING CHECKLIST
+Screenshots:
+
+Full idle layout
+
+Hover state on each cabinet and card
+
+Geometry Check:
+
+Correct cabinet perspective (angled top, slanted deck)
+
+Centered mascot, aligned text
+
+Glitch FX Check:
+
+CRT scanlines visible
+
+Fuzz/static overlay present
+
+Glitch artifacts (e.g., screen jump or distortion lines)
+
+Glow Check:
+
+Mascot glows vividly
+
+Cards glow evenly
+
+Text is readable, not oversaturated
+
+Reuse Check:
+
+Only 1 mascot (center only)
+
+No mascots reused on screens or in cards
+
+Card Layout:
+
+3 cards only
+
+Equal size, spacing, and vertical alignment
+
+Correct icons and button labels
+
+📤 EXPORT SPECS
+Full layout exported as PNG and SVG (300 DPI min)
+
+Transparent PNGs of individual elements:
+
+Mascot
+
+Cabinets
+
+Each card
+
+🚨 FINAL REMINDER
+This UI must glow, breathe, and feel alive.
+
+✅ Do:
+
+Use TRON-style glow and animation
+
+Match the wireframe layout exactly
+
+Simulate interactive behavior visually
+
+❌ Don’t:
+
+Flatten perspective
+
+Reuse mascot anywhere
+
+Omit glitch/screen FX
+
+Misalign or unevenly space cards
+
+This is the FSN Game Arcade.
+Make it pulse.
+Make it click.
+Make it breathe.

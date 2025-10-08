@@ -1,0 +1,303 @@
+/* FSN Pulse Task System Styling */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+.pulse-task-system {
+  font-family: 'Orbitron', sans-serif;
+  color: #00f0ff;
+}
+
+/* Task Section Headers */
+.pulse-task-section {
+  margin-bottom: 40px;
+}
+
+.pulse-task-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+}
+
+.pulse-task-section h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #00f0ff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
+}
+
+/* Completion Badges */
+.completion-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: completion-glow 2s ease-in-out infinite;
+}
+
+.daily-complete {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+  border: 2px solid #ffd700;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.weekly-complete {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 100%);
+  border: 2px solid #ff8c00;
+  color: #ff8c00;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
+}
+
+@keyframes completion-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+/* Task List */
+.pulse-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Individual Task Items */
+.pulse-task-item {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(0, 188, 212, 0.04) 100%);
+  border: 2px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pulse-task-item:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(0, 188, 212, 0.06) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 240, 255, 0.2);
+}
+
+.pulse-task-item.completed {
+  border-color: rgba(0, 255, 136, 0.4);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(0, 200, 108, 0.04) 100%);
+}
+
+.pulse-task-item.claimed {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 193, 7, 0.04) 100%);
+  opacity: 0.8;
+}
+
+/* Task Icons */
+.pulse-task-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.pending-circle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 24px;
+}
+
+.completed-checkmark {
+  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+  color: #000;
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  animation: checkmark-pulse 0.6s ease-out;
+}
+
+.claimed-checkmark {
+  font-size: 24px;
+  animation: claimed-bounce 0.8s ease-out;
+}
+
+@keyframes checkmark-pulse {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes claimed-bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+  60% { transform: translateY(-4px); }
+}
+
+/* Task Content */
+.pulse-task-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pulse-task-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.pulse-task-reward {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Task Actions */
+.pulse-task-action {
+  flex-shrink: 0;
+}
+
+.claim-btn {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 188, 212, 0.05) 100%);
+  border: 2px solid #00f0ff;
+  color: #00f0ff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.claim-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 188, 212, 0.1) 100%);
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 
+    0 0 20px rgba(0, 240, 255, 0.6),
+    0 0 40px rgba(0, 240, 255, 0.3);
+}
+
+.claim-btn:active {
+  transform: scale(0.98);
+}
+
+.pending-badge, .claimed-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pending-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.claimed-badge {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+/* Reset Information */
+.pulse-task-reset-info {
+  margin-top: 40px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.05) 0%, rgba(0, 188, 212, 0.02) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+}
+
+.reset-timer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pulse-task-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .pulse-task-content {
+    align-items: center;
+  }
+  
+  .pulse-task-section-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .completion-badge {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+}
+
+/* Special Effects for Completed Tasks */
+.pulse-task-item.completed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+  animation: task-complete-shine 2s ease-in-out;
+}
+
+@keyframes task-complete-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}

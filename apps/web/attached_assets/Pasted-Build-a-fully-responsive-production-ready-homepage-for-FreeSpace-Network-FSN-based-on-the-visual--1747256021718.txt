@@ -1,0 +1,227 @@
+Build a fully responsive, production-ready homepage for FreeSpace Network (FSN) based on the visual reference Homepage.png. This is not a typical marketing page — it’s a Web3-native identity onboarding gateway, akin to products like Phantom, Uniswap, or ENS.domains.
+
+The page must feel modern, polished, and interactive with subtle animations and clean crypto-first aesthetics.
+
+🧱 1. PAGE STRUCTURE
+Layout Basics:
+
+Full-bleed: width: 100vw, height: 100vh
+
+Zero scroll on load
+
+Flexbox hero layout: horizontal on desktop, stacked on mobile
+
+Left side: logo + text + button
+
+Right side: .fsn hex graphic
+
+HTML Skeleton:
+
+html
+Copy
+Edit
+<section class="hero">
+  <div class="hero-content">
+    <img src="/assets/fsn-logo.svg" alt="FreeSpace Network Logo" class="logo" />
+    <h1>Crypto starts with your <span class="highlight">.fsn</span> name</h1>
+    <p class="subtext">
+      Claim your Web3 identity.<br>
+      Earn XP. Emit your Signal.
+    </p>
+    <button class="cta">Claim your .fsn name</button>
+  </div>
+  <div class="hero-graphic">
+    <img src="/assets/fsn-hex.png" alt=".fsn hex" class="fsn-hex" />
+  </div>
+</section>
+✍️ 2. TYPOGRAPHY & TEXT STYLING
+Fonts:
+
+css
+Copy
+Edit
+font-family: 'Manrope', sans-serif;
+/* Fallbacks: 'Poppins', 'Inter' */
+Headline:
+
+css
+Copy
+Edit
+font-size: clamp(2.25rem, 5vw, 4rem);
+font-weight: 600;
+text-transform: none;
+color: #00f0ff;
+text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+Subheadline:
+
+css
+Copy
+Edit
+font-size: 1.25rem;
+font-weight: 400;
+line-height: 1.6;
+max-width: 420px;
+color: #c0faff;
+🛑 Do not use all-caps. Avoid harsh neon or low-contrast text.
+
+🔘 3. CTA BUTTON → INPUT FIELD
+Initial Button:
+
+css
+Copy
+Edit
+.cta {
+  padding: 0.75em 2em;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+.cta:hover {
+  box-shadow: 0 0 16px rgba(0,255,255,0.4);
+  transform: scale(1.03);
+}
+On Click → Morph to:
+
+html
+Copy
+Edit
+<input type="text" class="fsn-input" placeholder="This will be your Signal" />
+Input Field Style:
+
+css
+Copy
+Edit
+.fsn-input {
+  padding: 0.75em 2em;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  background: transparent;
+  color: #00f0ff;
+  font-size: 1rem;
+  width: 300px;
+}
+.fsn-input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.6;
+}
+🌀 4. LOGO & BRANDING
+Placement:
+
+Desktop: top-left of .hero-content
+
+Mobile: center-aligned above headline
+
+Style:
+
+css
+Copy
+Edit
+.logo {
+  filter: drop-shadow(0 0 8px #00f0ff);
+  height: 50px;
+}
+Use the exact same logo as in Homepage.png. Do not resize disproportionately.
+
+🔷 5. HEXAGON GRAPHIC (.fsn)
+Rules:
+
+SVG or PNG allowed
+
+Width: 280–360px on desktop, 220–280px on mobile
+
+Add subtle glow or pulse on hover
+
+Vertically align with text block
+
+Animation (optional):
+
+css
+Copy
+Edit
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fsn-hex:hover {
+  animation: pulse 3s ease infinite;
+}
+🌌 6. BACKGROUND VISUALS
+Static Fallback:
+
+css
+Copy
+Edit
+body {
+  background: radial-gradient(circle at center, #0a0f1c, #04070b);
+  background-size: cover;
+  overflow-x: hidden;
+}
+Animated Background:
+
+Use canvas, SVG, or Vanta.js (net or halo) for animated pulse lines or particle glow
+
+Low opacity
+
+Don’t distract from the foreground
+
+📱 7. MOBILE RESPONSIVENESS
+Breakpoints:
+
+<1024px: shrink .fsn-hex, tighter text spacing
+
+<768px: stack all elements vertically
+
+<480px: full-width button and input
+
+Text, padding, and layout must scale using rem or clamp() — no fixed pixels.
+
+🔒 8. NAME VALIDATION
+js
+Copy
+Edit
+const isValidName = (name) => /^[a-zA-Z0-9_-]{3,20}$/.test(name);
+Rules:
+
+Only allow a–z, A–Z, 0–9, hyphens, underscores
+
+Reject: empty string, "admin", "null", etc.
+
+Feedback:
+
+css
+Copy
+Edit
+.error-message {
+  color: #ff4c4c;
+  font-size: 0.875rem;
+  margin-top: 6px;
+}
+.success-message {
+  color: #00f0ff;
+  font-size: 0.875rem;
+  margin-top: 6px;
+}
+⚙️ 9. PERFORMANCE & POLISH
+Optimize all images (SVG > PNG if possible)
+
+Lazy load large assets
+
+Smooth transitions
+
+Minimize DOM nesting
+
+Avoid layout shift on input
+
+✅ FINAL CHECKLIST
+✔ Match reference layout and spacing
+✔ Fonts must match Manrope-style
+✔ All caps = BAD
+✔ Subtle, slow-moving background animation
+✔ Hex and logo aligned properly
+✔ Button-to-input interaction works
+✔ Fully responsive

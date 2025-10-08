@@ -1,0 +1,80 @@
+You are replacing the SIGNAL dial UI in a live product. You must follow exact visual and functional instructions.
+
+🧠 Project Overview:
+You are building a functional neon-glow SIGNAL tuner dial that:
+
+Replaces the current placeholder SIGNAL component on the homepage (center bottom).
+
+Must match the design reference shown in the file: signal_reference_dial.png
+
+Must display correctly spaced, sequential radio numbers
+
+The red needle must rotate based on user interaction with the knob
+
+🎨 Style + Integration Guidelines:
+Design Must Match This Image Exactly:
+→ signal_reference_dial.png
+
+Rounded semi-arc dial with a neon blue glow
+
+Outer ring: large radio numbers (5 to 16) spaced equally
+
+Inner ring: decimal numbers (5.5 to 14.5)
+
+Red needle starting at 9.5
+
+Rectangular neon-lit digital readout in the center
+
+Single round knob at bottom center
+
+Integrate into This Homepage Layout:
+→ fsn_home.png
+
+Keep dial size proportionate to the Pulse and Beacon components
+
+Use similar neon glow, spacing, and depth shadows
+
+Do NOT Repeat This Mistake:
+→ signal_garbled.png
+
+This version has incorrect labels, bad spacing, and poor legibility
+
+The arc is compressed and not readable
+
+The needle does not visually connect to the digital number
+
+🔧 Functionality Requirements:
+User should be able to click and drag the knob to rotate the red needle
+
+As the needle moves, the digital display updates in real-time
+
+The digital value shown must match the number the needle is pointing to
+
+Needle range: 5.0 to 16.0 (outer arc); 5.5 to 14.5 (inner arc)
+
+Decimal numbers should be equally spaced and accurate
+
+All numbers must be centered and readable — no truncation
+
+📐 Numbers and Alignment:
+Outer Arc Labels: 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+
+Inner Arc Labels: 5.5, 6.5, ..., 14.5
+
+Start Angle: Left side of arc at 5.0
+
+End Angle: Right side of arc at 16.0
+
+Red Needle Default: Points at 9.5
+
+Digital Display: Shows “9.5” centered in blue-glow box
+
+🧪 Tech Notes:
+Use Canvas, SVG, or WebGL for animated dial (your choice)
+
+The red needle can be rotated using transform: rotate(angle) from a center pivot
+
+The knob is purely aesthetic — rotation updates needle programmatically
+
+Keep all fonts and strokes legible, modern, and sci-fi styled
+

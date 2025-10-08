@@ -1,0 +1,515 @@
+/* FSN Vault - TRON-inspired CSS - Simplified Version */
+.vault-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+}
+
+/* Error and success messages */
+.vault-error {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #ff6b6b;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.vault-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Loading indicator */
+.vault-loading {
+  color: #a0d8ff;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* Subtitle */
+.vault-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Layout */
+.vault-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .vault-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Files section */
+.vault-files-section {
+  background: rgba(10, 20, 40, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.vault-files-section h3 {
+  color: #00f0ff;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.vault-files-list {
+  min-height: 200px;
+}
+
+.vault-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 2rem 0;
+  height: 200px;
+}
+
+.vault-empty p {
+  margin-top: 1rem;
+}
+
+.vault-files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.vault-file-card {
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vault-file-card:hover {
+  background: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.vault-file-icon {
+  margin-bottom: 0.75rem;
+}
+
+.vault-file-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.vault-file-date {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* Action section */
+.vault-action-section {
+  background: rgba(10, 20, 40, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+/* File upload */
+.vault-upload-form h3 {
+  color: #00f0ff;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.vault-upload-form p {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.vault-upload-drop {
+  border: 2px dashed rgba(0, 240, 255, 0.3);
+  border-radius: 8px;
+  padding: 2rem 1rem;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vault-upload-drop:hover {
+  border-color: rgba(0, 240, 255, 0.6);
+  background: rgba(0, 240, 255, 0.05);
+}
+
+.vault-upload-drop p {
+  margin: 1rem 0 0;
+}
+
+.vault-file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+  font-size: 0;
+}
+
+.vault-selected-file {
+  background: rgba(0, 240, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.vault-selected-file p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.vault-action-btn {
+  background: linear-gradient(135deg, #00f0ff, #0077ff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+  width: 100%;
+}
+
+.vault-action-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.vault-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.vault-action-btn.delete {
+  background: linear-gradient(135deg, #ff3b3b, #ff006a);
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.4);
+}
+
+.vault-action-btn.delete:hover {
+  box-shadow: 0 0 20px rgba(255, 59, 59, 0.6);
+}
+
+.vault-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.vault-action-btn.download {
+  background: linear-gradient(135deg, #00a0ff, #0077dd);
+  box-shadow: 0 0 15px rgba(0, 160, 255, 0.4);
+}
+
+.vault-action-btn.download:hover {
+  box-shadow: 0 0 20px rgba(0, 160, 255, 0.6);
+}
+
+.vault-action-btn.back {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.vault-action-btn.back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.vault-browse-btn {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.vault-browse-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Phase 0 Vault Layout Styles */
+.phase0-vault .vault-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, rgba(0, 30, 60, 0.4), rgba(0, 50, 100, 0.3));
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  margin: -1.5rem -2rem 2rem -2rem;
+}
+
+.fsn-identity h2 {
+  color: #00f0ff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.vault-subtitle {
+  color: rgba(0, 240, 255, 0.7);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.vault-pulse {
+  flex-shrink: 0;
+}
+
+/* Enhanced File Cards */
+.vault-file-card-enhanced {
+  background: rgba(0, 30, 60, 0.2);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.vault-file-card-enhanced:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.file-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(0, 20, 40, 0.3);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-filename-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.edit-filename-btn:hover {
+  background: rgba(0, 240, 255, 0.1);
+}
+
+.file-card-content {
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.filename-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.filename-input {
+  background: rgba(0, 20, 40, 0.6);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: #fff;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.filename-input:focus {
+  outline: none;
+  border-color: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);
+}
+
+.filename-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.save-btn, .cancel-btn {
+  background: none;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.save-btn {
+  border-color: rgba(0, 255, 0, 0.5);
+  color: #0f0;
+}
+
+.save-btn:hover {
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.cancel-btn {
+  border-color: rgba(255, 0, 0, 0.5);
+  color: #f00;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.file-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
+}
+
+.vault-file-date {
+  color: rgba(0, 240, 255, 0.6);
+  font-size: 0.75rem;
+}
+
+.file-xp {
+  color: #00ff88;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Footer Styles */
+.vault-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.vault-terms {
+  text-align: center;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
+  margin-top: 1rem;
+}
+
+.vault-terms p {
+  color: rgba(0, 240, 255, 0.5);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.vault-terms a {
+  color: rgba(0, 240, 255, 0.7);
+  text-decoration: none;
+}
+
+.vault-terms a:hover {
+  color: #00f0ff;
+  text-decoration: underline;
+}
+
+/* File viewer */
+.vault-file-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vault-file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.vault-file-header h3 {
+  color: #00f0ff;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.vault-file-header .vault-action-btn.delete {
+  width: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.vault-file-content {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow: auto;
+  flex-grow: 1;
+  max-height: 350px;
+}
+
+.vault-file-content pre {
+  margin: 0;
+  color: #e0f2ff;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

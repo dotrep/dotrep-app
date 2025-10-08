@@ -1,0 +1,91 @@
+1. 📁 Place the Background Gauge Asset
+Save your uploaded semicircle image (fced2181-851f-4686-ad04-6505f80bf61f.png) in the public folder (or wherever your assets live), and reference it:
+
+html
+Copy
+Edit
+<div class="signal-container">
+  <img src="/path/to/fced2181-851f-4686-ad04-6505f80bf61f.png" class="signal-gauge-bg" />
+  <div class="signal-needle" id="signal-needle"></div>
+  <div class="signal-label">SIGNAL</div>
+</div>
+🔁 Make sure the path to your PNG matches your project structure.
+
+2. 🧬 CSS Styling to Recreate Neon Look
+css
+Copy
+Edit
+.signal-container {
+  position: relative;
+  width: 220px;
+  height: 130px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signal-gauge-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.signal-needle {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 3px;
+  height: 90px;
+  background-color: #00faff;
+  transform-origin: bottom center;
+  transform: rotate(-90deg); /* default to far left */
+  z-index: 2;
+  border-radius: 3px;
+  box-shadow: 0 0 10px #00faff;
+}
+
+.signal-label {
+  margin-top: 4px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: #00faff;
+  letter-spacing: 2px;
+}
+✅ The needle appears centered and hovers above the gauge as a glowing line.
+
+3. ⚙️ JavaScript to Dynamically Rotate Needle
+javascript
+Copy
+Edit
+function updateSignal(value) {
+  // Clamp value between 0–100
+  const clamped = Math.max(0, Math.min(100, value));
+
+  // Convert to angle: -90° (left) to +90° (right)
+  const angle = -90 + (clamped * 180 / 100);
+
+  const needle = document.getElementById("signal-needle");
+  needle.style.transform = `rotate(${angle}deg)`;
+}
+
+// Example usage:
+updateSignal(75);
+✅ Final Layout Preview
+html
+Copy
+Edit
+<div class="signal-container">
+  <img src="/path/to/fced2181-851f-4686-ad04-6505f80bf61f.png" class="signal-gauge-bg" />
+  <div class="signal-needle" id="signal-needle"></div>
+  <div class="signal-label">SIGNAL</div>
+</div>
+🧪 Optional: Animate the Needle Smoothly
+To add transition:
+
+css
+Copy
+Edit
+.signal-needle {
+  transition: transform 0.3s ease-in-out;
+}

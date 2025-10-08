@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSN Ninja Bonus Stage</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            display: block;
+            margin: 0 auto;
+            background: #000011;
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .score-display {
+            font-size: 16px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 8px #00ffff;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff6600;
+            padding: 15px;
+            border-radius: 8px;
+            color: #ff6600;
+            text-shadow: 0 0 8px #ff6600;
+            font-size: 14px;
+        }
+        
+        .crosshair {
+            position: absolute;
+            pointer-events: none;
+            z-index: 150;
+            color: #ffffff;
+            font-size: 20px;
+            text-shadow: 0 0 5px #ffffff;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ff0066;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            color: #ff0066;
+            text-shadow: 0 0 15px #ff0066;
+            display: none;
+            z-index: 200;
+        }
+        
+        .victory {
+            border-color: #00ff66;
+            color: #00ff66;
+            text-shadow: 0 0 15px #00ff66;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #ff0066;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin: 5px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        
+        button:hover {
+            background: #ff3388;
+            box-shadow: 0 0 10px rgba(255, 0, 102, 0.5);
+        }
+        
+        .exit-btn {
+            background: #666 !important;
+        }
+        
+        .exit-btn:hover {
+            background: #888 !important;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="ui-overlay">
+        <div class="score-display">NINJAS: <span id="ninjaCount">30</span></div>
+        <div class="score-display">SCORE: <span id="score">0</span></div>
+        <div class="score-display">LIVES: <span id="lives">3</span></div>
+    </div>
+    
+    <div class="instructions">
+        <div><strong>MOVE MOUSE TO AIM</strong></div>
+        <div><strong>CLICK TO THROW SHURIKEN</strong></div>
+        <div>DEFEAT ALL 30 NINJAS</div>
+    </div>
+    
+    <div id="crosshair" class="crosshair">+</div>
+    
+    <div id="gameOver" class="game-over">
+        <h2 id="gameOverTitle">MISSION FAILED</h2>
+        <div id="gameOverMessage">A ninja escaped!</div>
+        <div style="margin-top: 20px;">
+            <button onclick="restartGame()">TRY AGAIN</button>
+            <button onclick="exitGame()" class="exit-btn">EXIT</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameRunning = true;
+        let ninjas = [];
+        let shurikens = [];
+        let particles = [];
+        let score = 0;
+        let lives = 3;
+        let ninjasRemaining = 30;
+        let ninjasSpawned = 0;
+        let playerX = canvas.width / 2;
+        
+        // TRON-style First Person Perspective
+        const NINJA_SPEED = 1.5;
+        const SHURIKEN_SPEED = 12;
+        const PLATFORM_Y1 = 180; // Top platform perspective
+        const PLATFORM_Y2 = 320; // Bottom platform perspective
+        const FLOOR_Y = canvas.height - 50; // Ground level
+        const SPAWN_RATE = 0.02;
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+        
+        // Classes
+        class Ninja {
+            constructor(platform) {
+                this.x = Math.random() < 0.5 ? -60 : canvas.width + 60;
+                this.y = platform - 45;
+                this.scale = platform === PLATFORM_Y1 ? 0.6 : 0.8; // Perspective scaling
+                this.width = 35 * this.scale;
+                this.height = 45 * this.scale;
+                this.speed = (NINJA_SPEED + Math.random() * 1) * (this.x < 0 ? 1 : -1);
+                this.platform = platform;
+                this.animFrame = Math.random() * 10;
+            }
+            
+            update() {
+                this.x += this.speed;
+                this.animFrame += 0.15;
+            }
+            
+            draw() {
+                const bounce = Math.sin(this.animFrame) * 1 * this.scale;
+                
+                // TRON-style wireframe ninja
+                ctx.strokeStyle = '#ff6600';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = '#ff4400';
+                
+                // Body outline
+                ctx.strokeRect(this.x, this.y + bounce, this.width, this.height);
+                ctx.fillRect(this.x + 2, this.y + bounce + 2, this.width - 4, this.height - 4);
+                
+                // Head/mask
+                ctx.strokeStyle = '#ff0000';
+                ctx.strokeRect(this.x + 5 * this.scale, this.y + bounce, this.width - 10 * this.scale, 15 * this.scale);
+                
+                // Glowing eyes
+                ctx.fillStyle = '#ff0000';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 5;
+                ctx.fillRect(this.x + 8 * this.scale, this.y + bounce + 5 * this.scale, 4 * this.scale, 4 * this.scale);
+                ctx.fillRect(this.x + this.width - 12 * this.scale, this.y + bounce + 5 * this.scale, 4 * this.scale, 4 * this.scale);
+                ctx.shadowBlur = 0;
+                
+                // Weapon glow
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(this.x + this.width/2 - 2 * this.scale, this.y + bounce + 18 * this.scale, 4 * this.scale, 15 * this.scale);
+            }
+            
+            isHit(shuriken) {
+                return shuriken.x < this.x + this.width &&
+                       shuriken.x + shuriken.width > this.x &&
+                       shuriken.y < this.y + this.height &&
+                       shuriken.y + shuriken.height > this.y;
+            }
+            
+            hasEscaped() {
+                return (this.speed > 0 && this.x > canvas.width + 100) || 
+                       (this.speed < 0 && this.x < -100);
+            }
+        }
+        
+        class Shuriken {
+            constructor(x, y, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.width = 6;
+                this.height = 6;
+                
+                // Calculate direction toward target
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                this.vx = (dx / distance) * SHURIKEN_SPEED;
+                this.vy = (dy / distance) * SHURIKEN_SPEED;
+                
+                this.rotation = 0;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += 0.4;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.rotation);
+                
+                // TRON-style glowing shuriken
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 8;
+                
+                ctx.beginPath();
+                // 4-pointed star
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i * Math.PI) / 2;
+                    const x1 = Math.cos(angle) * 10;
+                    const y1 = Math.sin(angle) * 10;
+                    const x2 = Math.cos(angle + Math.PI/4) * 4;
+                    const y2 = Math.sin(angle + Math.PI/4) * 4;
+                    
+                    if (i === 0) ctx.moveTo(x1, y1);
+                    else ctx.lineTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Center circle
+                ctx.beginPath();
+                ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+        }
+        
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.life = 30;
+                this.maxLife = 30;
+                this.color = color;
+                this.size = Math.random() * 4 + 2;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1; // Gravity
+                this.life--;
+            }
+            
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        // Game functions
+        function spawnNinja() {
+            if (ninjasSpawned >= 30) return;
+            
+            if (Math.random() < SPAWN_RATE) {
+                const platform = Math.random() < 0.5 ? PLATFORM_Y1 : PLATFORM_Y2;
+                ninjas.push(new Ninja(platform));
+                ninjasSpawned++;
+            }
+        }
+        
+        function createParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+        
+        function checkCollisions() {
+            // Check shuriken-ninja collisions
+            for (let i = shurikens.length - 1; i >= 0; i--) {
+                const shuriken = shurikens[i];
+                
+                for (let j = ninjas.length - 1; j >= 0; j--) {
+                    const ninja = ninjas[j];
+                    
+                    if (ninja.isHit(shuriken)) {
+                        // Create hit particles
+                        createParticles(ninja.x + ninja.width/2, ninja.y - ninja.height/2, '#ff6600');
+                        
+                        // Remove ninja and shuriken
+                        ninjas.splice(j, 1);
+                        shurikens.splice(i, 1);
+                        
+                        // Update score
+                        score += 100;
+                        ninjasRemaining--;
+                        
+                        break;
+                    }
+                }
+            }
+        }
+        
+        function checkGameEnd() {
+            // Check if any ninja escaped
+            for (let ninja of ninjas) {
+                if (ninja.hasEscaped()) {
+                    endGame(false, "A ninja escaped!");
+                    return;
+                }
+            }
+            
+            // Check victory condition
+            if (ninjasRemaining <= 0 && ninjas.length === 0) {
+                endGame(true, "BONUS STAGE COMPLETE!\nExtra life earned!");
+            }
+        }
+        
+        function endGame(victory, message) {
+            gameRunning = false;
+            const gameOverDiv = document.getElementById('gameOver');
+            const titleElement = document.getElementById('gameOverTitle');
+            const messageElement = document.getElementById('gameOverMessage');
+            
+            if (victory) {
+                titleElement.textContent = "MISSION COMPLETE";
+                gameOverDiv.classList.add('victory');
+                lives++; // Award extra life
+                score += 1000; // Bonus points
+            } else {
+                titleElement.textContent = "MISSION FAILED";
+                gameOverDiv.classList.remove('victory');
+            }
+            
+            messageElement.textContent = message;
+            gameOverDiv.style.display = 'block';
+            
+            updateUI();
+        }
+        
+        function updateUI() {
+            document.getElementById('ninjaCount').textContent = ninjasRemaining;
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+        
+        function drawTronEnvironment() {
+            // TRON-style wireframe environment
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            
+            // Top platform (perspective)
+            const topMargin = 120;
+            const topWidth = canvas.width - (topMargin * 2);
+            ctx.strokeRect(topMargin, PLATFORM_Y1, topWidth, 20);
+            
+            // Bottom platform (full width)
+            ctx.strokeRect(0, PLATFORM_Y2, canvas.width, 25);
+            
+            // Platform support pillars
+            ctx.lineWidth = 1;
+            
+            // Top platform pillars
+            for (let i = topMargin + 60; i < canvas.width - topMargin; i += 80) {
+                ctx.strokeRect(i, PLATFORM_Y1, 8, canvas.height - PLATFORM_Y1);
+                // Cross supports
+                ctx.beginPath();
+                ctx.moveTo(i, PLATFORM_Y1 + 20);
+                ctx.lineTo(i + 8, canvas.height - 20);
+                ctx.moveTo(i + 8, PLATFORM_Y1 + 20);
+                ctx.lineTo(i, canvas.height - 20);
+                ctx.stroke();
+            }
+            
+            // Bottom platform pillars
+            for (let i = 50; i < canvas.width; i += 70) {
+                ctx.strokeRect(i, PLATFORM_Y2, 12, canvas.height - PLATFORM_Y2);
+                // Cross supports
+                ctx.beginPath();
+                ctx.moveTo(i, PLATFORM_Y2 + 25);
+                ctx.lineTo(i + 12, canvas.height - 15);
+                ctx.moveTo(i + 12, PLATFORM_Y2 + 25);
+                ctx.lineTo(i, canvas.height - 15);
+                ctx.stroke();
+            }
+            
+            // Side walls with perspective
+            ctx.lineWidth = 2;
+            
+            // Left wall
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, canvas.height);
+            ctx.lineTo(60, canvas.height);
+            ctx.lineTo(topMargin, PLATFORM_Y1);
+            ctx.lineTo(topMargin, 0);
+            ctx.stroke();
+            
+            // Right wall
+            ctx.beginPath();
+            ctx.moveTo(canvas.width, 0);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(canvas.width - 60, canvas.height);
+            ctx.lineTo(canvas.width - topMargin, PLATFORM_Y1);
+            ctx.lineTo(canvas.width - topMargin, 0);
+            ctx.stroke();
+            
+            // Floor grid
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#004444';
+            
+            // Perspective grid lines
+            for (let i = 0; i <= 10; i++) {
+                const x = (canvas.width * i) / 10;
+                ctx.beginPath();
+                ctx.moveTo(x, canvas.height);
+                ctx.lineTo(topMargin + (topWidth * i) / 10, PLATFORM_Y1);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let y = canvas.height - 30; y > PLATFORM_Y2; y -= 20) {
+                const factor = (canvas.height - y) / (canvas.height - PLATFORM_Y1);
+                const margin = topMargin * factor;
+                ctx.beginPath();
+                ctx.moveTo(margin, y);
+                ctx.lineTo(canvas.width - margin, y);
+                ctx.stroke();
+            }
+        }
+        
+        function drawTronBackground() {
+            // TRON-style background
+            ctx.fillStyle = '#000011';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Starfield
+            ctx.fillStyle = '#00aaff';
+            for (let i = 0; i < 60; i++) {
+                const x = (i * 137) % canvas.width;
+                const y = (i * 211) % (canvas.height * 0.7);
+                const twinkle = Math.sin(Date.now() * 0.001 + i) * 0.3 + 0.7;
+                ctx.globalAlpha = twinkle;
+                ctx.fillRect(x, y, 1, 1);
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawTronHand() {
+            // TRON-style wireframe hand in bottom right
+            const handX = canvas.width - 100;
+            const handY = canvas.height - 80;
+            
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            
+            // Wireframe hand outline
+            ctx.beginPath();
+            ctx.moveTo(handX, handY);
+            ctx.lineTo(handX + 60, handY);
+            ctx.lineTo(handX + 70, handY - 15);
+            ctx.lineTo(handX + 65, handY - 25);
+            ctx.lineTo(handX + 55, handY - 20);
+            ctx.lineTo(handX + 45, handY - 25);
+            ctx.lineTo(handX + 35, handY - 20);
+            ctx.lineTo(handX + 25, handY - 25);
+            ctx.lineTo(handX + 15, handY - 20);
+            ctx.lineTo(handX + 5, handY - 10);
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Shuriken in hand
+            ctx.save();
+            ctx.translate(handX + 35, handY - 15);
+            ctx.rotate(Math.sin(Date.now() * 0.005) * 0.2);
+            
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 5;
+            
+            // 4-pointed star shuriken
+            ctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI) / 2;
+                const x1 = Math.cos(angle) * 12;
+                const y1 = Math.sin(angle) * 12;
+                const x2 = Math.cos(angle + Math.PI/4) * 4;
+                const y2 = Math.sin(angle + Math.PI/4) * 4;
+                
+                if (i === 0) ctx.moveTo(x1, y1);
+                else ctx.lineTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Clear and draw TRON environment
+            drawTronBackground();
+            drawTronEnvironment();
+            drawTronHand();
+            
+            // Spawn ninjas
+            spawnNinja();
+            
+            // Update and draw ninjas
+            for (let i = ninjas.length - 1; i >= 0; i--) {
+                const ninja = ninjas[i];
+                ninja.update();
+                ninja.draw();
+                
+                // Remove ninjas that are completely off-screen
+                if (ninja.x < -100 || ninja.x > canvas.width + 100) {
+                    ninjas.splice(i, 1);
+                }
+            }
+            
+            // Update and draw shurikens
+            for (let i = shurikens.length - 1; i >= 0; i--) {
+                const shuriken = shurikens[i];
+                shuriken.update();
+                shuriken.draw();
+                
+                // Remove shurikens that are off-screen
+                if (shuriken.x > canvas.width + 50 || shuriken.y > canvas.height + 50 || 
+                    shuriken.x < -50 || shuriken.y < -50) {
+                    shurikens.splice(i, 1);
+                }
+            }
+            
+            // Update and draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.update();
+                particle.draw();
+                
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            checkCollisions();
+            checkGameEnd();
+            updateUI();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Throw shuriken from hand position
+            const startX = canvas.width - 65;
+            const startY = canvas.height - 60;
+            
+            shurikens.push(new Shuriken(startX, startY, x, y));
+        });
+        
+        // Mouse movement for crosshair
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            // Update crosshair position
+            const crosshair = document.getElementById('crosshair');
+            crosshair.style.left = (rect.left + mouseX - 10) + 'px';
+            crosshair.style.top = (rect.top + mouseY - 10) + 'px';
+        });
+        
+        function restartGame() {
+            // Reset game state
+            gameRunning = true;
+            ninjas = [];
+            shurikens = [];
+            particles = [];
+            score = 0;
+            ninjasRemaining = 30;
+            ninjasSpawned = 0;
+            mouseX = canvas.width / 2;
+            mouseY = canvas.height / 2;
+            
+            document.getElementById('gameOver').style.display = 'none';
+            gameLoop();
+        }
+        
+        function exitGame() {
+            window.parent.postMessage('exitGame', '*');
+        }
+        
+        // Start game
+        updateUI();
+        gameLoop();
+    </script>
+</body>
+</html>

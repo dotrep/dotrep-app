@@ -1,0 +1,92 @@
+1.	Goal
+Give users a “Vault” button that safely stores files:
+
+	•	Client-side encrypt file.
+	•	Pin to IPFS (private in STEALTH; public pin in PUBLIC).
+	•	Save metadata in your DB for fast UI.
+	•	In PUBLIC, emit an on-chain Pinned(user, bytes32 cidHash) event via the Files contract.
+
+	2.	Env setup (Replit Secrets)
+Add these keys (names exactly):
+
+	•	VAULT_MAX_MB = 25 (free tier cap)
+	•	VAULT_ALLOWED_MIME = image/png,image/jpeg,application/pdf,text/plain (adjust to your policy)
+	•	IPFS_PROVIDER = pinata or web3storage
+	•	IPFS_API_KEY = your key/token from the provider
+	•	IPFS_GATEWAY = your chosen gateway base URL (e.g., https://gateway.pinata.cloud/ipfs/)
+	•	APP_MODE = STEALTH or PUBLIC (already used elsewhere)
+	•	FILES_ADDRESS = address of your Files contract for the active network
+	•	RPC_URL = local or Base Sepolia RPC (already set in earlier parts)
+
+	3.	Client-side encryption (simple, fast)
+
+	•	Use a standard libsodium/AES approach on the client before upload.
+	•	Generate a random key per file; DO NOT send this key to your server.
+	•	Encrypt the file blob → produce encryptedBlob.
+	•	Derive a short “file key checksum” and store it locally so users can verify they have the right key.
+	•	Your DB stores only metadata (not keys).
+
+	4.	Pinning flow (server route)
+
+	•	Frontend sends: encrypted blob stream + declared mime + size + wallet address (from the connected wallet) + filename.
+	•	Server checks:
+	•	size ≤ VAULT_MAX_MB, mime in VAULT_ALLOWED_MIME.
+	•	rate limit per wallet (e.g., 20 uploads/day).
+	•	Server pins to IPFS with IPFS_API_KEY and returns cid to the client.
+	•	NEVER log raw file content or encryption keys.
+	•	In STEALTH: use private pinning and do not share CIDs publicly; no on-chain event.
+	•	In PUBLIC: pin normally; move to step 6 to emit event.
+
+	5.	DB write (fast UI + audit)
+
+	•	Table vaultItems: id (uuid), address, cid (string), mime, size, filename, created_at.
+	•	Insert a row when pinning completes.
+	•	Expose a GET /api/vault/list?address=0x… for the dashboard to render recent files.
+	•	Add index on (address, created_at DESC).
+
+	6.	On-chain anchor (PUBLIC only)
+
+	•	Compute a 32-byte hash for the event. Practical choices:
+	•	Option A (simple): cidHash = keccak256(utf8(cid)) → 32 bytes.
+	•	Option B (multihash-aware): extract the 32-byte digest from CIDv1 if you want strict multihash semantics.
+	•	With the connected wallet (user), call Files.pin(cidHash); store tx_hash on the vaultItems row.
+	•	UI can show “verified on chain” once the tx confirms.
+
+	7.	Dashboard UX
+
+	•	“Upload” button → file picker → progress bar (encrypt → upload → pin → (PUBLIC) anchor).
+	•	List items show: filename, size, time, View (gateway URL), Verify (explorer link) in PUBLIC.
+	•	In STEALTH, hide gateway/explorer links and show a simple “Stored” badge.
+
+	8.	Safety & abuse controls
+
+	•	Enforce MIME allow-list strictly on server; reject executables/archives by default.
+	•	Cap per-file and per-day limits (use VAULT_MAX_MB, add VAULT_MAX_FILES_PER_DAY).
+	•	Add a “Delete from UI” flag → marks hidden in your DB (you cannot unpin everywhere on IPFS, so be explicit in copy).
+	•	Log storage cost metrics by wallet so you understand burn.
+
+	9.	Mobile and slow networks
+
+	•	Chunk uploads (5–10 MB per chunk); retry on failure.
+	•	Keep a small local queue so a mobile user can resume if the tab reloads.
+	•	Show a success toast only after pin (and, in PUBLIC, after event mined or at least broadcast).
+
+	10.	QA checklist
+
+	•	Large file rejected with clear message.
+	•	Wrong MIME rejected.
+	•	Upload succeeds in STEALTH (no chain calls) and shows in list.
+	•	Flip to PUBLIC: same upload emits Pinned event (check local logs or Basescan on Sepolia).
+	•	Removing 5-second polling still leaves UI responsive because events trigger re-fetch (covered in Part 4).
+	•	Gateway links work in PUBLIC; hidden in STEALTH.
+
+	11.	Privacy notes for STEALTH
+
+	•	Use neutral route names (/api/files/upload), neutral contract name (Files), and never log “FSN” or .fsn.
+	•	Do not publish CIDs or gateway URLs externally while APP_MODE=STEALTH.
+
+	12.	Optional improvements (later)
+
+	•	Add per-file sharing: generate a share link that includes an encrypted key fragment (client decrypts).
+	•	Add checksum verification in UI (display SHA-256 to users).
+	•	Add storage quotas by XP tier to create a light monetization path later.

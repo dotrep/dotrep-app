@@ -1,0 +1,793 @@
+/* Signal Touchpad Component Styles */
+.signal-touchpad {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 20, 40, 0.8) 100%);
+  border: 2px solid #00f0ff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-family: 'Orbitron', sans-serif;
+  color: #00f0ff;
+  width: 340px;
+  text-align: center;
+  box-shadow: 
+    0 0 15px rgba(0, 240, 255, 0.4),
+    inset 0 0 8px rgba(0, 240, 255, 0.1);
+  backdrop-filter: blur(6px);
+  position: relative;
+  transform: scale(0.95);
+  min-height: 400px;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+/* Screen Display */
+.touchpad-screen {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #00f0ff;
+  text-shadow: 0 0 3px rgba(0, 240, 255, 0.6);
+  min-height: 95px;
+  max-height: 140px;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Oscilloscope Wave Background */
+.oscilloscope-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.wave-display {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.wave-line {
+  animation: wave-flow 3s linear infinite;
+  filter: drop-shadow(0 0 1px #00f0ff);
+}
+
+.wave-line.wave-secondary {
+  animation: wave-flow 2.5s linear infinite reverse;
+  animation-delay: -0.5s;
+}
+
+.wave-line.wave-tertiary {
+  animation: wave-flow 3.5s linear infinite;
+  animation-delay: -1s;
+}
+
+@keyframes wave-flow {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(10px);
+    opacity: 0.2;
+  }
+}
+
+.screen-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-weight: 600;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.screen-line:last-child {
+  margin-bottom: 0;
+}
+
+/* Keypad */
+.touchpad-keypad {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.keypad-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.keypad-btn {
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #00f0ff;
+  padding: 6px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 10px;
+  font-weight: 600;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smaller preset buttons F1, F2 */
+.keypad-btn.preset-btn {
+  font-size: 8px;
+  padding: 4px 3px;
+  min-height: 24px;
+  font-weight: 500;
+}
+
+.keypad-btn:hover {
+  background: rgba(0, 240, 255, 0.1);
+  border-color: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.keypad-btn.preset-btn.active {
+  background: linear-gradient(135deg, #00f0ff, #0080ff);
+  color: #000;
+  border-color: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+}
+
+.keypad-btn.freq-adjust {
+  font-size: 9px;
+}
+
+.keypad-btn.power-btn {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.keypad-btn.power-btn.on {
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  color: #000;
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+}
+
+.keypad-btn.power-btn.off {
+  background: linear-gradient(135deg, #ff4444, #cc2222);
+  color: #fff;
+  border-color: #ff4444;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+}
+
+.keypad-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+
+.keypad-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Action Buttons */
+.touchpad-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.touchpad-action-btn {
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #00f0ff;
+  padding: 6px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: 24px;
+}
+
+.touchpad-action-btn:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.touchpad-action-btn.listen-btn.active {
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  color: #000;
+  border-color: #00ff88;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.6);
+}
+
+.touchpad-action-btn.cast-btn.active {
+  background: linear-gradient(135deg, #ff8800, #ff6600);
+  color: #000;
+  border-color: #ff8800;
+  box-shadow: 0 0 12px rgba(255, 136, 0, 0.6);
+}
+
+.touchpad-action-btn.multicast-btn.active {
+  background: linear-gradient(135deg, #8800ff, #6600cc);
+  color: #fff;
+  border-color: #8800ff;
+  box-shadow: 0 0 12px rgba(136, 0, 255, 0.6);
+}
+
+.touchpad-action-btn.lock-btn {
+  font-size: 7px;
+  padding: 4px 2px;
+  min-height: 20px;
+}
+
+.touchpad-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+
+.touchpad-action-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.multicast-info {
+  font-size: 11px;
+  color: #8800ff;
+  text-shadow: 0 0 4px rgba(136, 0, 255, 0.6);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Channel Selection for MULTI mode */
+.multi-channel-section {
+  margin-bottom: 10px;
+  max-height: 70px;
+  overflow-y: auto;
+}
+
+.channel-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.channel-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+  min-width: 32px;
+  min-height: 20px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-align: center;
+  outline: none;
+}
+
+.channel-btn.selected {
+  animation: channel-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes channel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Mode-specific styling */
+.signal-touchpad.mode-cast {
+  box-shadow: 
+    0 0 20px rgba(255, 136, 0, 0.4),
+    inset 0 0 12px rgba(255, 136, 0, 0.1);
+  border-color: #ff8800;
+}
+
+.signal-touchpad.mode-listen {
+  box-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.4),
+    inset 0 0 12px rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
+}
+
+.signal-touchpad.locked {
+  border-color: #ff4444;
+  box-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.4),
+    inset 0 0 12px rgba(255, 68, 68, 0.1);
+}
+
+/* Frequency typing animation */
+.freq-typing {
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+  animation: typing-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes typing-glow {
+  0% { text-shadow: 0 0 6px rgba(255, 215, 0, 0.8); }
+  100% { text-shadow: 0 0 10px rgba(255, 215, 0, 1), 0 0 14px rgba(255, 215, 0, 0.6); }
+}
+
+/* Active mode scanning animation */
+.signal-touchpad.mode-cast .touchpad-screen,
+.signal-touchpad.mode-listen .touchpad-screen {
+  position: relative;
+  overflow: hidden;
+}
+
+.signal-touchpad.mode-cast .touchpad-screen::before,
+.signal-touchpad.mode-listen .touchpad-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.1), transparent);
+  animation: scanning 3s ease-in-out infinite;
+}
+
+@keyframes scanning {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+@keyframes freq-flicker {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes xpBurst {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 0; }
+}
+
+.touchpad-action-btn.unlock-btn {
+  background: linear-gradient(135deg, #ff4444, #cc2222);
+  color: #fff;
+  border-color: #ff4444;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+}
+
+/* Disabled broadcast button styling */
+.touchpad-action-btn.disabled-broadcast {
+  background: rgba(100, 100, 100, 0.3) !important;
+  border-color: #666666 !important;
+  color: #999999 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.touchpad-action-btn.disabled-broadcast:hover {
+  background: rgba(100, 100, 100, 0.3) !important;
+  transform: none !important;
+}
+
+/* Listening status display */
+.listening-status {
+  margin-top: 4px;
+  padding: 4px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 3px;
+  border-left: 2px solid #00ff88;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* Broadcast warning styling */
+.broadcast-warning {
+  margin-top: 4px;
+  padding: 4px;
+  background: rgba(255, 68, 68, 0.1);
+  border-radius: 3px;
+  border-left: 2px solid #ff4444;
+}
+
+/* Signal equalizer animation for listening mode */
+.signal-equalizer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 20px;
+  gap: 2px;
+  margin: 4px 0;
+}
+
+.eq-bar {
+  width: 3px;
+  background: linear-gradient(to top, #00ff88, #00ff88aa);
+  border-radius: 1px;
+  animation: eq-bounce 1.5s ease-in-out infinite;
+}
+
+.eq-bar:nth-child(1) { animation-delay: 0s; }
+.eq-bar:nth-child(2) { animation-delay: 0.1s; }
+.eq-bar:nth-child(3) { animation-delay: 0.2s; }
+.eq-bar:nth-child(4) { animation-delay: 0.3s; }
+.eq-bar:nth-child(5) { animation-delay: 0.4s; }
+.eq-bar:nth-child(6) { animation-delay: 0.5s; }
+.eq-bar:nth-child(7) { animation-delay: 0.6s; }
+.eq-bar:nth-child(8) { animation-delay: 0.7s; }
+
+@keyframes eq-bounce {
+  0%, 100% { height: 3px; }
+  50% { height: 18px; }
+}
+
+/* Max Channels Warning */
+.max-channels-warning {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6600, #ff3300);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: bold;
+  animation: warning-bounce 2s ease-out forwards;
+  z-index: 20;
+  box-shadow: 0 0 12px rgba(255, 102, 0, 0.8);
+}
+
+@keyframes warning-bounce {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0px); }
+  85% { opacity: 1; transform: translateX(-50%) translateY(0px); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+@keyframes channel-pulse {
+  0% { box-shadow: 0 0 12px rgba(255, 102, 0, 0.8), 0 0 6px rgba(255, 102, 0, 0.4) inset; }
+  50% { box-shadow: 0 0 20px rgba(255, 102, 0, 1), 0 0 10px rgba(255, 102, 0, 0.6) inset; }
+  100% { box-shadow: 0 0 12px rgba(255, 102, 0, 0.8), 0 0 6px rgba(255, 102, 0, 0.4) inset; }
+}
+
+/* Channel button enhanced styles */
+.channel-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.channel-btn.selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: channel-sweep 2s ease-in-out infinite;
+}
+
+@keyframes channel-sweep {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* XP Gain Popup */
+.xp-gain-popup {
+  position: absolute;
+  top: -30px;
+  right: 10px;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  animation: xp-popup 2s ease-out forwards;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.xp-reason {
+  display: block;
+  font-size: 8px;
+  opacity: 0.8;
+}
+
+@keyframes xp-popup {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-5px) scale(1.1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-8px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-12px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Special Message Popup */
+.special-message {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #8800ff, #6600cc);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  animation: special-popup 3s ease-out forwards;
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(136, 0, 255, 0.6);
+  white-space: nowrap;
+}
+
+@keyframes special-popup {
+  0% {
+    transform: translateX(-50%) translateY(0) scale(0.7);
+    opacity: 0;
+  }
+  15% {
+    transform: translateX(-50%) translateY(-5px) scale(1.05);
+    opacity: 1;
+  }
+  85% {
+    transform: translateX(-50%) translateY(-8px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-12px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Enhanced Button Hover Effects */
+.keypad-btn:hover:not(:disabled) {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.keypad-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+}
+
+.touchpad-action-btn:hover:not(:disabled) {
+  border-color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.touchpad-action-btn:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+}
+
+/* Active Signal Pulse Animation */
+.signal-touchpad.active {
+  animation: signal-pulse 2s ease-in-out infinite;
+}
+
+@keyframes signal-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(0, 240, 255, 0.4),
+      inset 0 0 12px rgba(0, 240, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(0, 240, 255, 0.6),
+      inset 0 0 18px rgba(0, 240, 255, 0.2);
+  }
+}
+
+/* Frequency Display Flicker for Active Modes */
+.signal-touchpad.active .freq-typing,
+.signal-touchpad.active .screen-line:nth-child(2) span:not(.freq-typing) {
+  animation: freq-flicker 1.5s ease-in-out infinite;
+}
+
+@keyframes freq-flicker {
+  0%, 90%, 100% {
+    text-shadow: 0 0 4px rgba(0, 240, 255, 0.6);
+  }
+  95% {
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.9), 0 0 12px rgba(0, 240, 255, 0.5);
+  }
+}
+
+/* Broadcast Pulse Ring Animation */
+.broadcast-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border: 2px solid #00FFFF;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: broadcast-pulse 0.5s ease-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes broadcast-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    border-color: #00FFFF;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+    border-color: rgba(0, 255, 255, 0.1);
+  }
+}
+
+/* Locked keypad state */
+.keypad-locked .keypad-btn:disabled {
+  pointer-events: none;
+  opacity: 0.4;
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(100, 100, 100, 0.3);
+}
+
+/* Locked frequency display */
+.locked-info {
+  animation: lock-pulse 2s ease-in-out infinite;
+}
+
+@keyframes lock-pulse {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0.7;
+  }
+}
+
+/* XP Gain popup with glow animation */
+.xp-gain-popup {
+  animation: xp-glow 2s ease-out forwards;
+}
+
+@keyframes xp-glow {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+    text-shadow: 0 0 4px #ffd700;
+  }
+  20% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 1;
+    text-shadow: 0 0 15px #ffd700, 0 0 25px rgba(255, 215, 0, 0.8);
+  }
+  80% {
+    transform: translateY(-20px) scale(1);
+    opacity: 1;
+    text-shadow: 0 0 10px #ffd700;
+  }
+  100% {
+    transform: translateY(-30px) scale(0.9);
+    opacity: 0;
+    text-shadow: 0 0 5px #ffd700;
+  }
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .signal-touchpad {
+    width: 200px;
+    padding: 10px;
+  }
+
+  .keypad-btn {
+    padding: 6px 4px;
+    font-size: 10px;
+    min-height: 28px;
+  }
+
+  .touchpad-action-btn {
+    padding: 8px 6px;
+    font-size: 9px;
+  }
+
+  .touchpad-screen {
+    font-size: 8px;
+    padding: 6px;
+  }
+}
+
+/* Trust Badge Component */
+.trust-badge {
+  background: linear-gradient(135deg, #00ffcc, #00ccaa);
+  font-family: "Orbitron", monospace;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #001010;
+  text-shadow: 0 0 6px #0ff;
+  border: 1px solid #00ffcc;
+  margin: 4px;
+  display: inline-block;
+  animation: trust-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes trust-glow {
+  0% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.6); }
+  100% { box-shadow: 0 0 20px rgba(0, 255, 204, 1); }
+}
+
+/* Multi-Channel Selection */
+.multi-channel-section {
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid rgba(255, 102, 0, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.channel-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.channel-btn {
+  transition: all 0.2s ease;
+}
+
+.channel-btn:hover {
+  transform: scale(1.05);
+}
+
+.channel-btn.selected {
+  animation: channel-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes channel-pulse {
+  0% { box-shadow: 0 0 8px rgba(255, 102, 0, 0.8); }
+  100% { box-shadow: 0 0 16px rgba(255, 102, 0, 1); }
+}

@@ -1,0 +1,416 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+/* Enhanced XP Modal Styling */
+
+.xp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.xp-modal {
+  background: rgba(10, 26, 47, 0.98);
+  color: #00D4FF;
+  border: 3px solid #00D4FF;
+  border-radius: 16px;
+  padding: 32px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 0 60px rgba(0, 212, 255, 0.5), 
+              0 0 120px rgba(0, 170, 255, 0.3),
+              inset 0 0 25px rgba(0, 212, 255, 0.15);
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+  animation: modalSlideIn 0.4s ease-out;
+}
+
+.xp-close {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  background: none;
+  color: #00D4FF;
+  font-size: 28px;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 4px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.xp-close:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.6),
+              0 0 30px rgba(0, 170, 255, 0.3);
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.xp-modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.8),
+               0 0 30px rgba(0, 170, 255, 0.4);
+  letter-spacing: 2px;
+}
+
+/* Task Completion Animation */
+.task-complete {
+  background: linear-gradient(135deg, #00ff88, #00cc66) !important;
+  animation: task-complete-glow 3s ease-out forwards;
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+}
+
+@keyframes task-complete-glow {
+  0% { 
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+  }
+  50% { 
+    background: linear-gradient(135deg, #00ffaa, #00dd77);
+    box-shadow: 0 0 30px rgba(0, 255, 136, 1);
+  }
+  100% { 
+    background: rgba(10, 26, 47, 0.98);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+  }
+}
+
+/* Tab Switching Animation */
+.tab-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tab-content.switching {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.tab-button {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  color: #00D4FF;
+  padding: 8px 16px;
+  margin: 0 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #00D4FF, #0099cc);
+  color: #000;
+  border-color: #00D4FF;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+}
+
+.tab-button:hover {
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+/* Next Task Bounce Animation */
+.next-task-bounce {
+  animation: next-task-bounce 0.6s ease-out;
+}
+
+@keyframes next-task-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Checkmark Animation */
+.checkmark-animation {
+  position: relative;
+  display: inline-block;
+}
+
+.checkmark-animation::before {
+  content: '✓';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 14px;
+  opacity: 0;
+  animation: checkmark-fade 2s ease-out forwards;
+}
+
+@keyframes checkmark-fade {
+  0% { opacity: 0; transform: translateY(-50%) scale(0.5); }
+  20% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+  40% { opacity: 1; transform: translateY(-50%) scale(1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(1); }
+}
+
+.xp-modal p {
+  margin: 8px 0;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+  opacity: 0.9;
+}
+
+.xp-bar-container {
+  width: 100%;
+  background: rgba(34, 34, 34, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  border-radius: 12px;
+  height: 20px;
+  margin: 16px 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 15px rgba(0, 212, 255, 0.3),
+              0 0 10px rgba(0, 170, 255, 0.2);
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00D4FF 0%, #00aaff 100%);
+  width: 0%;
+  transition: width 0.4s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.7),
+              0 0 30px rgba(0, 170, 255, 0.4);
+  position: relative;
+  border-radius: 12px;
+}
+
+.xp-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
+.xp-modal h3 {
+  margin: 20px 0 12px 0;
+  font-size: 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.xp-modal h3:hover {
+  text-shadow: 0 0 12px rgba(0, 255, 136, 1);
+  transform: scale(1.02);
+}
+
+.xp-modal h3:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -45px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.9);
+  color: #00D4FF;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+  z-index: 1000;
+  font-weight: 400;
+  text-shadow: 0 0 6px rgba(0, 212, 255, 0.6);
+}
+
+.xp-modal h4 {
+  margin: 24px 0 12px 0;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.xp-modal ul {
+  padding-left: 0;
+  list-style-type: none;
+  color: #88f;
+  margin: 0;
+}
+
+.xp-modal li {
+  padding: 6px 0;
+  position: relative;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.xp-modal li:hover {
+  opacity: 1;
+}
+
+.xp-modal li .xp-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.xp-modal li .xp-amount {
+  font-weight: 700;
+  color: #00D4FF;
+  text-shadow: 0 0 6px rgba(0, 212, 255, 0.6);
+}
+
+/* Quest Item Interaction Styles */
+.quest-item {
+  position: relative;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 4px -12px;
+}
+
+.quest-item.clickable {
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.quest-item.clickable:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.quest-item.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+.quest-item.on-cooldown {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quest-item.on-cooldown:hover {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+  transform: none;
+}
+
+.quest-item.completing {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.quest-item.completing:hover {
+  background: rgba(255, 255, 0, 0.1);
+  border: 1px solid rgba(255, 255, 0, 0.3);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.2);
+}
+
+.completing-indicator {
+  color: #00D4FF;
+  font-weight: bold;
+  margin-left: 8px;
+  opacity: 0.8;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Signal Status Badge */
+.signal-status {
+  background-color: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  margin: 12px 0;
+  box-shadow: 0 0 6px #00ff88;
+  transition: all 0.2s ease-in-out;
+}
+
+.signal-status-dot {
+  height: 12px;
+  width: 12px;
+  background-color: #00ff88;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: signalPulseGlow 2s infinite;
+}
+
+@keyframes signalPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 6px #00ff88;
+  }
+  50% {
+    box-shadow: 0 0 14px #00ff88;
+  }
+}

@@ -1,0 +1,163 @@
+🛠️ Replit AI Instructions: Unify FSN NFTs + Badges + Feed Sync
+📌 This is a full-system update. You are building a unified, on-brand, data-driven, and interactive badge/NFT layer across FSN's Social and Vault views.
+
+🧩 1. Unify NFTs and Badges Under One System
+Goal: All badges should be treated as NFTs, with real metadata, stored and displayed consistently across the platform.
+
+Instructions:
+
+Define all badges as NFTs with the following metadata format:
+
+json
+Copy
+Edit
+{
+  "type": "badge",
+  "name": "Core Signal",
+  "id": "badge_core_signal",
+  "rarity": "epic",
+  "description": "Awarded for reaching Core Signal level.",
+  "earnedFrom": "Signal",
+  "dateEarned": "2025-07-13",
+  "xpBonus": 100,
+  "visual": "/assets/badges/core-signal.svg",
+  "soulbound": true
+}
+Store these badge-NFTs in the same vault/NFT registry used in the Vault → Data Manager screen.
+
+In the Vault > NFTs view, show all NFTs, including those of type "badge".
+
+In the Social tab > Badges, filter only NFTs of type badge.
+
+Ensure newly earned badges are automatically added to the user’s NFT list and show up both in Vault and Social tab.
+
+🔄 2. Auto-Sync Badges with User Actions (Pulse, XP, Game Center, etc.)
+Goal: Badges earned from quests, XP streaks, Signal unlocks, or onboarding should appear instantly.
+
+Instructions:
+
+Add backend logic or client-side triggers that:
+
+Detect badge-earning conditions (e.g. Signal Level ≥ 2, 7-day login streak, completed onboarding)
+
+Mint or activate the corresponding NFT badge (from metadata registry)
+
+Store it in the user’s vault
+
+Refresh Social > Badges grid to include the new badge
+
+Example triggers:
+
+js
+Copy
+Edit
+if (user.signalLevel === 2 && !user.hasBadge("badge_core_signal")) {
+  mintBadge("badge_core_signal");
+}
+🎨 3. Redesign Badge UI (Visual & UX Fixes)
+Goal: Remove placeholder art and unify badge design to match FSN's futuristic aesthetic.
+
+Instructions:
+
+Replace all white-background badge icons with SVGs or PNGs using dark themes + neon accent colors.
+
+Use badge icon containers that are:
+
+Circular or glowing capsule shapes
+
+Neon border glow (cyan, violet, orange based on badge type)
+
+Embossed or gradient-fill black backgrounds
+
+Add optional rarity ring:
+
+Common = no ring
+
+Rare = thin glow ring
+
+Epic = double glow pulse
+
+Legendary = animated border pulse
+
+Add hover effect:
+
+css
+Copy
+Edit
+.badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px #00f0ff88;
+  cursor: pointer;
+}
+🧠 4. Add Interactive Badge Details
+Goal: Clicking a badge opens a detail modal.
+
+Instructions:
+
+When any badge is clicked, open a modal showing:
+
+Badge name + icon
+
+Description
+
+How it was earned
+
+Rarity
+
+XP reward (if any)
+
+Date earned
+
+Source system: (Pulse, Game Center, Trust, etc.)
+
+Add optional buttons:
+
+Equip Badge (for social flair or effects)
+
+View on Chain (if relevant)
+
+Share Badge (link or image)
+
+🔗 5. Link Social Feed + Badges
+Goal: When an event in the Social Feed results in a badge, clicking the feed item shows the badge.
+
+Instructions:
+
+If a feed item includes a badge-earning event:
+
+Append + badge or icon in feed preview (e.g. “🎖 earned: Core Signal”)
+
+On click, AI panel explains badge + offers to view it
+
+json
+Copy
+Edit
+{
+  "eventType": "SIGNAL_UNLOCK",
+  "user": "satoshi.fsn",
+  "timestamp": "2m ago",
+  "xp": 50,
+  "badge": "badge_core_signal"
+}
+Allow AI panel or direct click to open that badge’s modal view.
+
+✅ 6. Clean Up Vault NFTs
+Goal: Make Vault NFTs view feel as polished as the Social tab.
+
+Instructions:
+
+Align NFT tile layout (e.g. border radius, neon hover)
+
+Show NFT type icon in top-right (e.g. Badge, Collectible, Beacon)
+
+Add filter tabs: All | Badges | Signal | Collectibles | Storage
+
+Add earned date + rarity indicator in footer
+
+Optional: allow pinning favorite NFTs
+
+💡 Bonus (optional)
+If user has earned multiple of the same badge (e.g. seasonal quest streaks), show it like:
+
+🧩 Hex Map Fragment (3 collected)
+Hover shows progress: 3 of 6 for full Beacon Map

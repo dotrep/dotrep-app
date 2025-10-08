@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FreeSpace Network - Claim your Web3 identity</title>
+    <meta name="description" content="Claim your Web3 identity with a .fsn name. Join the FreeSpace Network, earn XP, and emit your signal in the decentralized world." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="FreeSpace Network - Claim your Web3 identity" />
+    <meta property="og:description" content="Claim your Web3 identity with a .fsn name. Join the FreeSpace Network, earn XP, and emit your signal in the decentralized world." />
+    <meta property="og:type" content="website" />
+    
+    <style>
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+      }
+      
+      @supports (-webkit-touch-callout: none) {
+        html, body, #root {
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+        }
+      }
+    </style>
+    <!-- Safari Mobile Viewport Fix -->
+    <script>
+      // Fix for 100vh in Safari mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        function setVh() {
+          let vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        
+        // Set initially and update on resize
+        setVh();
+        window.addEventListener('resize', setVh);
+        window.addEventListener('orientationchange', setVh);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

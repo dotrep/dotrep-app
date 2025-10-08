@@ -1,0 +1,16 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rocket icon centered and properly sized -->
+  <g transform="translate(60,60)">
+    <!-- Rocket body -->
+    <path d="M0,-35 L-10,-12 L-10,12 L-5,18 L5,18 L10,12 L10,-12 Z" fill="#00f0ff" stroke="#ffffff" stroke-width="2"/>
+    <!-- Rocket tip -->
+    <path d="M0,-35 L-7,-47 L0,-52 L7,-47 Z" fill="#ffffff"/>
+    <!-- Engine flames -->
+    <path d="M-7,18 L-4,30 L0,24 L4,30 L7,18" fill="#ff6600" opacity="0.8"/>
+    <!-- Side fins -->
+    <path d="M-10,-6 L-18,-3 L-18,6 L-10,10" fill="#0099cc"/>
+    <path d="M10,-6 L18,-3 L18,6 L10,10" fill="#0099cc"/>
+    <!-- Window -->
+    <circle cx="0" cy="-18" r="5" fill="#66ccff" opacity="0.7"/>
+  </g>
+</svg>

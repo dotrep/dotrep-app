@@ -1,0 +1,107 @@
+## ✅ Task #10 – Replit Instructions  
+**Title**: Create XP Reward Triggers Per Game (FSN Phase 0 – Task 10)
+
+---
+
+### 🎯 Objective  
+Ensure XP is properly awarded for gameplay actions using the centralized XP engine. Triggers must fire upon game completion (win or play), log XP events, and update the user's XP total accordingly.
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Use the Shared `awardXP` Function
+
+If not already created, make sure you have this utility:
+
+```js
+// lib/awardXP.js
+
+import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase/initFirebase";
+import XP_ACTIONS from "./xpActions";
+
+export const awardXP = async (uid, action) => {
+  const xpValue = XP_ACTIONS[action] || 0;
+  if (xpValue === 0) return;
+
+  const userRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userRef);
+  const currentXP = userSnap.data()?.xp || 0;
+  const newXP = currentXP + xpValue;
+
+  await updateDoc(userRef, { xp: newXP });
+
+  await addDoc(collection(db, "xpLogs"), {
+    uid,
+    action,
+    xpEarned: xpValue,
+    timestamp: serverTimestamp()
+  });
+};
+```
+
+---
+
+### ✅ 2. Add XP Triggers to Each Game
+
+#### 🧠 In `MemoryGame.jsx` (win condition)
+Replace your win logic with:
+
+```js
+useEffect(() => {
+  if (matched.length === deck.length && !finished) {
+    awardXP(uid, "win_game"); // from XP_ACTIONS
+    setFinished(true);
+  }
+}, [matched]);
+```
+
+#### ⚡ In `ClickSpeedGame.jsx`
+Inside the countdown complete logic:
+
+```js
+if (clicks >= 30) {
+  awardXP(uid, "win_game");
+} else {
+  awardXP(uid, "play_game");
+}
+```
+
+✅ This gives XP for participation and **bonus XP for performance**
+
+---
+
+### ✅ 3. Update XP_ACTIONS (if not already done)
+
+In `lib/xpActions.js`:
+
+```js
+const XP_ACTIONS = {
+  play_game: 5,
+  win_game: 10,
+  // ... other actions
+};
+```
+
+---
+
+### 🧪 QA Checklist
+
+| Scenario                          | XP Action Triggered | XP Value |
+|-----------------------------------|----------------------|----------|
+| User plays but does not win       | `play_game`          | 5 XP     |
+| User wins memory or click game    | `win_game`           | 10 XP    |
+| Game re-played                    | ✅ New XP each time  |          |
+| XP logs recorded in `xpLogs`      | ✅                   |          |
+
+---
+
+### ✅ Summary
+
+- All FSN games now reward XP via centralized engine
+- XP amounts pulled from `xpActions.js`
+- Logs added for every XP award
+- Fully aligned with future gamification and airdrop scoring

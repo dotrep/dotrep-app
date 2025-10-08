@@ -1,0 +1,253 @@
+/* Admin Dashboard Styles */
+
+.admin-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  position: relative;
+  background-color: #000;
+  color: #fff;
+}
+
+.admin-login-container {
+  background-color: rgba(10, 25, 41, 0.8);
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+  z-index: 10;
+}
+
+.admin-login-container h1 {
+  color: #00f0ff;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.admin-login-container p {
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.admin-login-container button + button {
+  margin-top: 0.5rem;
+}
+
+/* Main Admin Dashboard */
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  background-color: #000;
+  color: #fff;
+  padding: 1.5rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+.admin-title h1 {
+  color: #00f0ff;
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.admin-title p {
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.admin-actions {
+  display: flex;
+}
+
+.admin-stats {
+  background-color: rgba(10, 25, 41, 0.7);
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  z-index: 10;
+}
+
+.stats-card {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  flex: 1;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #00f0ff;
+}
+
+.admin-tabs {
+  background-color: rgba(10, 25, 41, 0.7);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  padding: 1rem;
+  z-index: 10;
+  flex: 1;
+}
+
+.admin-tab-content {
+  padding: 1rem 0;
+}
+
+/* Domain Table Styling */
+.domains-filter {
+  margin-bottom: 1.5rem;
+}
+
+.search-form {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.search-input {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-select {
+  background-color: rgba(30, 41, 59, 0.8);
+  color: white;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.status-registered {
+  background-color: rgba(52, 211, 153, 0.2);
+  color: rgb(52, 211, 153);
+}
+
+.status-reserved {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: rgb(251, 191, 36);
+}
+
+.status-available {
+  background-color: rgba(96, 165, 250, 0.2);
+  color: rgb(96, 165, 250);
+}
+
+.status-banned {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+}
+
+/* Reserved Names Section */
+.reserved-names-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .reserved-names-section {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+.reserve-form-container {
+  background-color: rgba(15, 23, 42, 0.6);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 240, 255, 0.1);
+}
+
+.reserve-form-container h3 {
+  margin-bottom: 1rem;
+  color: #00f0ff;
+}
+
+.reserve-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reserved-names-list h3 {
+  margin-bottom: 1rem;
+  color: #00f0ff;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  opacity: 0.7;
+}
+
+/* Table Styling Enhancements */
+.domains-table,
+.logs-table,
+.reserved-names-list {
+  overflow-x: auto;
+}
+
+/* General Utility Classes */
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mr-4 {
+  margin-right: 1rem;
+}
+
+.text-center {
+  text-align: center;
+}

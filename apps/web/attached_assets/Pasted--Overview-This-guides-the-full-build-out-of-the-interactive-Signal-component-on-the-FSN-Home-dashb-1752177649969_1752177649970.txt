@@ -1,0 +1,158 @@
+🧭 Overview
+This guides the full build-out of the interactive Signal component on the FSN Home dashboard after signalActive === true. It includes:
+
+Frequency tuning UI
+
+Signal broadcasting & listening modes
+
+MHz readout animation
+
+Cast/Listen button logic
+
+Signal state saved in localStorage or Context
+
+📁 Files to Modify or Create
+File	Purpose
+/src/components/SignalDial.jsx	Main dial UI
+/src/styles/SignalDial.css	Visual styles for dial/buttons
+/src/context/UserContext.js	Signal state tracking
+/src/pages/Home.jsx or /App.jsx	Where SignalDial is rendered
+
+🧠 STEP 1: State Management
+1A. Add Signal State to Context (UserContext.js)
+In your user context:
+
+js
+Copy
+Edit
+const [signalMode, setSignalMode] = useState("OFF"); // "OFF", "CAST", "LISTEN"
+const [currentFreq, setCurrentFreq] = useState(9.5); // default MHz
+Expose these in context provider:
+
+js
+Copy
+Edit
+{ signalMode, setSignalMode, currentFreq, setCurrentFreq }
+⚙️ STEP 2: Render SignalDial on Home Page
+In Home.jsx, where the Pulse/Signal/Beacon gauges are displayed:
+
+jsx
+Copy
+Edit
+import SignalDial from "../components/SignalDial";
+
+{signalActive && <SignalDial />}
+🧪 STEP 3: SignalDial Component Logic
+3A. Inside SignalDial.jsx, render the dial:
+jsx
+Copy
+Edit
+const SignalDial = () => {
+  const { signalMode, setSignalMode, currentFreq, setCurrentFreq } = useUser();
+
+  const handleCast = () => {
+    setSignalMode("CAST");
+  };
+
+  const handleListen = () => {
+    setSignalMode("LISTEN");
+  };
+
+  const increaseFreq = () => {
+    if (currentFreq < 30) setCurrentFreq(prev => +(prev + 0.1).toFixed(2));
+  };
+
+  const decreaseFreq = () => {
+    if (currentFreq > 0) setCurrentFreq(prev => +(prev - 0.1).toFixed(2));
+  };
+
+  return (
+    <div className="signal-dial">
+      <div className="dial-screen">
+        <div className="dial-line">
+          <span className="label">MODE:</span> {signalMode}
+        </div>
+        <div className="dial-line">
+          <span className="label">FREQ:</span> {currentFreq.toFixed(2)} MHz
+        </div>
+      </div>
+
+      <div className="freq-controls">
+        <button onClick={decreaseFreq}>◄◄</button>
+        <button onClick={increaseFreq}>►►</button>
+      </div>
+
+      <div className="signal-actions">
+        <button className={`cast-btn ${signalMode === "CAST" ? "active" : ""}`} onClick={handleCast}>📡 CAST</button>
+        <button className={`listen-btn ${signalMode === "LISTEN" ? "active" : ""}`} onClick={handleListen}>🎧 LISTEN</button>
+      </div>
+    </div>
+  );
+};
+🎨 STEP 4: Style the SignalDial UI
+In /src/styles/SignalDial.css:
+
+css
+Copy
+Edit
+.signal-dial {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 2px solid #0ff;
+  border-radius: 16px;
+  padding: 20px;
+  font-family: 'Orbitron', sans-serif;
+  color: #0ff;
+  width: 280px;
+  text-align: center;
+  box-shadow: 0 0 20px #0ff5;
+}
+
+.dial-screen {
+  background: radial-gradient(circle, #000 40%, #0ff1 100%);
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.label {
+  color: #888;
+  margin-right: 6px;
+}
+
+.freq-controls button,
+.signal-actions button {
+  font-family: 'Orbitron', sans-serif;
+  background: #111;
+  border: 1px solid #0ff;
+  color: #0ff;
+  padding: 10px 14px;
+  margin: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.signal-actions .active {
+  background: #0ff;
+  color: #000;
+  box-shadow: 0 0 10px #0ff;
+}
+💾 STEP 5: Save Signal State (Optional)
+If you want state to persist across page reloads:
+
+In UserContext.js:
+js
+Copy
+Edit
+useEffect(() => {
+  const savedSignalMode = localStorage.getItem("signalMode");
+  const savedFreq = localStorage.getItem("currentFreq");
+  if (savedSignalMode) setSignalMode(savedSignalMode);
+  if (savedFreq) setCurrentFreq(parseFloat(savedFreq));
+}, []);
+
+useEffect(() => {
+  localStorage.setItem("signalMode", signalMode);
+  localStorage.setItem("currentFreq", currentFreq);
+}, [signalMode, currentFreq]);

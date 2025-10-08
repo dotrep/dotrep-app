@@ -1,0 +1,130 @@
+Task: Upgrade the current FSN dashboard to its final state — transforming it into a fully animated, Tron-styled Trust Engine cockpit with Pulse, Signal, and Beacon indicators, active feedback, and recovery flows — all while preserving your existing nav layout and live data.
+
+🔧 STRUCTURE: MAINTAIN THESE
+✅ Do not change or remove:
+
+Top nav bar (Home, Vault, Social, Game Center)
+
+.fsn name
+
+XP count
+
+XP in last 7 days
+
+The logic for Pulse, Signal, and Beacon gating
+
+The “Next Action” recommendation box
+
+🧠 SYSTEMS TO FINALIZE
+1. 🫀 PULSE GAUGE
+Replace the current flat Pulse score (50/70) with a circular animated gauge or glowing ring meter
+
+The ring glows brighter as the Pulse gets stronger
+
+Below 60 = dimmed ring (grayish flicker effect)
+
+Tooltip on hover:
+
+“Pulse is your identity’s health. Stay active to keep it strong.”
+
+Add animation when Pulse changes
+Example: If Pulse increases, the ring flashes briefly in cyan or teal
+
+2. 📡 SIGNAL BAR
+Replace current text (“10/100”) with a dynamic horizontal meter
+
+Cap the fill to the Pulse level
+
+Add a glowing effect that brightens at higher trust
+
+Tooltip on hover:
+
+“Signal reflects your behavioral trust. It’s capped by your Pulse.”
+
+Bonus: When capped, show a faint glow around the bar with label:
+
+“CAPPED”
+
+3. 🛰️ BEACON PANEL
+Convert Beacon section to a modular console-like card
+
+State logic:
+
+If locked: show 🔒 icon and a pulsing ring behind it
+
+If warming up (Pulse ≥ 70 but Signal < 80):
+Show radar animation with tooltip:
+
+“Your Beacon is warming up. Boost your Signal to activate.”
+
+If unlocked: Beacon console glows and reads ONLINE, shows a subtle pulse animation
+
+4. ✨ XP DISPLAY & PROGRESSION
+Keep current XP number
+
+Add a glowing progress bar showing XP earned toward next milestone (can be based on weekly goal or static level threshold, like “500 XP”)
+
+Tooltip:
+
+“XP unlocks Vault skins, quests, and token access.”
+
+Bonus: When user earns XP, flash an animation on this bar
+
+5. ✅ NEXT ACTION BLOCK
+Keep the logic for “Next Action” but add:
+
+A small icon (📌 or ⚙️) for clarity
+
+Background glow that increases subtly when user is doing well
+
+Success feedback:
+
+If last action was completed, show green checkmark or pulse ring flash
+
+🖥️ UI POLISH / ANIMATION
+Element	Add
+Pulse Ring	Glow gradient fill + dim/flicker < 60
+Signal Meter	Animate fill, throttle highlight if capped
+Beacon Console	Locked = gray flicker; Warming = pulsing radar; Unlocked = glowing ONLINE
+XP Progress	Animate on gain
+“Next Action” Box	Brighten when fulfilled, change copy when satisfied
+Identity Incentivized	Pulse outward slowly as background animation
+Background	Maintain Tron-style gridlines — animate subtle particle drift or node pulsing if possible
+
+⚙️ INTERACTION BEHAVIOR
+Situation	Visual Response
+Pulse increases	Ring glows for 1.5s, emits faint wave
+Signal increases	Bar fill slides upward, tooltip updates
+XP earned	Progress bar flashes
+User becomes Beacon-eligible	Show modal or toast:
+
+“🔓 Your Beacon is now online. You’ve unlocked global trust projection.”
+| User reactivates after drop | Show “Welcome Back” toast + Pulse flicker restabilizing |
+
+📱 RESPONSIVENESS
+Stack gauges vertically on mobile
+
+Ensure nav remains sticky
+
+Show only relevant scores with collapsed details for XP or Signal on small screens
+
+🚫 DO NOT
+Remove or hide the nav bar
+
+Change how XP or Pulse is stored
+
+Display only raw numbers — visual feedback must lead
+
+✨ OPTIONAL (Post-MVP Enhancements)
+Add tabs below XP to view:
+
+“Pulse History” (last 30 days)
+
+“Signal Sources” (how XP/quests affected it)
+
+Add hoverable sparkline charts
+
+Add radar-style “Trust Map” animation when Beacon is unlocked
+
+✅ END RESULT:
+A live cockpit that makes users feel like their crypto identity is breathing — growing stronger as they engage, dimming if they stop, and broadcasting proudly when they earn it.

@@ -1,0 +1,158 @@
+Objective:
+
+Fix NaN XP bug
+
+Properly gate Vault Tier, Signal, and Beacon behind XP + conditions
+
+Add XP level-up tracking and visual feedback
+
+Prepare base logic for future badge-based progression
+
+🧠 XP Logic – Fixes & Upgrades
+✅ 1. Fix NaN XP Bug
+Bug Description:
+In the Vault upgrade screen, NaN XP needed to upgrade appears instead of a proper value.
+
+🔧 Fix:
+In the component that renders the XP bar (likely in VaultPanel.jsx or VaultUpgradeModal.jsx):
+
+js
+Copy
+Edit
+const currentXP = userProgress.xp || 0;
+const requiredXP = 250; // or whatever is defined per tier
+
+const xpToNextTier = requiredXP - currentXP;
+const displayXP = isNaN(xpToNextTier) ? '0' : xpToNextTier;
+And update display:
+
+jsx
+Copy
+Edit
+<p>{displayXP} XP needed to upgrade</p>
+✅ 2. Add XP Gating Logic
+🔓 Vault Tiers
+Vault upgrade should unlock based on XP and file count.
+
+Requirements Example:
+
+Tier	File Limit	NFT Limit	XP Required
+1 (Explorer)	5 files	1 NFT	0 XP
+2 (Navigator)	10 files	3 NFTs	250 XP
+3 (Sentinel)	20 files	5 NFTs	750 XP
+
+💻 In your vaultManager.js or similar logic file:
+js
+Copy
+Edit
+function getVaultTier(xp) {
+  if (xp >= 750) return 'Sentinel';
+  if (xp >= 250) return 'Navigator';
+  return 'Explorer';
+}
+
+function getVaultLimits(tier) {
+  switch (tier) {
+    case 'Sentinel':
+      return { files: 20, nfts: 5 };
+    case 'Navigator':
+      return { files: 10, nfts: 3 };
+    default:
+      return { files: 5, nfts: 1 };
+  }
+}
+Then reference getVaultTier(user.xp) when displaying UI or blocking uploads.
+
+🔓 Signal Unlock
+Condition:
+Signal unlocks when:
+
+XP ≥ 100
+
+Pulse ≥ 70 Hz
+
+At least 1 broadcast sent
+
+Example:
+
+js
+Copy
+Edit
+const signalUnlocked =
+  user.xp >= 100 &&
+  user.pulse >= 70 &&
+  user.broadcasts.length >= 1;
+Use this boolean to:
+
+Unlock UI interactions (remove lock overlay)
+
+Trigger FSN Observer AI tooltip if not met
+
+Display a small "🔓 Signal Unlocked!" popup when all are met
+
+🔓 Beacon Unlock
+Condition:
+
+Signal unlocked
+
+3+ days of login streak
+
+XP ≥ 500
+
+Track login streak in userProgress.lastLoginDates[] and count unique days.
+
+📈 3. XP Level-Up Tracker
+Add a level system based on XP thresholds.
+
+Example Levels:
+Level	XP Required
+1	0–99
+2	100–249
+3	250–499
+4	500–749
+5	750+
+
+Logic:
+js
+Copy
+Edit
+function getUserLevel(xp) {
+  if (xp >= 750) return 5;
+  if (xp >= 500) return 4;
+  if (xp >= 250) return 3;
+  if (xp >= 100) return 2;
+  return 1;
+}
+Update the header XP display to show:
+
+jsx
+Copy
+Edit
+Lvl {getUserLevel(user.xp)} • {user.xp} XP
+✨ 4. Optional: Visual XP Feedback (Level-Up Ping)
+Add a glow/animation popup (like:
+
+🔥 “Level Up! You’re now Lvl 2 — Navigator Tier unlocked!”)
+
+Trigger this when level changes:
+
+Track previousLevel vs newLevel
+
+Use animation class like:
+
+css
+Copy
+Edit
+.level-up-toast {
+  background: #0ff;
+  color: #000;
+  animation: pulseGlow 1s ease-in-out;
+}
+✅ Summary of What This Unlocks
+Feature	Unlocks At	Output
+Vault Tier 2	XP ≥ 250	10 file limit, 3 NFTs
+Signal UI	XP ≥ 100 + Pulse ≥ 70 + 1 Cast	Can broadcast signals
+Beacon	Signal unlocked + XP ≥ 500 + 3-day streak	Show advanced XP dashboard
+XP Level	XP ranges	Level label (Lvl 1–5) on HUD
+Level-Up Toast	Level increases	Visual glow + encouragement
+

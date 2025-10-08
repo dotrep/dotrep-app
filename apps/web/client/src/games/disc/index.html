@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DISC - FSN Arcade</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="discCanvas" width="800" height="600"></canvas>
+    <div id="hud">
+      <div id="topBar">
+        <span id="fsnName">loading.fsn</span>
+        <span id="score">7450</span>
+      </div>
+      <div id="xpBar">
+        <span id="xpText">XP: 0 / 100</span>
+        <div id="xpProgress"><div id="xpFill"></div></div>
+      </div>
+      <button id="exitBtn">↩ Back to Arcade</button>
+    </div>
+    <div id="pulseOverlay" class="hidden">
+      <div class="pulse-ring"></div>
+      <div class="pulse-text">PULSE ACTIVATED!</div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

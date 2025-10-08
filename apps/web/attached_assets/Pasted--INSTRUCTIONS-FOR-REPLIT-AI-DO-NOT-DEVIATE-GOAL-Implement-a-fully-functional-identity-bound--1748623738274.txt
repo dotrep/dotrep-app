@@ -1,0 +1,135 @@
+🧠 INSTRUCTIONS FOR REPLIT AI (DO NOT DEVIATE)
+🔧 GOAL
+Implement a fully functional, identity-bound UI for FreeSpace Network (.fsn) that includes:
+
+A verified badge system.
+
+A profile avatar selector with meaningful behavioral ties.
+
+A hexagon editor that reflects identity tiers and user status.
+
+✅ SECTION 1: VERIFIED BADGE SYSTEM
+1. Upload verified-badge.png to project root.
+2. Wherever a .fsn username is rendered (e.g., jason.fsn), insert:
+html
+Copy
+Edit
+<span class="username">jason.fsn</span>
+<img src="verified-badge.png" class="verified-icon" alt="Verified Badge">
+3. In style.css, add:
+css
+Copy
+Edit
+.verified-icon {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 6px #00faff);
+  animation: pulseBadge 2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+4. Only show this badge if:
+js
+Copy
+Edit
+user.isVerified === true
+✅ SECTION 2: PROFILE AVATAR SELECTOR (WITH MEANING)
+In the UI, users see 6 avatar choices:
+👤 Default
+
+🌐 “Social”
+
+🌙 Night Owl
+
+✅ Verified
+
+⚡ Fast/Early
+
+⭐ Top Contributor
+
+For each avatar:
+Let the user click to select one, and save to their profile:
+
+js
+Copy
+Edit
+user.avatarSelection = "verified"; // example
+BONUS: Add automatic assignment if no avatar is selected:
+js
+Copy
+Edit
+if (user.isVerified) {
+  user.avatarSelection = "verified";
+} else if (user.activityHours.includes('midnight')) {
+  user.avatarSelection = "night";
+} else {
+  user.avatarSelection = "default";
+}
+✅ Avatar image files must be SVG or PNG, and styled with a light glow when selected.
+
+✅ SECTION 3: HEXAGON EDITOR (FULLY FUNCTIONAL)
+Display 4 styles:
+
+Style	Meaning	Logic Binding
+Classic	Default .fsn	user.hexStyle = "classic"
+Neon	Influencer	user.xp > 1000 OR user.invited > 10
+Pulse	Verified + Active	user.isVerified && user.activeToday
+Matrix	Mod/Admin	user.role === "admin" or "mod"
+
+User selects a hex style by clicking the style card.
+When clicked:
+
+js
+Copy
+Edit
+user.hexStyle = "pulse"; // example
+On page render:
+js
+Copy
+Edit
+document.body.classList.add(`hex-${user.hexStyle}`);
+Optional: Animate hex border based on style
+css
+Copy
+Edit
+.hex-pulse {
+  border: 2px solid #00faff;
+  animation: glowHex 2s infinite;
+}
+
+@keyframes glowHex {
+  0%, 100% { box-shadow: 0 0 5px #00faff; }
+  50% { box-shadow: 0 0 12px #00faff; }
+}
+🔒 SECTION 4: DATA STORAGE (DUMMY BACKEND VERSION)
+User object must include:
+
+js
+Copy
+Edit
+user = {
+  username: "jason.fsn",
+  isVerified: true,
+  avatarSelection: "verified",
+  hexStyle: "pulse",
+  role: "user", // or "admin"
+  xp: 2200,
+  activeToday: true,
+  invited: 3,
+  activityHours: ["00:00", "01:00", "02:00"]
+}
+Store to localStorage, Supabase, Firebase, or mock DB.
+
+🎯 FINAL CHECKLIST (FOR REPLIT AI)
+✅ Use verified-badge.png only if isVerified === true
+✅ Avatar selection is clickable, stored, and has fallback logic
+✅ Hexagon style is selectable, persistent, and tied to status
+✅ Hex style updates user-facing CSS classes for animations
+✅ Pulse animation uses CSS keyframes
+✅ All visual elements are consistent with TRON neon aesthetic
+

@@ -1,0 +1,48 @@
+📌 Objective: Add a fully rendered 3D arcade cabinet to the FSN Game Center screen. It must look like a real arcade machine glowing within the existing UI.
+
+🎯 Placement Instructions:
+- Insert the cabinet on the **left side of the screen**, between the two text rows:
+   - Top: “Compete • Earn • Dominate”
+   - Bottom: “1,247 Active Players | 42 Tournaments | 8.9M XP Earned”
+- The cabinet must appear **embedded** within this gap. 
+- Push the bottom stats row downward to create vertical space.
+- The background and grid must match the existing FSN screen — **no white blocks, frames, or empty voids**.
+
+🎮 Arcade Cabinet Requirements:
+- Style: **Fully 3D 1980s upright arcade machine**, angled slightly or facing forward.
+- Shape: tall rectangular body with visible side panel depth, control panel overhang, glowing screen, and marquee header.
+- Materials: matte black with **cyan-blue neon glowing edge trim** on all surfaces.
+
+📺 Screen Instructions:
+- Show a **pixelated smiley face**, styled as blocky 8-bit — **not emoji**, not round.
+- Add a **subtle glitch/fuzz effect** on the screen:
+   - Horizontal flicker bands or static lines (very light)
+   - Faint noise shimmer like a CRT monitor
+   - Do NOT use thick scanlines or distort the screen shape
+   - Screen should pulse and glow gently, as if alive
+   - Think: **old-school CRT screen gently glitching under power surge**
+
+🕹️ Control Panel Details:
+- One short joystick on the left (glowing stick, dark base)
+- Two glowing circular buttons on the right
+- The control panel should project outward in 3D, with proper shading and glow
+
+🔠 Labels:
+- Top marquee: **DAILY QUEST** in bright glowing cyan, block-style arcade font
+- Bottom of cabinet (optional repeat): **DAILY QUEST** again in same font
+
+🌌 Glow FX & Environment:
+- Cabinet must cast a **radial Tron-style glow** on the floor below it
+- Soft pulsing shadow or aura under base
+- Screen should glow forward slightly (but not blur)
+- Entire scene must remain dark, cosmic, and consistent with the FSN theme
+- No stars, no fog, no white fills — only the FSN grid + neon accents
+
+🧠 Rules / Fixes:
+- Do NOT flatten the cabinet into a wireframe or 2D shape
+- Do NOT detach the control panel from the body
+- Do NOT center the cabinet — keep it locked to the left side
+- Do NOT add characters, faces, or mascots
+- Do NOT alter the FSN logo, header, or background grid
+
+This is just the left cabinet (DAILY QUEST). The right side must remain open for future placement.

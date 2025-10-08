@@ -1,0 +1,89 @@
+🧠 FUNCTIONALITY TO IMPLEMENT
+1. Make Each Bar in the Beacon Chart Interactive
+Convert the static bars into individual clickable <div> or <svg> elements.
+
+Each bar should:
+
+Have a hover effect: glow or cyan pulse
+
+On click, show a tooltip or modal with:
+
+Time of last cast
+
+Signal strength (based on Hz)
+
+XP earned from that cast
+
+Option to "Recast" or "Share Beacon"
+
+2. Dynamic Bar Animation When Casting
+When a user clicks "CAST" from the signal panel:
+
+Animate the central (tallest) bar in the Beacon.
+
+Light up a wave pattern left → right with subtle glow.
+
+Use this as a visual indicator that a Signal is broadcasting to the network.
+
+Add a 2-second pulse glow effect (like a radar ping) to the full Beacon chart.
+
+3. Beacon Chart = Pulse Hz Signal Strength
+Map the height of the bars dynamically based on pulseHz (0–100):
+
+10 bars total.
+
+Pulse strength of 10 Hz = 1 bar, 100 Hz = all 10 bars.
+
+Use Math.floor(pulseHz / 10) to determine how many bars light up.
+
+This makes the Beacon reflect current user power.
+
+4. Add XP Gain on Successful Cast
+Each time a user hits CAST:
+
+Add +10 XP to their XP counter.
+
+Log the cast in the XP panel as: +10 XP - Signal Beacon Cast
+
+5. Responsive Design
+Make sure the Beacon chart:
+
+Resizes cleanly on mobile and tablet
+
+Does not push other UI elements out of alignment
+
+Still uses cyan neon glow, animated bars, and FSN-styled font (e.g. Orbitron)
+
+🎨 Design and Style Notes
+Use Orbitron for all text (import via Google Fonts if needed).
+
+Match beacon colors to Pulse and Signal:
+
+Active bars: #00FFFF (Cyan Glow)
+
+Inactive bars: #113344
+
+Hovered bar: #00FFFF with 25% stronger glow
+
+Tooltip modal should match other FSN modals (rounded corners, blue neon border)
+
+🧩 OPTIONAL POLISH (if time allows)
+Add a "Broadcast Boost" chance — 10% chance to earn double XP for a cast (visually display this with a sparkle burst or bonus pop-up)
+
+Add a “Total Broadcasts” counter under the Beacon label:
+
+📡 Total Broadcasts: 17
+
+✅ SUCCESS CHECKLIST
+ Beacon bar chart animates when casting
+
+ Bars scale with Pulse Hz (1–10 bars)
+
+ Clicking a bar shows recent cast data
+
+ Casting gives XP and logs to XP popup
+
+ Beacon style matches FSN aesthetic
+
+ Works across desktop and mobile
+

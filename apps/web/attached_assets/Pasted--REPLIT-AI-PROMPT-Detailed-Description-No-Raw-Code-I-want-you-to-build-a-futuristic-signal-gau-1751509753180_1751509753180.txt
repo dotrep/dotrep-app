@@ -1,0 +1,110 @@
+🔧 REPLIT AI PROMPT (Detailed Description – No Raw Code)
+I want you to build a futuristic signal gauge interface that matches this design:
+
+🌀 GENERAL DESIGN OVERVIEW
+
+The component is a neon-styled analog signal meter with a glowing outer dial, a floating yellow needle, a digital readout, and a “SIGNAL” label.
+
+The style is inspired by retro-futuristic interfaces — think TRON or cyberpunk tech.
+
+The whole module is centered inside a square container and sits on a dark navy background. Use glowing cyan and yellow elements to match the uploaded design.
+
+🎯 CORE ELEMENTS TO BUILD
+
+Outer Gauge Arc
+
+A large semicircle from 0 to 16.
+
+Evenly spaced tick marks with glowing cyan numbers in increasing order.
+
+These numbers should form an arc across the top of the dial, just like in the image.
+
+Yellow Signal Needle
+
+A single thin yellow needle, glowing softly.
+
+The needle starts at the center bottom and points outward toward the arc.
+
+It should point to a random number between 0 and 16, updating every few seconds.
+
+Do not let the needle touch the internal readout or dip inward — it should hover only between the center and outer gauge.
+
+The needle should not be sharp or jagged — make it rounded and smooth like a compass arrow.
+
+Center Display Readout
+
+A rounded rectangle display with neon blue glow showing the signal number (e.g. “9.5”).
+
+The number updates along with the needle.
+
+The units should be MHz, glowing slightly and readable.
+
+It must be centered below the needle and in the same font/color as the image.
+
+Decorative Dial (Bottom Center)
+
+Below the readout, include a stylized dial circle — no interactivity needed, just visual.
+
+Use concentric rings or a sci-fi-styled knob (see image) — make sure it’s centered and subtle.
+
+Label: SIGNAL
+
+Below the dial, include the glowing word “SIGNAL” in all caps.
+
+Use the same sci-fi neon font — preferably Orbitron or something similar.
+
+Slight glow and spacing between letters.
+
+Visual Polish
+
+Everything should glow subtly — use cyan and yellow accents.
+
+Use dark gradients for the background: deep navy or blue-black.
+
+Add a bit of depth using shadows or gradients on the gauge arc and display areas.
+
+⚙️ FUNCTIONAL BEHAVIOR
+
+Every 3 seconds, the yellow needle should smoothly rotate to a new random position between 0 and 16.
+
+The MHz readout should update to match the needle's value (use 1 decimal place).
+
+All animation must be smooth (ease-in-out rotation).
+
+Use canvas or SVG to render the dial and needle (your choice).
+
+📦 LAYOUT INSTRUCTIONS
+
+This signal gauge module will eventually sit in the middle of a 3-panel layout:
+
+Left: PULSE (circular dial)
+
+Center: SIGNAL (this gauge)
+
+Right: BEACON (bar chart)
+
+For now, focus only on the signal meter, but make sure the layout allows for future side modules.
+
+Make it responsive and centered in the browser.
+
+🧪 EXAMPLE TEST SCENARIO
+
+When the page loads, it shows the gauge at 9.5 MHz with the yellow needle pointing to 9.5.
+
+After 3 seconds, it animates smoothly to another random position (e.g. 5.2 MHz).
+
+Every few seconds, it updates again — like a fluctuating signal reader.
+
+🧠 Summary for Replit AI:
+
+Build a neon signal gauge that looks and behaves exactly like the final image I provided. It must:
+
+Show numbers from 0 to 16 in a half-circle arc
+
+Include a glowing yellow compass-like needle
+
+Update every few seconds to a random MHz value
+
+Display that value below the needle
+
+Use futuristic visuals — glowing cyan, smooth lines, and a dark theme

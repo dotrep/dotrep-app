@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Arrow Shaft - vertical line pointing upward -->
+  <line x1="256" y1="136" x2="256" y2="316" 
+        stroke="#00FFFF" stroke-width="16" stroke-linecap="round" 
+        filter="url(#glow)" />
+  
+  <!-- Arrowhead - inverted V shape pointing upward -->
+  <polyline points="206,186 256,136 306,186" 
+            stroke="#00FFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"
+            fill="none" filter="url(#glow)" />
+  
+  <!-- Tray - U-shaped bracket base -->
+  <path d="M 166 396 L 166 376 Q 166 356 186 356 L 326 356 Q 346 356 346 376 L 346 396"
+        stroke="#00FFFF" stroke-width="16" stroke-linecap="round" 
+        fill="none" filter="url(#glow)" />
+</svg>

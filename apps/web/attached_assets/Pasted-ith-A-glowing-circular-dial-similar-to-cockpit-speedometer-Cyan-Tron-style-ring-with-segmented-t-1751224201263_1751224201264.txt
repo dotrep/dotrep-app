@@ -1,0 +1,134 @@
+ith:
+A glowing circular dial (similar to cockpit speedometer)
+
+Cyan Tron-style ring with segmented ticks
+
+Radial glow intensifies as score increases
+
+Pulse Levels:
+Score	Visual Effect
+≥ 70	Bright glow, stable ring
+40–69	Dimmer glow, “STABLE” label
+< 40	Flickering edges, warning halo, “WEAK” label
+
+Animations:
+Animate ring fill from previous to new value
+
+Show wave ripple on Pulse increase
+
+Tooltip:
+“Your Pulse reflects your identity health and stability.”
+
+📡 2. SIGNAL GAUGE (Upgrade the current arc)
+Convert current half-arc into:
+A full arc-style signal meter with:
+
+Radial tick marks
+
+Fill animation
+
+Neon blue glowing sweep
+
+Signal Levels:
+Score	Visual
+0–24	Flicker, red glow at edge, label: “WEAK”
+25–69	Smooth glow, label: “STABLE”
+70–100	Bright cyan glow, label: “STRONG”
+
+If Signal is capped by Pulse:
+Overlay a translucent block at Pulse threshold
+
+Show tooltip:
+
+“Your Signal is capped by a low Pulse. Reignite your Pulse to unlock full Signal strength.”
+
+🛰️ 3. BEACON CONSOLE
+Keep existing Beacon box, but fully upgrade:
+Show a circular radar dish with sweeping animation
+
+Add console-style framing
+
+Label states clearly:
+
+Status	Visual
+OFFLINE	Dim radar, red text, lock icon
+WARMING UP	Radar pulses + circular animation
+ONLINE	Cyan glow, pulsing ring + text: “BEACON ONLINE”
+
+Animate when unlocked:
+Sweep radar activates
+
+“BEACON ONLINE” text fades in
+
+Add subtle background glow or particle orbit
+
+Tooltip:
+“Your Beacon activates once Pulse and Signal are strong enough. This unlocks global visibility and access.”
+
+✨ 4. XP DISPLAY & ANIMATION
+Keep existing XP score and XP Progress: 325 / 500
+
+Add:
+
+Glowing XP progress bar (horizontal)
+
+Animate progress bar fill on XP gain
+
+Optional +XP popup or mini-confetti effect
+
+Tooltip:
+“XP unlocks Vault skins, quests, and future token access.”
+
+🔁 5. NEXT ACTION MODULE
+Keep logic (e.g., “Log in daily to maintain Pulse”)
+
+Add dynamic icon:
+
+🫀 = Pulse task
+
+📶 = Signal task
+
+Flash a subtle border glow when action is completed
+
+📱 6. RESPONSIVE LAYOUT
+Desktop Layout	Mobile Layout
+PULSE	Top left
+SIGNAL	Top center
+BEACON	Top right
+XP / Next Action	Bottom bar
+
+Stack vertically on mobile
+
+Keep nav bar and XP always accessible
+
+🔒 7. LOGIC TO MAINTAIN
+Do not reset or change pulseScore, signalScore, or beaconStatus
+
+Continue using finalSignal = min(rawSignal, pulseScore)
+
+Preserve gating:
+
+Beacon unlocks at Pulse ≥ 70 AND Signal ≥ 80
+
+Never let Pulse drop below 30
+
+✅ 8. STYLE GUIDANCE
+All gauges must use Tron-style glow (neon cyan/blue)
+
+Use animated transitions not static score jumps
+
+Gauges should pulse gently at idle
+
+Use text like: WEAK, STABLE, STRONG under gauges
+
+Background should include faint Tron gridlines and ambient particle drift
+
+✨ 9. FINAL TOUCHES
+Event	Visual
+Pulse + Signal both increase	UI briefly pulses cyan
+Beacon unlocked	Modal or toast: “BEACON ONLINE — Global projection active”
+XP gain	Flash bar, optional +XP float
+User returns after decay	Toast: “Welcome back. Your Pulse is stabilizing.”
+
+✅ SINGLE SUMMARY LINE FOR REPLIT:
+Please enhance the current Trust Engine by converting all Pulse, Signal, and Beacon indicators into fully animated Tron-style gauges with glow, cap logic, tooltips, and signal feedback — maintaining all live logic and navigation, and presenting the final Home dashboard as a responsive, cockpit-style crypto identity engine.

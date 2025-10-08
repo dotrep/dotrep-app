@@ -1,0 +1,160 @@
+ FSN Badge + NFT Fixes and Library Expansion
+Use this instruction set to fix visual, interactive, and scaling issues across FSN's Badge and NFT system in the Vault and Social tabs.
+
+✅ 1. Fix “Equipped” Button Logic
+text
+Copy
+Edit
+Fix the “Equipped” button in the badge modal.
+
+- If the badge is already equipped:
+  - Set the button to disabled.
+  - Label it “Equipped ✓”
+  - Style: green background, `cursor: default`, `pointer-events: none`
+
+- If the badge is not equipped:
+  - On click:
+    - Call `equipBadge(badgeId)`
+    - Show toast: “Badge equipped to profile”
+    - Change button label to “Equipped ✓”
+    - Disable the button
+
+- Optional: visually highlight the equipped badge in the badge grid using a glowing ring or "equipped" tag.
+✅ 2. Prevent NFT/Badge Icon Overlap
+text
+Copy
+Edit
+Separate the visual assets for NFTs and Badges.
+
+- Place all badge icons in `/public/assets/icons/badges/`
+- Place all NFT icons in `/public/assets/icons/nfts/`
+
+- Ensure badge metadata explicitly references its icon:
+  - Example: `"visual": "/assets/icons/badges/core-signal.svg"`
+
+- Do not reuse icons (e.g. rocket, flame) across both NFTs and badges unless specifically intended. Default to fallback icons if undefined.
+
+- Add a `type` field to all NFT/badge objects to drive routing logic:
+```json
+{
+  "type": "badge", 
+  "name": "Onboarding Complete", 
+  ...
+}
+yaml
+Copy
+Edit
+
+---
+
+### ✅ 3. Fix Name Cutoff for Long Titles
+
+```text
+Fix layout issues for long badge and NFT names.
+
+- In grid or card views:
+  - Limit display to one line
+  - Use: `text-overflow: ellipsis; overflow: hidden; white-space: nowrap;`
+  - On hover, show full name in a tooltip (`title` attribute or custom)
+
+- In modals:
+  - Allow multiline names with:
+    - `word-wrap: break-word;`
+    - `white-space: normal;`
+  - Ensure mobile-friendly rendering
+✅ 4. Add “View All” Library for Badges and NFTs
+text
+Copy
+Edit
+Add a “View All” Library modal or page for badges and NFTs.
+
+1. On the Social tab and Vault view:
+   - Add a `View All` button below each badge/NFT grid.
+
+2. On click:
+   - Open a fullscreen modal or new page (`/library`)
+
+3. Features of Library View:
+   - Grid view of all NFTs and badges
+   - Tab filters: All | Badges | Signal | Trust | Quests | Collectibles
+   - Rarity filter (Common, Rare, Epic, Legendary)
+   - Search bar (live filter by name or metadata)
+   - Sort dropdown: Most Recent | Alphabetical | Rarity
+
+4. Optional:
+   - Infinite scroll or page-based pagination
+   - Toggle between card view and compact list view
+✅ 5. Improve Badge/NFT Metadata Display
+text
+Copy
+Edit
+Update the badge and NFT modal with the following metadata sections:
+
+- Name (multiline)
+- Type (badge, NFT, beacon, etc.)
+- Rarity
+- Description
+- Earned date
+- Source system (Pulse, Signal, Game Center, etc.)
+- XP bonus (if any)
+- Requirement (quest completed, streak, action)
+- Soulbound label if non-transferable
+
+Optional buttons:
+- `Equip Badge` (if not equipped)
+- `Share` (copy badge image or share URL)
+- `View on Chain` (if tokenized)
+✅ 6. Optional: Highlight Equipped Badge in Grid
+text
+Copy
+Edit
+In the badge grid view:
+- If a badge is equipped:
+  - Add a glowing border or ring effect
+  - Tooltip on hover: “Equipped”
+  - Optional badge in corner (e.g. checkmark icon)
+
+CSS hint:
+```css
+.badge.equipped {
+  box-shadow: 0 0 12px #00ffccaa;
+  border: 2px solid #00f0ff;
+}
+ruby
+Copy
+Edit
+
+---
+
+### ✅ 7. Optional: Modularize Badge/NFT Object Schema
+
+```text
+Ensure all NFTs and Badges follow this standard schema:
+```json
+{
+  "id": "badge_core_signal",
+  "type": "badge",
+  "name": "Core Signal",
+  "rarity": "epic",
+  "description": "Awarded for reaching Core Signal level.",
+  "source": "Signal System",
+  "earned": "2025-07-13",
+  "xpBonus": 100,
+  "requirement": "Reach Signal Level 2",
+  "soulbound": true,
+  "visual": "/assets/icons/badges/core-signal.svg"
+}
+yaml
+Copy
+Edit
+
+---
+
+## ✅ Final Output
+
+- 🔒 Properly working "Equipped" logic
+- 🧩 Clear separation of badges and NFTs
+- 💅 Polished long-name handling
+- 📚 Scalable inventory with Library view
+- 🎨 Visual consistency across all screens
+- 🔗 Data model unification across Vault + Social + Pulse

@@ -1,0 +1,39 @@
+🎮 Design an arcade cabinet for the FSN Game Center screen that combines a stylized glowing aesthetic with real-world arcade structure.
+
+📐 Perspective:
+- Rotate the cabinet about **15 degrees inward**, so it faces toward the center of the screen.
+- Show a classic **3/4 arcade angle**, revealing both the front and left side.
+
+📦 Cabinet Shape (Hybrid Style):
+- Use a **tall rectangular body** — no tapering.
+- Include a **sloped control panel** that juts outward beneath the screen (angled like a real arcade cabinet).
+- Add a **visible lower front panel** below the controls — flat and boxy, no curves or floating elements.
+
+🖼️ Screen:
+- Display a glowing **pixel-style smiley face** centered on the screen.
+- No bevel or CRT depth — screen should glow outward with light fuzz or static flicker.
+- Add neon edge glow around the screen like a Tron UI.
+
+🎛️ Control Panel (Realistic Layout):
+- Angled panel should feature:
+   • 1 joystick with a thin stick and round ball top (left side)
+   • 2 glowing round buttons (right side)
+- Controls should be built **into** the panel — not floating or pasted on.
+
+🧱 Cabinet Base:
+- Include a boxy **base panel** beneath the control section (no coin slots, just structure).
+- Keep the entire cabinet **symmetrical and vertically aligned**.
+
+🌌 FX & Integration:
+- Apply **cyan-blue neon edge glow** around the cabinet
+- Add a **soft glowing ripple** on the ground to anchor the cabinet into the FSN Game Center UI
+- Match the lighting and aesthetic of the existing FSN page (dark cosmic grid background, electric cyan accents)
+
+🧠 DO NOT:
+- Do not use a realistic CRT display or physical textures
+- Do not over-render fine realism details — keep it clean and iconic
+- Do not create a tapered or cartoony cabinet
+- Do not float the control panel or distort the perspective
+
+✅ Summary:
+- Think of this as a **glowing Tron-style cabinet** with the layout and structure of a real machine (like Space Ace or Galaga), embedded into a digital interface.

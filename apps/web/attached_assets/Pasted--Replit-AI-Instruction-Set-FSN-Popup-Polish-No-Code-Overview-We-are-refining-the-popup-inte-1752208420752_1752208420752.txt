@@ -1,0 +1,119 @@
+🧠 Replit AI Instruction Set — FSN Popup Polish (No Code)
+✅ Overview:
+We are refining the popup interactions across Pulse, Signal, and Beacon on the FSN dashboard. You have already implemented core logic and UI components. These final polish instructions focus on animation, user feedback, glow effects, and branding consistency.
+
+🔹 1. [PULSE COMMAND CENTER] – Animation + Completion Polish
+Goals:
+Improve the "All Pulse Tasks Completed!" section
+
+Animate task check-off moment
+
+Smooth transitions between “TASKS” and “HISTORY” tabs
+
+Instructions:
+When a user completes a Pulse Boosting Action (e.g. uploading a file):
+
+Trigger a short animation (e.g. checkmark fades in with glow pulse)
+
+Change the card background to a green glow box briefly before settling into static “Complete” state
+
+Add a tab-switching animation between "TASKS" and "HISTORY" using slide or fade, instead of abrupt content change
+
+Animate the “NEXT RECOMMENDED TASK” area to briefly bounce or pulse when the list updates
+
+🔹 2. [SIGNAL PANEL] – MULTI Mode Glow + Selection Logic
+Goals:
+Improve visibility and interaction feedback for multi-channel mode
+
+Animate selected channels
+
+Instructions:
+In “MULTI” mode:
+
+When a user clicks an F1 / F2 / F3 channel:
+
+Apply a stronger glow effect (cyan or orange) around the selected channel box
+
+Add a thin animated outline ring to indicate it’s actively selected
+
+Cap selection at 3 channels; once 3 are selected:
+
+Visually gray out or pulse-lock remaining options
+
+Add subtle tooltip on hover: “Max 3 channels active”
+
+🔹 3. [BEACON] – Broadcast Modal + Animated Count
+Goals:
+Animate "Total Broadcasts" number
+
+Enhance RECAST / SHARE hover states
+
+Instructions:
+When a broadcast is sent:
+
+Animate the beacon bar rise with smooth easing (i.e. bar grows up vertically over 0.5s)
+
+On the “Total Broadcasts: X” counter:
+
+Animate a +1 bounce or numeric pulse when a new cast is made
+
+Inside the Broadcast Data modal:
+
+On hover over RECAST / SHARE buttons:
+
+Add a hover glow around the button and subtle scale effect (e.g. 1.05x on hover)
+
+When RECAST is clicked:
+
+Briefly flash a “Recast Successful!” text above or below the buttons (fades out after 2s)
+
+For SHARE: Temporarily show “Copied to clipboard!” after clicking (fades out automatically)
+
+🔹 4. [GENERAL MODAL POLISH] – Design Consistency
+Goals:
+Unify font, colors, and spacing across all modals
+
+Instructions:
+Ensure all modals are using:
+
+Orbitron or your selected sci-fi font
+
+Proper capitalization style (e.g. “Signal Active” not “signal active”)
+
+Consistent font weight and letter spacing
+
+Modal frame glows:
+
+Use cyan blue glow borders across all popup types
+
+Glow color can adapt (e.g. green for success, purple for multi-cast, orange for attention)
+
+Add consistent close button in top right, always visible and glowing subtly on hover
+
+Apply a soft blur or dark transparent background behind modals to keep focus on pop-up
+
+🔹 5. [OPTIONAL BONUS] – Add Subtle Ambient FX
+Goals:
+Make the system feel alive and immersive
+
+Instructions:
+Optionally, assign ambient tone or SFX to:
+
+Pulse Level Up (subtle sci-fi blip)
+
+Signal Activation (modulated ping)
+
+Beacon Cast (broadcast whoosh)
+
+If adding audio is too complex now, note this as a Phase 2 polish layer.
+
+Final Note for Replit AI:
+You must match the style, tone, and design of the current FSN interface
+
+Do not add new features or redesigns — this is only polish for existing working pop-ups
+
+All transitions should feel futuristic, responsive, and rewarding
+
+Use animation easing where possible for smooth feel
+
+Do not break existing logic or XP integrations

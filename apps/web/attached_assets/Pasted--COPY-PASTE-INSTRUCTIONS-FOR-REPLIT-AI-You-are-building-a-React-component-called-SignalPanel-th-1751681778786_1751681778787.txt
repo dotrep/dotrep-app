@@ -1,0 +1,220 @@
+✅ COPY-PASTE INSTRUCTIONS FOR REPLIT AI
+
+⸻
+
+You are building a React component called SignalPanel that represents a futuristic neon signal gauge UI with the following design goals:
+
+⸻
+
+📍1. OVERALL POSITIONING
+	•	The component will be centered between two other elements: Pulse (left) and Beacon (right).
+	•	It will include a glowing outer signal arc, a rotating red dial needle, an inner glowing signal strength ring, and an animated wave that appears when multicasting is active.
+
+⸻
+
+🔧 2. COMPONENT STRUCTURE
+
+Create 3 files in the Replit project:
+	•	SignalPanel.jsx
+	•	SignalPanel.css
+	•	signalUtils.js
+
+You will render SignalPanel into the main app (e.g., in App.jsx).
+
+⸻
+
+🎨 3. SIGNALPANEL.JSX
+
+Paste this into SignalPanel.jsx:
+
+import React, { useState, useEffect } from 'react';
+import './SignalPanel.css';
+import { getAngleForSignal } from './signalUtils';
+
+export default function SignalPanel() {
+  const [signal, setSignal] = useState(50); // User-selected signal (0–100)
+  const [strength, setStrength] = useState(0); // Fluctuating signal strength
+  const [mode, setMode] = useState('broadcast'); // 'broadcast' or 'listen'
+  const [multicasting, setMulticasting] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomStrength = Math.floor(Math.random() * 100);
+      setStrength(randomStrength);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="signal-panel">
+      <div className="outer-dial">
+        <div className="dial-numbers">
+          {[...Array(21)].map((_, i) => (
+            <div
+              key={i}
+              className="dial-number"
+              style={{ transform: `rotate(${i * 13.5 - 135}deg)` }}
+            >
+              {i * 5}
+            </div>
+          ))}
+        </div>
+        <div
+          className="red-needle"
+          style={{ transform: `rotate(${getAngleForSignal(signal)}deg)` }}
+        />
+      </div>
+
+      <div className="inner-ring" style={{ opacity: 0.4 + strength / 250 }}>
+        <span>{strength}</span>
+      </div>
+
+      {multicasting && (
+        <div className="wave-animation" />
+      )}
+
+      <div className="controls">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={signal}
+          onChange={(e) => setSignal(Number(e.target.value))}
+        />
+        <button onClick={() => setMode(mode === 'broadcast' ? 'listen' : 'broadcast')}>
+          {mode.toUpperCase()}
+        </button>
+        <button onClick={() => setMulticasting(!multicasting)}>
+          Toggle Multicast
+        </button>
+      </div>
+    </div>
+  );
+}
+
+🎨 4. SIGNALPANEL.CSS
+
+Paste this into SignalPanel.css:
+
+.signal-panel {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin: auto;
+  background: black;
+}
+
+.outer-dial {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid cyan;
+  box-shadow: 0 0 20px cyan;
+}
+
+.dial-numbers {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg);
+}
+
+.dial-number {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform-origin: bottom center;
+  font-size: 10px;
+  color: cyan;
+}
+
+.red-needle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 140px;
+  background: red;
+  box-shadow: 0 0 8px red;
+  transform-origin: bottom center;
+  z-index: 2;
+}
+
+.inner-ring {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,100,0.5), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #ffffcc;
+  text-shadow: 0 0 5px yellow;
+}
+
+.wave-animation {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: repeating-linear-gradient(
+    90deg,
+    cyan 0px,
+    cyan 2px,
+    transparent 2px,
+    transparent 10px
+  );
+  animation: waveMove 2s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes waveMove {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: 100%;
+  }
+}
+
+.controls {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+
+🧠 5. SIGNALUTILS.JS
+
+Paste this into signalUtils.js:
+
+export function getAngleForSignal(signal) {
+  return (signal / 100) * 270 - 135;
+}
+
+✅ HOW TO USE
+	1.	Import <SignalPanel /> into your App.jsx or wherever you mount it.
+	2.	Ensure you have "react" and "react-dom" in your package.json.
+	3.	Click the knob slider to change the signal.
+	4.	Hit “Toggle Multicast” to animate the wave.
+	5.	Hit “Broadcast / Listen” to change interaction mode (visual only, for now).
+
+⸻
+
+✅ FEATURES INCLUDED
+	•	✅ Outer arc dial with correct scale and red needle rotation
+	•	✅ Red needle limited to outer arc (doesn’t touch center)
+	•	✅ Glowing signal strength inner ring (animated based on strength)
+	•	✅ Broadcast/listen toggle
+	•	✅ Animated multicast wave
+	•	✅ Positioning-safe, scalable layout
+	•	✅ All labels removed except dynamic signal strength

@@ -1,0 +1,248 @@
+/* Animation effects for successful claim */
+@keyframes success-flash {
+  0% {
+    filter: brightness(1) blur(0);
+  }
+  20% {
+    filter: brightness(2) blur(1px);
+  }
+  40% {
+    filter: brightness(1.5) blur(0);
+  }
+  60% {
+    filter: brightness(2.2) blur(2px);
+  }
+  80% {
+    filter: brightness(1.8) blur(0);
+  }
+  100% {
+    filter: brightness(1) blur(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.2;
+  }
+}
+
+@keyframes hex-victory-pulse {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
+    transform: scale(1);
+  }
+  25% {
+    filter: drop-shadow(0 0 25px rgba(0, 240, 255, 1));
+    transform: scale(1.05);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.9));
+    transform: scale(1);
+  }
+  75% {
+    filter: drop-shadow(0 0 30px rgba(0, 240, 255, 1));
+    transform: scale(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
+    transform: scale(1);
+  }
+}
+
+/* Class to trigger background flash */
+.network-victory {
+  animation: success-flash 1.5s forwards;
+}
+
+/* Claim success effect for the hexagon */
+.hex-victory {
+  animation: hex-victory-pulse 2s forwards;
+}
+
+/* Pulse rings for background nodes */
+.victory-node::before {
+  content: '';
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  border-radius: 100%;
+  background-color: rgba(0, 240, 255, 0.05);
+  animation: pulse-ring 3s infinite;
+  z-index: -1;
+}
+
+/* Enhanced particle density during celebration */
+.victory-mode .background-particle {
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 240, 255, 0.8) 0%,
+    rgba(0, 144, 255, 0.3) 70%, 
+    rgba(0, 0, 0, 0) 100%
+  );
+  box-shadow: 0 0 20px 5px rgba(0, 240, 255, 0.6);
+}
+
+/* Success message enhancement */
+.success-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  z-index: 99999;
+  opacity: 0;
+  animation: fade-in 0.3s forwards;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.success-content {
+  background-color: rgba(10, 25, 41, 0.9);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  border: 2px solid rgba(0, 240, 255, 0.6);
+  box-shadow: 
+    0 0 30px rgba(0, 240, 255, 0.4),
+    0 0 60px rgba(0, 240, 255, 0.2),
+    inset 0 0 20px rgba(0, 240, 255, 0.1);
+  text-align: center;
+  max-width: 90%;
+  width: 400px;
+  animation: success-appear 0.5s forwards;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+}
+
+/* Create a glowing border effect */
+.success-content::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(0, 240, 255, 0), rgba(0, 240, 255, 0.8), rgba(0, 240, 255, 0));
+  border-radius: 1rem;
+  z-index: -1;
+  animation: border-glow 3s linear infinite;
+}
+
+@keyframes border-glow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+@keyframes success-appear {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1rem;
+  animation: success-icon-pulse 1.5s infinite;
+}
+
+@keyframes success-icon-pulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.9));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+  }
+}
+
+.success-text h3 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.claimed-name {
+  color: #00f0ff;
+  font-weight: bold;
+  position: relative;
+  display: inline-block;
+}
+
+.claimed-name::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    #00f0ff 50%, 
+    transparent 100%
+  );
+  animation: name-underline 2s infinite;
+}
+
+@keyframes name-underline {
+  0% {
+    opacity: 0.2;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.1);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scaleX(0.8);
+  }
+}
+
+.success-text p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 1rem;
+}

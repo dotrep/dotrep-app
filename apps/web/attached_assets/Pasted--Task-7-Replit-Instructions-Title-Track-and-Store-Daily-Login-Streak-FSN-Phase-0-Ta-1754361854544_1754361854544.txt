@@ -1,0 +1,109 @@
+## ✅ Task #7 – Replit Instructions  
+**Title**: Track and Store Daily Login Streak (FSN Phase 0 – Task 7)
+
+---
+
+### 🎯 Objective  
+Track each user’s consecutive daily login streak, store it in Firestore, reset it after inactivity, and award XP at key streak milestones (e.g., 1-day, 3-day, 7-day).
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Update Firestore on User Login
+
+In your auth listener or login flow (e.g., in `useEffect` after Firebase login):
+
+```js
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase/initFirebase";
+import { awardXP } from "../lib/awardXP";
+import dayjs from "dayjs"; // install via `npm install dayjs`
+
+const handleLoginStreak = async (uid) => {
+  const userRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userRef);
+
+  const data = userSnap.data() || {};
+  const lastLogin = data.lastLogin?.toDate?.() || null;
+  const streak = data.loginStreak || 0;
+  const today = dayjs().startOf("day");
+  const yesterday = dayjs().subtract(1, "day").startOf("day");
+
+  let newStreak = 1;
+
+  if (lastLogin) {
+    const last = dayjs(lastLogin).startOf("day");
+
+    if (last.isSame(today)) {
+      // already logged in today – no XP, keep streak
+      return;
+    } else if (last.isSame(yesterday)) {
+      newStreak = streak + 1;
+    }
+  }
+
+  await updateDoc(userRef, {
+    loginStreak: newStreak,
+    lastLogin: serverTimestamp()
+  });
+
+  // Award XP based on milestones
+  const milestoneActions = {
+    1: "login_streak_1",
+    3: "login_streak_3",
+    7: "login_streak_7"
+  };
+
+  if (milestoneActions[newStreak]) {
+    await awardXP(uid, milestoneActions[newStreak]);
+  }
+};
+```
+
+Then call:
+```js
+handleLoginStreak(user.uid);
+```
+
+---
+
+### ✅ 2. Firestore Schema After This Task
+
+| Field            | Type     | Description                     |
+|------------------|----------|---------------------------------|
+| `loginStreak`    | Number   | Current streak count            |
+| `lastLogin`      | Timestamp| Last login timestamp            |
+| `xp`             | Number   | Total XP                        |
+
+---
+
+### ✅ 3. Optional: Display in Dashboard
+
+```jsx
+<p>🔥 Login Streak: {userData.loginStreak} days</p>
+```
+
+---
+
+### 🧪 QA Checklist
+
+| Test Case                       | Expected Outcome                        |
+|--------------------------------|-----------------------------------------|
+| First login ever               | ✅ Streak set to 1                       |
+| Login again same day           | ✅ No XP change, streak unchanged        |
+| Login next day (consecutive)   | ✅ Streak increases by +1                |
+| Login after 2+ days gap        | ✅ Streak resets to 1                    |
+| Hit 3-day streak               | ✅ XP awarded via `awardXP`              |
+| Hit 7-day streak               | ✅ Additional XP awarded                 |
+
+---
+
+### ✅ Summary
+
+- Streak count is tracked and stored per user
+- XP awarded at 1, 3, and 7 day login milestones
+- Streak resets automatically after skipped days
+- Works invisibly at login and integrates with XP engine

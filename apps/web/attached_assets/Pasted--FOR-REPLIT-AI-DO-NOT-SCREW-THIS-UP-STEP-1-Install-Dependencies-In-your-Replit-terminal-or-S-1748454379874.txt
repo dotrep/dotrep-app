@@ -1,0 +1,142 @@
+🧠 FOR REPLIT AI: DO NOT SCREW THIS UP
+🛠️ STEP 1: Install Dependencies
+In your Replit terminal or Shell tab, run:
+
+bash
+Copy
+Edit
+npm install magic-sdk ethers
+This installs Magic (for wallet auth) and Ethers.js (to get wallet address).
+
+🛠️ STEP 2: Create the Magic Login Component
+Create a new file:
+
+bash
+Copy
+Edit
+/pages/login.js
+Add the following code:
+
+jsx
+Copy
+Edit
+// /pages/login.js
+import { useState } from 'react';
+import { Magic } from 'magic-sdk';
+import { ethers } from 'ethers';
+
+const magic = typeof window !== 'undefined' && new Magic('YOUR_PUBLISHABLE_KEY'); // Replace this
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email) return alert('Enter a valid email');
+
+    await magic.auth.loginWithMagicLink({ email });
+
+    const provider = new ethers.providers.Web3Provider(magic.rpcProvider);
+    const signer = provider.getSigner();
+    const userAddress = await signer.getAddress();
+
+    setAddress(userAddress);
+    setLoggedIn(true);
+    
+    // TODO: Save to FSN DB (alias resolution layer)
+    console.log('Wallet Address:', userAddress);
+  };
+
+  return (
+    <div>
+      <h2>Claim your .fsn name</h2>
+      {!loggedIn ? (
+        <>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button onClick={handleLogin}>Login / Create Wallet</button>
+        </>
+      ) : (
+        <div>
+          <p>✅ Logged in!</p>
+          <p>Your wallet address is: {address}</p>
+          <p>Next step: Pick your .fsn name and connect vault.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+🛠️ STEP 3: Replace YOUR_PUBLISHABLE_KEY
+Go to https://dashboard.magic.link
+
+Create a new project
+
+Copy the publishable key
+
+Paste it in this line:
+
+js
+Copy
+Edit
+const magic = new Magic('YOUR_PUBLISHABLE_KEY');
+🛠️ STEP 4: Hook Into the FSN Flow
+After the user logs in:
+
+Get their walletAddress via Ethers.js
+
+Prompt them to pick their .fsn name
+
+Save this in your Firestore/Supabase DB:
+
+json
+Copy
+Edit
+{
+  "fsn_name": "jason.fsn",
+  "wallet_address": "0xA1b2...C3D4",
+  "email": "user@example.com"
+}
+This lets you:
+
+Send tokens/files to .fsn
+
+Power the Vault and Forge
+
+Track XP per wallet
+
+🧪 STEP 5: Test in Replit
+Go to:
+
+arduino
+Copy
+Edit
+https://your-replit-url/login
+Test:
+
+Enter your email
+
+Confirm the login link
+
+See your wallet address populate ✅
+
+🔒 IMPORTANT NOTES FOR REPLITAI
+Magic is non-custodial — you are NOT storing keys
+
+All transactions still happen onchain (EVM-compatible)
+
+Never expose private keys. You don’t even have access to them.
+
+Store only the public wallet address + .fsn name
+
+Do not hardcode anything. Use .env for keys later.
+
+🧠 BONUS TODO (If you're not a moron):
+Redirect user to /dashboard/[fsn_name] after login
+
+Integrate Vault + XP functions using the same wallet address
+
+Allow changing email, but never allow .fsn name reassignment (soulbound)

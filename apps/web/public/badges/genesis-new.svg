@@ -1,0 +1,22 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Genesis symbol centered and properly sized -->
+  <g transform="translate(60,60)">
+    <!-- Central star -->
+    <polygon points="0,-24 7,-7 24,-7 12,3 19,19 0,9 -19,19 -12,3 -24,-7 -7,-7" 
+             fill="#ffcc00" stroke="#ffffff" stroke-width="2"/>
+    
+    <!-- Inner core -->
+    <circle cx="0" cy="0" r="9" fill="#ff9900"/>
+    <circle cx="0" cy="0" r="4" fill="#ffffff"/>
+    
+    <!-- Genesis rays -->
+    <line x1="0" y1="-36" x2="0" y2="-42" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="25" y1="-25" x2="30" y2="-30" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="36" y1="0" x2="42" y2="0" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="25" y1="25" x2="30" y2="30" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="0" y1="36" x2="0" y2="42" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="-25" y1="25" x2="-30" y2="30" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="-36" y1="0" x2="-42" y2="0" stroke="#ffcc00" stroke-width="2"/>
+    <line x1="-25" y1="-25" x2="-30" y2="-30" stroke="#ffcc00" stroke-width="2"/>
+  </g>
+</svg>

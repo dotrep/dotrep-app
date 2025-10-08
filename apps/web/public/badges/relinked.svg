@@ -1,0 +1,19 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Relink chain -->
+  <g transform="translate(40,40)">
+    <!-- Chain links -->
+    <ellipse cx="-12" cy="-8" rx="6" ry="10" fill="none" stroke="#00f0ff" stroke-width="2"/>
+    <ellipse cx="12" cy="-8" rx="6" ry="10" fill="none" stroke="#00f0ff" stroke-width="2"/>
+    <ellipse cx="0" cy="8" rx="6" ry="10" fill="none" stroke="#66ccff" stroke-width="2"/>
+    
+    <!-- Connection points -->
+    <circle cx="-12" cy="-8" r="2" fill="#ffffff"/>
+    <circle cx="12" cy="-8" r="2" fill="#ffffff"/>
+    <circle cx="0" cy="8" r="2" fill="#66ccff"/>
+    
+    <!-- Network connections -->
+    <line x1="-6" y1="-8" x2="6" y2="-8" stroke="#00f0ff" stroke-width="1"/>
+    <line x1="-8" y1="2" x2="0" y2="0" stroke="#00f0ff" stroke-width="1"/>
+    <line x1="8" y1="2" x2="0" y2="0" stroke="#00f0ff" stroke-width="1"/>
+  </g>
+</svg>

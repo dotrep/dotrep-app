@@ -1,0 +1,131 @@
+.admin-login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #000;
+  color: #fff;
+  position: relative;
+}
+
+.admin-login-container {
+  width: 90%;
+  max-width: 400px;
+  background-color: rgba(10, 25, 41, 0.8);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 2rem auto;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  z-index: 10;
+  text-align: center;
+}
+
+.admin-login-container h1 {
+  color: #00f0ff;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-login-container p {
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: #c0faff;
+}
+
+.admin-input {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: rgba(0, 240, 255, 0.8);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
+.admin-input::placeholder {
+  color: rgba(192, 250, 255, 0.5);
+}
+
+.login-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.login-button {
+  flex: 1;
+  background: linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.4) 0%,
+    rgba(0, 144, 255, 0.4) 100%
+  );
+  color: #fff;
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  transition: all 0.2s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background: linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.6) 0%,
+    rgba(0, 144, 255, 0.6) 100%
+  );
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+.cancel-button {
+  flex: 1;
+  color: #c0faff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  background-color: transparent;
+}
+
+.login-help {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.login-help p {
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .admin-login-container {
+    padding: 1.5rem;
+  }
+  
+  .login-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

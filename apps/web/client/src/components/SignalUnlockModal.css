@@ -1,0 +1,356 @@
+/* Signal Unlock Modal Styles */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+.signal-unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+}
+
+.signal-unlock-modal {
+  position: relative;
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(5, 15, 25, 0.95);
+  border: 1px solid #00ffff;
+  box-shadow: 0 0 12px #00ffff;
+  border-radius: 16px;
+  color: #c0eaff;
+  padding: 32px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  animation: modalSlideIn 0.5s ease-out;
+  overflow: hidden;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Signal Glyph Animation */
+.signal-glyph {
+  margin: 0 auto 30px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00ffff, #00aaff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  animation: pulseGlow 2.5s infinite;
+  padding: 12px;
+  background-color: #002;
+}
+
+@keyframes pulseGlow {
+  0%   { 
+    transform: scale(1);   
+    box-shadow: 0 0 10px #00ffff; 
+  }
+  50%  { 
+    transform: scale(1.1); 
+    box-shadow: 0 0 25px #00ffff, 0 0 40px #00aaff; 
+  }
+  100% { 
+    transform: scale(1);   
+    box-shadow: 0 0 10px #00ffff; 
+  }
+}
+
+/* Enhanced Glyph Glow Container */
+.glyph-glow {
+  animation: glowPulse 3s ease-in-out infinite;
+  border-radius: 50%;
+  padding: 10px;
+  background-color: #002233;
+  display: inline-block;
+  margin: 0 auto 30px;
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 8px #00ffff; 
+  }
+  50% { 
+    transform: scale(1.08); 
+    box-shadow: 0 0 18px #00ffff; 
+  }
+}
+
+/* Enhanced Activate Button */
+.activate-btn {
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(to right, #00ffff, #00aaff);
+  color: #000;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 16px 32px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 20px #00ffff;
+}
+
+.activate-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 32px #00ffff;
+}
+
+.activate-btn:active {
+  transform: scale(0.98);
+}
+
+.signal-glyph.pulse-active {
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 40px rgba(0, 255, 255, 0.8),
+    0 0 80px rgba(0, 170, 255, 0.6);
+}
+
+.signal-icon {
+  font-size: 36px;
+  color: #000;
+  animation: iconGlow 2s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+}
+
+/* Achievement Header */
+.achievement-header {
+  margin-bottom: 30px;
+}
+
+.pulse-achievement {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 32px;
+  color: #00ffff;
+  text-shadow: 0 0 12px #00ffff;
+  margin: 0 0 15px 0;
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { 
+    text-shadow: 
+      0 0 20px rgba(0, 255, 255, 0.8),
+      0 0 40px rgba(0, 170, 255, 0.6);
+  }
+  50% { 
+    text-shadow: 
+      0 0 30px rgba(0, 255, 255, 1),
+      0 0 60px rgba(0, 170, 255, 0.8);
+  }
+}
+
+.unlock-subtitle {
+  font-family: 'Orbitron', sans-serif;
+  color: #c0eaff;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Achievement Message */
+.achievement-message {
+  margin-bottom: 40px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.achievement-message p {
+  color: #c0eaff;
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.broadcast-button {
+  font-family: 'Audiowide', 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #00ffff, #00aaff);
+  color: #000;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.broadcast-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.broadcast-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.close-button {
+  font-family: 'Montserrat', sans-serif;
+  background: transparent;
+  color: #00ffff;
+  border: 2px solid #00ffff;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: confettiFall 3s linear infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Animated Background Rings */
+.signal-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.signal-ring {
+  position: absolute;
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: ringExpand 3s ease-out infinite;
+}
+
+.ring-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+  animation-delay: 1s;
+}
+
+.ring-3 {
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  animation-delay: 2s;
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .signal-unlock-modal {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .pulse-achievement {
+    font-size: 28px;
+  }
+  
+  .unlock-subtitle {
+    font-size: 16px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .broadcast-button,
+  .close-button {
+    width: 100%;
+    max-width: 250px;
+  }
+}

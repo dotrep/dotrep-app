@@ -1,0 +1,26 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sentinel tower -->
+  <g transform="translate(40,40)">
+    <!-- Tower base -->
+    <rect x="-12" y="12" width="24" height="12" fill="#9966ff" stroke="#ffffff" stroke-width="1"/>
+    
+    <!-- Tower body -->
+    <rect x="-8" y="-8" width="16" height="20" fill="#9966ff" stroke="#ffffff" stroke-width="1"/>
+    
+    <!-- Tower top -->
+    <polygon points="0,-20 -10,-8 10,-8" fill="#ffffff"/>
+    
+    <!-- Radar dish -->
+    <ellipse cx="0" cy="-16" rx="6" ry="2" fill="#66ccff" opacity="0.7"/>
+    
+    <!-- Signal beams -->
+    <line x1="-20" y1="-12" x2="-4" y2="-12" stroke="#9966ff" stroke-width="1" opacity="0.6"/>
+    <line x1="4" y1="-12" x2="20" y2="-12" stroke="#9966ff" stroke-width="1" opacity="0.6"/>
+    <line x1="-16" y1="-20" x2="-2" y2="-16" stroke="#9966ff" stroke-width="1" opacity="0.4"/>
+    <line x1="2" y1="-16" x2="16" y2="-20" stroke="#9966ff" stroke-width="1" opacity="0.4"/>
+    
+    <!-- Watch eye -->
+    <circle cx="0" cy="-4" r="2" fill="#ffffff"/>
+    <circle cx="0" cy="-4" r="1" fill="#9966ff"/>
+  </g>
+</svg>

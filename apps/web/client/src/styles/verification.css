@@ -1,0 +1,63 @@
+/* Verification Badge Styles */
+.verification-badge {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  vertical-align: middle;
+  display: inline-block;
+  animation: pulseBadge 2s infinite ease-in-out;
+}
+
+.verification-badge.glow-effect {
+  filter: drop-shadow(0 0 6px #00faff);
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.username-with-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+/* Chat specific verification badge styling */
+.chat-username .verification-badge {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+}
+
+/* Message notification verification badge */
+.message-sender .verification-badge {
+  width: 14px;
+  height: 14px;
+  margin-left: 3px;
+}
+
+/* Dashboard stats verification badge */
+.stat-card .verification-badge {
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+}
+
+/* FSN name styling for better contrast with badge */
+.fsn-name-verified {
+  background: linear-gradient(135deg, #64ffff, #38bdf8);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* Wallet transaction verification badge */
+.tx-from .verification-badge,
+.tx-to .verification-badge {
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+}

@@ -1,0 +1,190 @@
+PART 9: Mobile/PWA polish + wallet UX + performance
+
+Mobile-first layout
+
+Ensure all core flows (connect, claim, XP/streak view, vault upload, leaderboard) are single-column, thumb-reachable, large tap targets (44px).
+
+Keep heavy visuals off mobile; lazy-load images and lists.
+
+PWA (installable)
+
+Add a manifest (name from APP_NAME env, neutral icon in STEALTH).
+
+Register a service worker for basic offline shell (dashboard + cached CSS/JS).
+
+Enable “Add to Home Screen” prompt after first successful login.
+
+Test on iOS Safari and Android Chrome; verify splash screen + icon.
+
+Wallet UX on mobile
+
+Use deep links for WalletConnect; confirm MetaMask Mobile and Coinbase Wallet open correctly.
+
+If STEALTH: show only MetaMask + WalletConnect.
+
+If PUBLIC: add Coinbase Wallet and test Base chain auto-switch prompt.
+
+Add a “stuck?” help link that explains how to switch network and clear pending txs.
+
+Claim flow ergonomics
+
+Real-time validation (length 3–20, [a–z0–9–]) before any chain call.
+
+Pre-check availability with a read; only then present the tx.
+
+Post-claim toast with “Copy your handle” and a shareable (disabled in STEALTH).
+
+Vault upload ergonomics
+
+Show client-side size check and MIME allow-list before network work.
+
+Progress bar: encrypt (fast), upload (streamed), pin (await), anchor (PUBLIC only).
+
+If user backgrounds the tab, keep a local queue and resume.
+
+Performance budget
+
+JS bundle target: < 220KB gzipped for landing page; split dApp code behind the connect gate.
+
+Code-split wallet connectors; load Coinbase module only in PUBLIC.
+
+Use event-driven refresh instead of polling (already set in Part 4).
+
+Cache contract ABIs and addresses in memory; memoize viem clients.
+
+Accessibility & basic SEO (even in STEALTH)
+
+Semantic headings, labeled form inputs, focus states, keyboard nav.
+
+Neutral metadata in STEALTH; real OG/Twitter cards in PUBLIC.
+
+Tiny analytics (PUBLIC only)
+
+Track: connect_success, claim_success, upload_success, award_seen, referral_share_click.
+
+No wallet or CID in analytics payloads; keep it aggregate.
+
+Error states users understand
+
+“Name taken,” “Wallet already has a name,” “Wrong network,” “Tx rejected,” “File too large/blocked type,” “No storage left today.”
+
+Provide a one-click network switch and retry buttons.
+
+Mobile QA checklist
+
+iOS Safari + MetaMask Mobile/WalletConnect: connect → claim → upload → see XP → leaderboard.
+
+Android Chrome + Coinbase Wallet: same.
+
+Airplane mode after upload starts: ensure it resumes or fails cleanly.
+
+—
+PART 10: Security hardening + prelaunch QA + go-live runbook
+
+Key management
+
+Separate keys: DEPLOYER, AWARDER, FRONTEND_OWNER (if any admin calls).
+
+Store only in Replit Secrets (dev) and a secure vault in prod; never commit.
+
+Rotate AWARDER before switching to PUBLIC; fund minimally.
+
+Contract safety switches
+
+Add Pausable (or a simple paused bool) to Points awarder functions; owner can pause awards.
+
+Registry is minimal; ensure no upgrade hooks or transfers.
+
+Files emits events only; no external calls.
+
+Unit tests for: duplicate register, case normalization, invalid chars, award idempotency, pause behavior.
+
+RPC/provider resilience
+
+Primary RPC from Alchemy/Infura; add a backup RPC URL and failover.
+
+Exponential backoff and retry on transient errors.
+
+Backend security
+
+CORS allowlist for your domain(s).
+
+Rate-limit claim, upload, referral endpoints.
+
+CRON endpoints require a secret token in header.
+
+Redact logs (no keys, no CIDs, no wallet addresses in STEALTH).
+
+hCaptcha/Turnstile on claim when PUBLIC.
+
+Storage & privacy
+
+Client-side encryption keys never leave the browser.
+
+Keep only CID, size, mime, filename in DB; never store plaintext content.
+
+Make clear in copy: IPFS is public in PUBLIC mode; in STEALTH keep pins private.
+
+Monitoring & alerts (PUBLIC)
+
+Uptime check for app and RPC health endpoints.
+
+Error tracking (Sentry/Logtail) with PII scrubbed.
+
+On-chain watchers (Tenderly/Blocknative) for Points.Awarded spikes or revert storms.
+
+Backups & recovery
+
+Nightly DB snapshot; verify restore monthly.
+
+Export deployments JSON to a safe location after each deploy.
+
+Keep local copies of ABIs and bytecode used in production.
+
+Dry run (Base Sepolia)
+
+Full dress rehearsal using PUBLIC mode to Sepolia: connect, claim, award daily XP via cron, upload + pin + Files event, leaderboard verify.
+
+Run for 48 hours; review logs, gas usage, any reverts, and award idempotency (no dupes).
+
+Final go-live steps (Base mainnet, if/when ready)
+
+Confirm APP_MODE=PUBLIC, brand assets live, analytics ON.
+
+Deploy contracts to Base mainnet with DEPLOYER; store addresses in deployments/base.json.
+
+Set RPC_URL to Base mainnet; set contract addresses in env/deployments file.
+
+Fund AWARDER with small Base ETH; unpause awards.
+
+Turn on referrals and share links; enable explorer buttons.
+
+Rollback plan
+
+MAINTENANCE_MODE flag: serve a static banner; pause Points awards.
+
+If a critical bug: flip back to Sepolia or STEALTH, pause awards, and notify users (status page).
+
+Hotfix contract issues by pausing awarder and shipping a new Points contract, keeping Registry and Files intact; wire new address in env and restart cron.
+
+Launch-day checklist (1 page you can print)
+
+Env flags: APP_MODE PUBLIC; CHAIN Base or Base Sepolia; connectors enabled; analytics on.
+
+Contracts: addresses confirmed; events visible on explorer; Points unpaused.
+
+Cron: running; last run success; AWARDER funded.
+
+Vault: pin succeeds; explorer shows Pinned events (PUBLIC).
+
+Leaderboard: loads; verify button matches on-chain.
+
+Support: prepared FAQs for common errors; incident channel ready.
+
+Post-launch 72-hour watch
+
+Keep logs open; watch award rates, error rates, and contract event volumes.
+
+Cap referrals if abuse detected; adjust hCaptcha threshold if needed.
+
+Collect UX friction notes and ship day-2 patches (copy tweaks, limits, retries).

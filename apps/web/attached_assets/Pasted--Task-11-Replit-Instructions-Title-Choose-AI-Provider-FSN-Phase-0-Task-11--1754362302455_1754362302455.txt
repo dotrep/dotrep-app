@@ -1,0 +1,121 @@
+## ✅ Task #11 – Replit Instructions  
+**Title**: Choose AI Provider (FSN Phase 0 – Task 11)
+
+---
+
+### 🎯 Objective  
+Select and integrate a trusted AI chat provider that will power FSN's in-app chatbot for user interaction, onboarding help, XP rewards, and gamified dialogue. The provider must support:
+- Easy front-end integration (React)
+- Message streaming (ideal)
+- Identity-bound usage (per UID)
+- Scalable, low-latency chat
+- XP triggers per user message (next task)
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Preferred Provider: **OpenAI GPT-4 (via API)**
+
+Why:
+- Best performance
+- Streaming and message history support
+- Stable SDK for React/Firebase stack
+
+---
+
+### ✅ 2. Get Your OpenAI API Key
+
+Go to [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)  
+→ Click **"Create New Secret Key"**  
+→ Copy and store it securely in `.env`:
+
+```
+NEXT_PUBLIC_OPENAI_API_KEY=sk-...
+```
+
+---
+
+### ✅ 3. Install OpenAI Client
+
+```bash
+npm install openai
+```
+
+---
+
+### ✅ 4. Create `/lib/chatWithAI.js`
+
+```js
+// lib/chatWithAI.js
+
+import { OpenAI } from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
+
+export const sendChatMessage = async (messages) => {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages,
+    stream: false
+  });
+
+  return response.choices[0].message.content;
+};
+```
+
+---
+
+### ✅ 5. Example Call (in chatbot component)
+
+```js
+const [history, setHistory] = useState([
+  { role: "system", content: "You are a friendly FSN helper." }
+]);
+
+const handleSend = async (userMessage) => {
+  const newHistory = [...history, { role: "user", content: userMessage }];
+  const aiResponse = await sendChatMessage(newHistory);
+
+  setHistory([
+    ...newHistory,
+    { role: "assistant", content: aiResponse }
+  ]);
+};
+```
+
+---
+
+### ✅ 6. Alternatives (only if OpenAI fails)
+
+| Provider      | Notes |
+|---------------|-------|
+| **Cohere**     | Good fallback, native SDK |
+| **Anthropic Claude** | More expensive, less JS-native |
+| **HuggingFace** | Slower unless hosted on paid infra |
+
+Use OpenAI unless regionally blocked.
+
+---
+
+### 🧪 QA Checklist
+
+| Step                            | Expected Result                    |
+|---------------------------------|-------------------------------------|
+| API key loads correctly         | ✅ Can send test prompt              |
+| Chat renders in UI              | ✅ AI replies correctly              |
+| React state holds conversation  | ✅ Multiple messages work            |
+| User identity (UID) passed      | ✅ Stored for XP in Task #13         |
+
+---
+
+### ✅ Summary
+
+- GPT-4 selected via OpenAI API
+- Integration functional in React
+- Ready for chat UI (Task #12) and XP rewards (Task #13)

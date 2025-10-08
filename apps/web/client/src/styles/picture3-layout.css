@@ -1,0 +1,346 @@
+/* Picture 3 Layout - Minimalist FSN PULSE Design */
+
+.picture3-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0A1A2F, #0F2848);
+  color: #00f0ff;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Top Navigation */
+.picture3-nav {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 1.5rem 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nav-item.active {
+  color: #00f0ff;
+}
+
+.nav-item:hover {
+  color: #00f0ff;
+}
+
+.nav-icon {
+  font-size: 1rem;
+}
+
+/* Large Centered FSN PULSE Ring */
+.pulse-center-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 2rem 0;
+}
+
+.large-pulse-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-rings {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 240, 255, 0.6);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.pulse-ring.outer {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-width: 3px;
+}
+
+.pulse-ring.middle {
+  width: 85%;
+  height: 85%;
+  top: 7.5%;
+  left: 7.5%;
+  border-width: 2px;
+  animation-delay: 0.5s;
+}
+
+.pulse-ring.inner {
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+  border-width: 2px;
+  animation-delay: 1s;
+}
+
+.pulse-ring.active {
+  border-color: rgba(0, 240, 255, 1);
+  box-shadow: 
+    0 0 30px rgba(0, 240, 255, 0.8),
+    0 0 60px rgba(0, 240, 255, 0.4),
+    inset 0 0 30px rgba(0, 240, 255, 0.2);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.pulse-content {
+  text-align: center;
+  z-index: 10;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.pulse-level {
+  font-size: 1.2rem;
+  font-weight: 300;
+  color: #00f0ff;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.pulse-status {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-bottom: 3rem;
+  letter-spacing: 1px;
+}
+
+/* No center logo/icon needed */
+
+.pulse-brand {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-top: 2rem;
+  letter-spacing: 3px;
+}
+
+/* Progress Tracker */
+.progress-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin: 3rem 0;
+  padding: 0 2rem;
+}
+
+.tracker-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tracker-dot {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.tracker-dot.active {
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+}
+
+.tracker-step span {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.tracker-step.active span {
+  color: #00f0ff;
+  font-weight: 500;
+}
+
+/* Your Stored Files Section */
+.stored-files-section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.files-title {
+  font-size: 1.5rem;
+  color: #00f0ff;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.file-card {
+  background: rgba(0, 30, 60, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-card:hover {
+  border-color: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 8px 25px rgba(0, 240, 255, 0.2);
+  transform: translateY(-4px);
+}
+
+.file-card.empty {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.file-card.empty:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(0, 240, 255, 0.3);
+}
+
+.file-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.file-xp {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #00ff88;
+  margin-bottom: 1rem;
+}
+
+.file-date {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Upload File Button */
+.upload-section {
+  text-align: center;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.upload-file-btn {
+  background: linear-gradient(135deg, #00a8cc, #0077aa);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 168, 204, 0.4);
+  width: 100%;
+  max-width: 400px;
+}
+
+.upload-file-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00c4ee, #0099cc);
+  box-shadow: 0 6px 20px rgba(0, 168, 204, 0.6);
+  transform: translateY(-2px);
+}
+
+.upload-file-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upload-error {
+  color: #ff6b6b;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .picture3-nav {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .large-pulse-container {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .pulse-level {
+    font-size: 1rem;
+  }
+  
+  .pulse-status {
+    font-size: 1.2rem;
+  }
+  
+  .pulse-brand {
+    font-size: 1.4rem;
+  }
+  
+  .fsn-logo {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+  
+  .progress-tracker {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .tracker-line {
+    width: 30px;
+  }
+  
+  .files-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stored-files-section {
+    padding: 1rem;
+  }
+}

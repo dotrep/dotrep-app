@@ -1,0 +1,104 @@
+✅ SIGNAL INTERACTION PHASE 0 — FINAL POLISH + MICRO-FEATURE INSTRUCTIONS (FOR REPLIT)
+🧾 Summary
+You're going to:
+
+Highlight the selected signal mode (CAST, LISTEN, etc.)
+
+Add animated glow to “casting”
+
+Introduce LOCK logic
+
+Add button UX feedback
+
+Add save/restore frequency and mode (optional)
+
+🔷 1. MODE BUTTON FEEDBACK (CAST / LISTEN / MULTI)
+Goal: When user clicks CAST, LISTEN, or MULTI, that button should glow (neon blue or green), and the MODE: display should update.
+
+What to tell Replit AI:
+Add an active CSS class to the button clicked (CAST, LISTEN, or MULTI).
+
+Remove the active class from all others.
+
+Update MODE: in the signal display to match the selected button.
+
+Example:
+
+makefile
+Copy
+Edit
+MODE: CAST  
+FREQUENCY: 19.10 MHz
+🔷 2. LOCK BUTTON BEHAVIOR
+Goal: When LOCK is clicked:
+
+All number buttons and mode buttons become disabled
+
+MODE: displays “LOCKED”
+
+The LOCK button should glow purple
+
+A tooltip or toast can say: Signal locked. Unlock to adjust.
+
+What to tell Replit AI:
+Add logic: if LOCK is toggled ON, set disabled=true on all keypad buttons and mode buttons.
+
+When toggled OFF, re-enable buttons and restore previous mode state.
+
+You can use a locked = true/false global variable to track this.
+
+🔷 3. “ACTIVE MODE” VISUALS (OPTIONAL ANIMATION)
+Goal: Visually indicate when the signal is active.
+
+Animation suggestions:
+Add a pulsing glow or shimmer to the entire signal dial.
+
+Animate MHz digits to slightly flicker/glow every 1–2 seconds.
+
+Add a soft soundwave animation or arc-line animation around the FSN logo if possible (non-essential but powerful visual anchor).
+
+What to tell Replit AI:
+Add a CSS animation to the .signal-display panel if ON button is active and LOCK is off.
+
+Optional: background pulse effect using canvas, SVG, or CSS keyframes.
+
+🔷 4. UX + UI IMPROVEMENTS
+XP Gains + Feedback
+
+Show a "+XP" bubble briefly when casting or listening starts.
+
+Store XP gain in the log (for now, just simulate this with a toast or console.log).
+
+Button Hover & Click Effects
+
+Add hover and active states to every button:
+
+Cyan outline on hover
+
+Bright glow on click
+
+Optional sound or haptic effect if sound library is available
+
+🔷 5. OPTIONAL: STATE MEMORY
+If user reloads, you can:
+
+Save last frequency and mode in localStorage
+
+On load, restore display to last known FREQUENCY and MODE
+
+Example instruction:
+
+js
+Copy
+Edit
+localStorage.setItem('fsn_signal_mode', 'CAST');
+localStorage.setItem('fsn_signal_freq', '13.37');
+🎯 Stretch Goal (Optional)
+“Correct” Frequencies:
+
+When user dials special community frequencies (e.g. 13.37 MHz), show a spark animation or bonus message like:
+
+vbnet
+Copy
+Edit
+🛰️ You've tuned into FSN Core Channel!

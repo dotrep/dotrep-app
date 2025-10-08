@@ -1,0 +1,96 @@
+ MODULE: “Next Task to Boost Pulse”
+📍 This appears below the Pulse gauge on the Home page.
+
+👀 WHAT THIS DOES
+This component shows one recommended task the user hasn’t done yet to help them increase their Pulse Hz.
+It updates dynamically based on what they’ve already done.
+
+Example:
+
+“+5Hz: Upload your first Vault file”
+“+7Hz: Join the FSN Discord”
+“+5Hz: Play your first mini mission”
+
+🔧 STEP-BY-STEP IMPLEMENTATION PLAN (NO CODE YET)
+📁 1. Create: src/components/NextPulseTask.jsx
+This is a new component.
+
+It should:
+
+Accept the user’s completed Pulse tasks (from state or mock for now)
+
+Loop through a predefined list of Pulse tasks
+
+Find the first one they haven’t done yet
+
+Display that task with:
+
+✅ Hz reward
+
+✅ Description
+
+✅ Icon (optional)
+
+✅ Glow style to match Pulse dial
+
+🧠 PULSE TASK DATA STRUCTURE
+In the same file or a separate constants file (pulseTasks.js), define an array like this:
+
+js
+Copy
+Edit
+[
+  { id: "upload_file", label: "Upload your first Vault file", hz: 5 },
+  { id: "join_discord", label: "Join the FSN Discord", hz: 7 },
+  { id: "play_mini_game", label: "Play a mini mission", hz: 5 },
+  { id: "mint_nft", label: "Mint your first Vault NFT", hz: 5 },
+  { id: "enable_secure_mode", label: "Activate Vault Security Mode", hz: 7 },
+  { id: "follow_user", label: "Follow a user", hz: 3 }
+]
+📁 2. Modify: Home.jsx
+(Or wherever Pulse dial is rendered)
+
+Import the NextPulseTask component
+
+Add it directly below the Pulse gauge
+
+Pass in the list of completed tasks (use mock data at first)
+
+🧪 TEMP DATA FOR TESTING
+Until Pulse state is real, use this mock:
+
+js
+Copy
+Edit
+const completedPulseTasks = ["upload_file", "join_discord"];
+This would cause the module to show:
+
++5Hz: Play a mini mission
+
+🎨 STYLING DETAILS FOR REPLIT AI
+In NextPulseTask.css, apply the following:
+
+Neon blue text: #00ffff
+
+A glowing left bar or icon
+
+Box-shadow for slight glow
+
+Text format:
+
+🔹 +5Hz: Upload your first Vault file
+
+You can also animate the box subtly or fade it in on hover.
+
+✅ RESULT
+On the Home page, under the Pulse dial, users will see:
+
+🔹 +5Hz: Mint your first Vault NFT
+
+And as they complete tasks, this will update to show the next one.
+
+➕ FUTURE ENHANCEMENT (Phase 1+)
+Click the task to go straight to that action (e.g., open Vault, launch Game)
+
+Show “Completed” badge or strikethroughs
+

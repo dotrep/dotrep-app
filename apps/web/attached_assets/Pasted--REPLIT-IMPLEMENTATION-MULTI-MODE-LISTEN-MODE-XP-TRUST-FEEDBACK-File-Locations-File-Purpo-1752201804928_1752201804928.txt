@@ -1,0 +1,162 @@
+✅ REPLIT IMPLEMENTATION: MULTI MODE + LISTEN MODE + XP & TRUST FEEDBACK
+📂 File Locations
+File	Purpose
+SignalPanel.jsx	Main logic for Signal modes (CAST, LISTEN, MULTI)
+SignalPanel.css	Visual glow/animations for modes
+XPContext.js or AppContext.js	XP state management
+UserContext.js	For storing activeFrequencies, signalMode, etc.
+
+🔷 PART 1 — MULTI MODE IMPLEMENTATION
+👀 Goal:
+Allow user to select and CAST to multiple frequencies simultaneously.
+
+🔧 Instructions:
+Add global state:
+
+js
+Copy
+Edit
+const [selectedFrequencies, setSelectedFrequencies] = useState([]);
+When user enters MULTI mode:
+
+Show a new UI below the MHz display:
+
+jsx
+Copy
+Edit
+"Select up to 3 channels:"
+[ F1 ] [ F2 ] [ F3 ]
+Each [ Fx ] button:
+
+When clicked: highlights with glow
+
+Stores frequency entered into selectedFrequencies[i]
+
+If already 3 selected, disable more selections
+
+When user hits CAST:
+
+Loop through selectedFrequencies
+
+Trigger a CAST animation for each one
+
+Add XP:
+
+js
+Copy
+Edit
+addXP(25 * selectedFrequencies.length);
+logXP(`+${25 * selectedFrequencies.length} XP – Multi Signal Broadcast`);
+Reset state after casting
+
+js
+Copy
+Edit
+setSelectedFrequencies([]);
+🔷 PART 2 — LISTEN MODE MINIGAME
+👀 Goal:
+Allow users to tune to “hidden” FSN channels and receive XP if they find the correct frequency.
+
+🔧 Instructions:
+Create a hidden global:
+
+js
+Copy
+Edit
+const targetFreq = 13.37; // For now, hardcoded
+When LISTEN mode is active and frequency entered matches:
+
+js
+Copy
+Edit
+if (parseFloat(frequency) === targetFreq) {
+  setFoundFreq(true);
+  addXP(15);
+  logXP('+15 XP — Frequency Lock Achievement');
+}
+Show success modal or toast:
+
+csharp
+Copy
+Edit
+🎧 You’ve locked into a hidden FSN channel!
+Optional:
+
+Animate waveform or noise meter while tuning
+
+Shake or flash when close (within ±0.10 MHz)
+
+🔷 PART 3 — XP FEEDBACK + HUD INTEGRATION
+👀 Goal:
+Any action in MULTI or LISTEN gives real-time XP feedback.
+
+🔧 Instructions:
+Inside XP context or XP bar component:
+
+On XP change:
+
+Briefly glow the XP counter
+
+Float a +XX XP element upward
+
+css
+Copy
+Edit
+@keyframes xpBurst {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 0; }
+}
+XP log in modal should include:
+
++25 XP – Multi Signal Broadcast
+
++15 XP – Frequency Lock
+
+🔷 PART 4 — OPTIONAL TRUST TIER PREP
+👀 Goal:
+Show user progression toward Signal Trust Tier 1
+
+🔧 Instructions:
+Add new state variable:
+
+js
+Copy
+Edit
+const [trustTier, setTrustTier] = useState(0); // 0, 1, 2...
+Trigger Tier 1:
+
+js
+Copy
+Edit
+if (xp >= 1000 && totalCasts >= 10) {
+  setTrustTier(1);
+}
+Show badge in XP modal or top nav:
+
+less
+Copy
+Edit
+🔰 Signal Trust: Tier I
+Optional style:
+
+css
+Copy
+Edit
+.trust-badge {
+  background: #00ffcc;
+  font-family: Orbitron;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #001010;
+  text-shadow: 0 0 6px #0ff;
+}
+✅ FINAL CHECKLIST
+Feature	Status
+MULTI mode enables 2–3 channel broadcast	✅
+CAST gives XP per channel	✅
+LISTEN mode minigame works with XP bonus	✅
+XP counter + log updates in real time	✅
+Trust tier progress logic in place	✅
+UI styled with FSN glow, Orbitron font	✅
+

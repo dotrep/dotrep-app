@@ -1,0 +1,51 @@
+Add a retro-style arcade cabinet to the existing FSN Game Center screen layout.
+
+🎯 Placement:
+- Place the cabinet on the **left side of the screen**, between the following two text rows:
+   - Top: “Compete • Earn • Dominate”
+   - Bottom: “1,247 Active Players | 42 Tournaments | 8.9M XP Earned”
+- Push the bottom stats row downward to make room.
+- The cabinet must feel fully embedded in the layout — no white box or extra frame.
+- Background must be identical to the FSN grid style — same glow, same cosmic black theme.
+
+🎮 Cabinet Design:
+- Style: **1980s upright arcade machine**, facing straight forward (not angled).
+- Shape: rectangular cabinet with a tall vertical screen, top marquee panel, and control panel at waist height.
+- Body: matte black metal with **neon cyan-blue glowing trim** on all edges.
+- Size: roughly fills the vertical gap between the two text rows, with good spacing above and below.
+
+📺 Screen Details:
+- Display a **pixelated smiley face**, blocky and 8-bit style (not emoji).
+- Add a **subtle animated flicker/glitch effect**:
+   - Simulate a faint glow pulse on the screen
+   - Overlay light “CRT flicker” texture: subtle horizontal jitter lines or pixel noise
+   - Do **not** add thick scanlines or full-screen distortion
+   - No blur or warping — the face must remain clear and intact
+   - Think of a **CRT screen gently glitching** from power fluctuation or signal fuzz, with glowing pixel shimmer
+- Smiley face should have:
+   - Two vertical oval eyes
+   - A smooth but pixelated smile
+   - Bright cyan glow around the screen edges
+
+🕹️ Control Panel:
+- Two circular glowing cyan buttons (on the right side)
+- One short joystick (on the left side), black base with glowing stick
+- Panel should glow slightly from underneath, matching FSN neon lighting
+
+🔠 Labels:
+- Top marquee: **“DAILY QUEST”** in bold block font, glowing cyan-blue
+- Bottom panel (repeat): also says **“DAILY QUEST”**, same font and glow — this is intentional, not a mistake
+
+🌌 FX + Environment:
+- Cabinet casts a soft radial glow on the floor — Tron-style ripple, centered under cabinet base
+- Background must remain FSN Game Center grid — do not add stars, clouds, fog, or a white glow box
+- Keep everything consistent with FSN’s cyberpunk, minimalist design
+
+🧠 Do NOT:
+- Do not center the cabinet
+- Do not add other UI elements, mascots, or tokens
+- Do not mirror or distort text
+- Do not redraw the Game Center header or nav
+- Do not replace the background — use existing FSN background
+
+Only render the **left arcade cabinet**. Right side must remain empty for future use.

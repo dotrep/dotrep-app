@@ -1,0 +1,270 @@
+/* XP Ring Component Styles */
+
+.xp-ring-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.xp-ring {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-ring-background {
+  opacity: 0.3;
+}
+
+.progress-ring-progress {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+  filter: drop-shadow(0 0 8px #00f0ff);
+}
+
+.progress-ring-glow {
+  opacity: 0.6;
+  filter: blur(2px);
+  animation: ring-glow 2s ease-in-out infinite alternate;
+}
+
+.xp-ring-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.xp-ring-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.xp-ring-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+  line-height: 1;
+}
+
+.xp-progress-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.xp-current {
+  color: #00f0ff;
+  text-shadow: 0 0 6px rgba(0, 240, 255, 0.4);
+}
+
+.xp-separator {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.xp-next {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.next-level-info {
+  font-size: 9px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ring pulse animation on XP gain */
+.ring-pulse .progress-ring-progress {
+  animation: ring-pulse-flash 0.5s ease-out;
+}
+
+.ring-pulse .progress-ring-glow {
+  animation: ring-pulse-glow 0.5s ease-out;
+}
+
+/* Level up animations */
+.level-up .xp-ring {
+  animation: level-up-ring 1s ease-out;
+}
+
+.level-up-overlay {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+  animation: level-up-appear 3s ease-out forwards;
+}
+
+.level-up-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b366ff;
+  text-shadow: 0 0 15px rgba(179, 102, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  animation: level-up-text-glow 1s ease-out infinite alternate;
+}
+
+.level-up-sparkles {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  animation: sparkle-bounce 2s ease-out infinite;
+}
+
+.level-up-sparkles span {
+  animation: sparkle-rotate 1s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.2s);
+}
+
+.level-up-sparkles span:nth-child(1) { --i: 0; }
+.level-up-sparkles span:nth-child(2) { --i: 1; }
+.level-up-sparkles span:nth-child(3) { --i: 2; }
+
+/* Keyframe Animations */
+@keyframes ring-glow {
+  0% { opacity: 0.4; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes ring-pulse-flash {
+  0% {
+    filter: drop-shadow(0 0 8px #00f0ff);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px #00f0ff) drop-shadow(0 0 40px #00f0ff);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px #00f0ff);
+  }
+}
+
+@keyframes ring-pulse-glow {
+  0% {
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(4px) drop-shadow(0 0 20px #00f0ff);
+  }
+  100% {
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+}
+
+@keyframes level-up-ring {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px #b366ff);
+  }
+  25% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 30px #b366ff) drop-shadow(0 0 60px #b366ff);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px #b366ff);
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px #00f0ff);
+  }
+}
+
+@keyframes level-up-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-15px) scale(1.1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-15px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
+  }
+}
+
+@keyframes level-up-text-glow {
+  0% {
+    text-shadow: 0 0 15px rgba(179, 102, 255, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 25px rgba(179, 102, 255, 1), 0 0 35px rgba(179, 102, 255, 0.6);
+  }
+}
+
+@keyframes sparkle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes sparkle-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .xp-ring {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .xp-ring-value {
+    font-size: 20px;
+  }
+  
+  .xp-ring-label {
+    font-size: 9px;
+  }
+  
+  .xp-progress-info {
+    font-size: 10px;
+  }
+  
+  .next-level-info {
+    font-size: 8px;
+  }
+}

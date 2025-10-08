@@ -1,0 +1,200 @@
+🌀 1. Revert Pulse Gauge to Original Look
+📁 File: PulseGauge.jsx
+Objective: Replace the current smooth ring display with a segmented radial bar gauge with inner text, outer cyan glow, and unlock text below.
+
+✅ Replace existing JSX with:
+jsx
+Copy
+Edit
+<div className="pulse-gauge">
+  <svg viewBox="0 0 100 100" className="gauge-svg">
+    {[...Array(12)].map((_, i) => (
+      <rect
+        key={i}
+        x="48"
+        y="8"
+        width="4"
+        height="12"
+        rx="2"
+        ry="2"
+        fill={i < activeSegments ? '#00ffff' : '#111'}
+        transform={`rotate(${i * 30} 50 50)`}
+      />
+    ))}
+  </svg>
+  <div className="pulse-center">
+    <div className="pulse-value">{pulse} Hz</div>
+    <div className="pulse-subtext">
+      {pulse >= 70 ? '✅ Signal Ready' : 'Next Signal at 70Hz'}
+    </div>
+  </div>
+</div>
+🔧 Logic:
+js
+Copy
+Edit
+const pulse = user.pulse || 55;
+const activeSegments = Math.floor((pulse / 100) * 12);
+🎨 CSS (pulseGauge.css or inline):
+css
+Copy
+Edit
+.pulse-gauge {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: auto;
+  border-radius: 50%;
+  background: radial-gradient(#0a0a1a, #000);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.gauge-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pulse-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  color: #0ff;
+}
+
+.pulse-value {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.pulse-subtext {
+  font-size: 12px;
+  color: #aaa;
+}
+🎮 2. Game Center: XP Reward Feedback
+📁 File: GameCenter.jsx
+✅ After the user completes a quest/game round:
+Add:
+
+js
+Copy
+Edit
+showToast({
+  message: '+25 XP Earned!',
+  icon: '🎮',
+  type: 'xp'
+});
+user.xp += 25;
+✅ Also update XP UI + trigger sound:
+js
+Copy
+Edit
+playSound('xp_gain.wav');
+(Ensure audio file exists or use Audio('/audio/xp_gain.wav').play())
+
+🧩 3. Add Tooltip for Signal / Trust Icons
+📁 File: UserProfile.jsx or SignalStatusBar.jsx
+Wrap icons in hover tooltips:
+
+jsx
+Copy
+Edit
+<span className="tooltip-wrapper">
+  <img src="/icons/signal.svg" alt="Core Signal" />
+  <span className="tooltip-text">📡 Core Signal: Verified Broadcast Status</span>
+</span>
+
+<span className="tooltip-wrapper">
+  <img src="/icons/shield.svg" alt="Verified Trust" />
+  <span className="tooltip-text">🛡️ Verified: Trust Protocol Passed</span>
+</span>
+🎨 Tooltip CSS:
+css
+Copy
+Edit
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  background-color: #222;
+  color: #0ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.tooltip-wrapper:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+🔒 4. Locked Badge / NFT Tooltip Clarity
+📁 File: BadgeCard.jsx or NFTCard.jsx
+Update the locked state with:
+
+jsx
+Copy
+Edit
+{!earned && (
+  <div className="lock-overlay">
+    <span className="tooltip-text">🔒 Earn by completing onboarding</span>
+  </div>
+)}
+You can dynamically change text with badge logic:
+
+js
+Copy
+Edit
+getUnlockMessage(badgeId) {
+  switch(badgeId) {
+    case 'coreSignal': return 'Reach 70Hz + 100 XP';
+    case 'trustVerified': return 'Complete Trust requirements';
+    default: return 'Locked — Complete related mission';
+  }
+}
+💾 5. Vault Tier Enforcement Logic
+📁 File: VaultUploadLogic.js
+Enforce file and NFT limits based on tier:
+
+js
+Copy
+Edit
+function getVaultLimits(tier) {
+  switch (tier) {
+    case 'Sentinel': return { files: 20, nfts: 5 };
+    case 'Navigator': return { files: 10, nfts: 3 };
+    default: return { files: 5, nfts: 1 };
+  }
+}
+
+const currentTier = getVaultTier(user.xp);
+const limits = getVaultLimits(currentTier);
+
+if (user.files.length >= limits.files) {
+  showToast({
+    message: '🚫 Vault file limit reached for current tier',
+    type: 'alert'
+  });
+  return;
+}
+Ensure file upload buttons reflect disabled state when over limit.
+
+✅ What This Gives You
+Feature	Result
+Pulse Gauge	Tron-glow radial vibe fully restored
+Game XP Feedback	Feels rewarding to complete a quest
+Signal/Trust Icons	Now teach users what they mean
+Locked Slots	Build curiosity + motivation to unlock
+Vault Tier Fix

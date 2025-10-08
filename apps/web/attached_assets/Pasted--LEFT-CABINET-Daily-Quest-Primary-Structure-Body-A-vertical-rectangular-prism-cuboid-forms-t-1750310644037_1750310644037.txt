@@ -1,0 +1,82 @@
+🕹️ LEFT CABINET: Daily Quest
+Primary Structure:
+Body: A vertical rectangular prism (cuboid) forms the base. The sides and back appear flush and uniform, providing structural depth.
+
+Perspective: The cabinet is rendered in 3-point perspective with vanishing points pulling backward, downward, and to the right. This creates the illusion of depth and tilt.
+
+Base footprint: Slight trapezoidal taper visible in the footprint — the bottom is marginally wider than the top, giving a stable “planted” feel.
+
+Control Panel Area:
+The control surface projects outward as a slanted trapezoidal prism, tilted upward ~30–40°, resting on a short extruded ledge.
+
+Features circular disk-like buttons—geometric cylinders in perspective — and a subtle horizontal slot (possibly for interaction or light effect).
+
+Monitor Bezel and Screen:
+The screen housing is a recessed trapezoidal inset within a slanted parallelepiped (a skewed prism).
+
+The top section leans forward and upward, suggesting an angular polygonal cowl.
+
+The screen surface is curved with a convex “CRT” feel, but geometrically it's a slightly warped plane.
+
+Marquee Header:
+Titled "DAILY QUEST", it occupies a horizontally extruded cuboid, but skewed slightly upward — visually a parallelogram extruded into depth.
+
+Marquee faces frontward but cants slightly forward ~10°, giving it a billboard-like effect on a tilted frame.
+
+Facial Features:
+The face (smiley with eyes and mouth) is rendered as ellipses and an arc, embedded on the screen plane, glowing with uniform radial gradients to simulate curvature and emotion.
+
+⭐ RIGHT CABINET: Mini Missions – Network Wars
+Primary Structure:
+Also based on a vertical rectangular prism, but this cabinet tilts more aggressively backward — giving it a more dynamic Z-profile silhouette.
+
+The right edge is more sharply angled, suggesting a deeper cantilevered control area and steeper monitor incline.
+
+Control Panel Area:
+Projects outward with a longer trapezoidal face, extruded to form a trapezoidal prism extending forward.
+
+Houses two circular cylindrical buttons, aligned slightly closer to the user.
+
+Button layout implies a “dual control” or secondary interaction mechanism.
+
+Monitor Bezel and Screen:
+More angular than the Daily Quest version — the inset screen is a concave trapezoidal recess (geometrically: a trapezoid extruded into a slightly negative depth).
+
+The star-shaped face uses a centered pentagonal radial symmetry, resembling a 2.5D embossed polygon glowing from behind.
+
+Marquee Header:
+The "MINI MISSIONS" text sits in a horizontally skewed cuboid, more aggressively canted forward than on the left cabinet.
+
+The top appears angled ~20–25° from vertical, giving a slightly overhanging effect.
+
+The header geometry suggests a forward-leaning parallelepiped—contributing to the cabinet’s aerodynamic “lean-in” vibe.
+
+Shared Geometric Themes and 3D Nature:
+Perspective and Depth:
+Both cabinets use a consistent oblique projection to simulate 3D, with:
+
+Width depth shrinking toward the right.
+
+Height lines angling slightly inward to converge visually.
+
+Illumination creating rim lighting that emphasizes edge geometry and depth contours.
+
+Base & Shadows:
+Each cabinet casts a radial glow at the base, simulating contact with the “floor plane” and anchoring them in 3D space.
+
+These glows trace the bottom profile of each cabinet, matching the geometric footprint—elongated trapezoid or rectangle depending on tilt.
+
+Neon Outlines:
+The glowing outlines act like wireframe models, reinforcing the geometry:
+
+Edges glow brighter than flat surfaces.
+
+Rounded corners are interpolated via Bézier curves (curved edge segments between straight-line planes).
+
+Stylistic 3D Cues:
+No ambient occlusion or surface texture — everything is read through shape, outline, and glow, giving it a clean, synthetic TRON-style vectorized aesthetic.
+
+Despite minimalist shading, the 3D illusion is strong due to perspective lines, consistent vanishing point logic, and geometric layering.
+
+TL;DR:
+The left cabinet (Daily Quest) is a friendlier, upright trapezoidal-cuboid hybrid, whereas the right cabinet (Mini Missions) is more dynamic, aggressively angled, and forward-leaning. Both are constructed from extruded polygonal prisms — mainly rectangles, trapezoids, and parallelograms — and stylized with 3D-emulating neon geometry using glow, perspective, and precise contouring.

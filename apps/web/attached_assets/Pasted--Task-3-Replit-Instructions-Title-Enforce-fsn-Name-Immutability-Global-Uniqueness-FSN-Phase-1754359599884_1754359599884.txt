@@ -1,0 +1,136 @@
+✅ Task 3 – Replit Instructions
+
+Title: Enforce .fsn Name Immutability & Global Uniqueness (FSN Phase 0 – Task 3)
+
+⸻
+
+🧠 Context
+
+You are working in a Next.js + React + Firebase project for FreeSpace Network (FSN). Users can claim a unique .fsn name, which is soulbound and cannot be changed or reused. This task ensures that each .fsn name:
+	•	Can be claimed only once
+	•	Is locked forever once claimed
+	•	Cannot be deleted or overwritten
+	•	Is always stored in lowercase
+	•	Is linked to only one Firebase UID
+
+The name claim logic and Firestore integration is already partially implemented in ClaimName.jsx.
+
+⸻
+
+✅ Objectives
+	1.	Enforce immutability of .fsn name documents
+	2.	Enforce global uniqueness (no two users can claim the same name)
+	3.	Prevent any user from claiming more than one .fsn
+	4.	Protect Firestore from unauthorized updates or deletions
+	5.	Store all .fsn names in lowercase only
+
+⸻
+
+🔧 Step-by-Step Instructions
+
+⸻
+
+🔒 1. Firestore Security Rules (firestore.rules)
+
+Replace or update your fsnNames rule block with this:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    match /fsnNames/{fsnName} {
+      allow create: if request.auth != null 
+        && !exists(/databases/$(database)/documents/fsnNames/$(fsnName));
+        
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+
+✅ This prevents .fsn name overwrites or deletes
+✅ This also allows users to modify only their own profile
+
+⸻
+
+🔁 2. Update Claim Logic in ClaimName.jsx
+
+In your handleClaim() function, add the following steps before writing the .fsn name:
+
+A. Always convert input to lowercase
+
+const fsnBase = fsnInput.toLowerCase();
+const fullFsnName = `${fsnBase}.fsn`;
+
+B. Block duplicate name
+
+const fsnDoc = await getDoc(doc(db, "fsnNames", fullFsnName));
+if (fsnDoc.exists()) {
+  setError("That .fsn name is already claimed.");
+  return;
+}
+
+C. Block users from claiming more than one name
+
+const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+if (userDoc.exists() && userDoc.data().fsnName) {
+  setError("You’ve already claimed a .fsn name.");
+  return;
+}
+
+📥 3. Create .fsn Name Document in Firestore
+
+Continue your claim logic with:
+
+await setDoc(doc(db, "fsnNames", fullFsnName), {
+  ownerUID: user.uid,
+  email: user.email || null,
+  phone: user.phoneNumber || null,
+  fingerprint: await generateDeviceFingerprint(),
+  ip: await fetchUserIP(),
+  claimedAt: serverTimestamp(),
+  xpAtClaim: await fetchUserXP(user.uid)
+});
+
+🔁 4. Store the .fsn name in the user profile
+
+await updateDoc(doc(db, "users", user.uid), {
+  fsnName: fullFsnName
+});
+
+🧪 5. QA Checklist (for Replit AI)
+
+Test these scenarios:
+
+Test Case	Expected Result
+Try to claim a taken name	❌ Error shown
+Try to claim a second .fsn	❌ Error shown
+Try to change .fsn via profile update	❌ Blocked by security rules
+Delete .fsn name doc via Firebase console	❌ Blocked
+Use uppercase or mixed case input	✅ Stored as lowercase
+
+
+🧾 6. Optional Audit Log (Advanced)
+
+Add this if you want to track all name claims:
+
+await setDoc(doc(db, "auditLogs", `claim_${fullFsnName}`), {
+  uid: user.uid,
+  timestamp: serverTimestamp(),
+  ip,
+  fingerprint,
+  email: user.email || null
+});
+
+✅ Summary
+
+You have now:
+	•	Locked all .fsn names as permanent, unique, lowercase entries
+	•	Enforced 1:1 mapping between user and .fsn
+	•	Prevented future edits or reuse of any claimed name
+	•	Hardened Firestore rules to eliminate updates or deletions
+	•	Fully aligned the system with FSN’s soulbound identity principles

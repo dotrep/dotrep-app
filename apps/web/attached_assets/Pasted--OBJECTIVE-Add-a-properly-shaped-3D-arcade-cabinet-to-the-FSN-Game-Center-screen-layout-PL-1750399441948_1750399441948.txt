@@ -1,0 +1,56 @@
+🎯 OBJECTIVE: Add a properly shaped 3D arcade cabinet to the FSN Game Center screen layout.
+
+📍 PLACEMENT:
+- Position the cabinet on the **left side of the screen**, between the two text rows:
+   • Top row: “Compete • Earn • Dominate”
+   • Bottom row: “1,247 Active Players | 42 Tournaments | 8.9M XP Earned”
+- Push the bottom row downward so the cabinet fits cleanly.
+- The cabinet must be fully embedded — do NOT float it. It should look like it belongs in the FSN world.
+
+🎮 CABINET DESIGN (FIXED STRUCTURE):
+- Use a **real 1980s upright arcade shape**, not a stack of boxes.
+- Cabinet must be **fully 3D**:
+   • Curved edges and tapering top
+   • Angled base visible in perspective
+   • Depth on the left side to show volume
+- Control panel should be **built into the cabinet body**, not pasted on.
+   • It must extend slightly outward at a slope, NOT as a separate block.
+
+🕹️ PANEL ELEMENTS:
+- One short joystick on the left
+- Two glowing cyan-blue buttons on the right
+- Add soft underglow to the panel
+
+📺 SCREEN:
+- Display a glowing pixelated smiley face (blocky 8-bit, not emoji)
+- Add a **light CRT flicker effect**:
+   • Subtle scanline shimmer or horizontal jitter
+   • Gentle fuzz or static glow — like a powered-on CRT screen
+   • Screen should emit forward-facing blue glow (NOT blur)
+
+🔠 TEXT LABELS:
+- Top marquee: “DAILY QUEST” in bold, cyan glowing block font
+- Optional repeat: “DAILY QUEST” at the base of cabinet
+
+🌌 FX & GROUNDING:
+- Cabinet must cast a **soft neon ripple** on the floor (Tron-style radial glow)
+- Add faint shadow below the machine to ground it visually
+- Do not float or leave white boxes around the object
+
+🧠 FSN BACKGROUND RULES:
+- Maintain FSN background: dark grid pattern with glowing cyan lines
+- Do NOT overwrite or flatten the existing layout
+- Do NOT remove the Game Center header or FSN glyph
+
+📋 LAYOUT INTEGRITY:
+- Restore the full Game Center layout:
+   • Keep “Game Center” title + “Compete • Earn • Dominate”
+   • Push “Active Players | Tournaments | XP Earned” row downward so it’s still fully visible
+- Do not shrink or compress text — layout should feel balanced and futuristic
+
+🛑 DO NOT:
+- Do not create flat 2D rectangles
+- Do not float the control panel
+- Do not remove the stat row
+- Do not center the cabinet
+- Do not add mascots or extra UI

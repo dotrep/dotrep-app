@@ -1,0 +1,375 @@
+/* Vault Upgrade Modal Styles */
+.vault-upgrade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.vault-upgrade-modal {
+  background: linear-gradient(135deg, 
+    rgba(10, 25, 45, 0.95) 0%, 
+    rgba(20, 35, 55, 0.95) 50%, 
+    rgba(15, 30, 50, 0.95) 100%);
+  border: 2px solid rgba(0, 240, 255, 0.3);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 20px 60px rgba(0, 240, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+.vault-upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.vault-upgrade-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #00f0ff;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 240, 255, 0.5);
+}
+
+.vault-upgrade-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.vault-upgrade-close:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.vault-upgrade-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.vault-upgrade-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 4px 12px rgba(0, 240, 255, 0.3));
+}
+
+.vault-upgrade-message p {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem;
+}
+
+.vault-upgrade-limit {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.2rem;
+  color: #ff6b6b;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+  text-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.vault-tier-info {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.current-tier,
+.next-tier {
+  flex: 1;
+  min-width: 180px;
+}
+
+.tier-label {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tier-badge {
+  padding: 1rem;
+  border: 2px solid;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tier-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 240, 255, 0.2);
+}
+
+.tier-number {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #00f0ff;
+  margin-bottom: 0.5rem;
+}
+
+.tier-name {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.tier-limits {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.xp-progress-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 15px;
+}
+
+.xp-progress-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  color: #00f0ff;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.xp-progress-bar {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  overflow: hidden;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.8s ease;
+  position: relative;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+.xp-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.current-xp {
+  color: #00f0ff;
+  font-weight: 600;
+}
+
+.required-xp {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.xp-remaining {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.max-tier-reached {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 15px;
+  margin-bottom: 2rem;
+}
+
+.max-tier-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.5));
+}
+
+.max-tier-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.2rem;
+  color: #ffd700;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.max-tier-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.upgrade-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.earn-xp-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #00f0ff, #0080ff);
+  border: none;
+  border-radius: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+}
+
+.earn-xp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, #00ffff, #0099ff);
+}
+
+.premium-teaser {
+  opacity: 0.6;
+}
+
+.premium-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, rgba(128, 0, 255, 0.2), rgba(255, 0, 128, 0.2));
+  border: 2px solid rgba(128, 0, 255, 0.3);
+  border-radius: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
+  transition: all 0.3s ease;
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+}
+
+.btn-text {
+  font-weight: 600;
+}
+
+.coming-soon {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes progressPulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .vault-upgrade-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .vault-upgrade-header {
+    padding: 1rem 1.5rem 0.5rem;
+  }
+  
+  .vault-upgrade-content {
+    padding: 1.5rem;
+  }
+  
+  .vault-tier-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .current-tier,
+  .next-tier {
+    min-width: auto;
+  }
+  
+  .upgrade-actions {
+    flex-direction: column;
+  }
+  
+  .earn-xp-btn,
+  .premium-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

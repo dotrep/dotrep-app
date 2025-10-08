@@ -1,0 +1,29 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Chainlink master symbol centered and properly sized -->
+  <g transform="translate(60,60)">
+    <!-- Hexagonal chain links -->
+    <polygon points="0,-30 27,-15 27,15 0,30 -27,15 -27,-15" 
+             fill="none" stroke="#ff9900" stroke-width="3"/>
+    <polygon points="0,-18 15,-9 15,9 0,18 -15,9 -15,-9" 
+             fill="rgba(255,153,0,0.2)" stroke="#ffcc66" stroke-width="2"/>
+    
+    <!-- Chain connections -->
+    <line x1="-27" y1="0" x2="-42" y2="0" stroke="#ff9900" stroke-width="3"/>
+    <line x1="27" y1="0" x2="42" y2="0" stroke="#ff9900" stroke-width="3"/>
+    <line x1="0" y1="-30" x2="0" y2="-42" stroke="#ff9900" stroke-width="3"/>
+    <line x1="0" y1="30" x2="0" y2="42" stroke="#ff9900" stroke-width="3"/>
+    
+    <!-- Master crown -->
+    <polygon points="0,-36 -6,-42 -3,-48 0,-45 3,-48 6,-42" fill="#ffcc00"/>
+    
+    <!-- Central orb -->
+    <circle cx="0" cy="0" r="9" fill="#ff9900"/>
+    <circle cx="0" cy="0" r="4" fill="#ffffff"/>
+    
+    <!-- Data nodes -->
+    <circle cx="-12" cy="-6" r="2" fill="#ffcc66"/>
+    <circle cx="12" cy="-6" r="2" fill="#ffcc66"/>
+    <circle cx="-12" cy="6" r="2" fill="#ffcc66"/>
+    <circle cx="12" cy="6" r="2" fill="#ffcc66"/>
+  </g>
+</svg>

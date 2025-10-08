@@ -1,0 +1,188 @@
+Component: Mission Tracker / Onboarding Task Panel
+Target File: Likely a new React component, e.g. components/MissionTracker.jsx
+Integrates with: XP system, vault status, signal unlocks, task events
+
+✅ OBJECTIVE
+Build a right-side slide-in Mission Tracker panel that displays 5 onboarding tasks. Each task shows a checkbox (complete/incomplete), task title, XP reward, and status label. Tasks should update based on user actions and contribute to total XP.
+
+📁 FILE STRUCTURE + NEW FILES TO ADD
+sql
+Copy
+Edit
+components/
+  └── MissionTracker.jsx       ← (New component)
+  └── MissionTaskItem.jsx      ← (Subcomponent for individual task rows)
+
+styles/
+  └── missionTracker.css       ← (New optional CSS or use tailwind/style modules)
+📌 UI PLACEMENT
+Appears on the right side of the screen (like the FSN Observer AI panel)
+
+Toggle open via a floating task icon in the corner of the HUD (e.g. clipboard or radar)
+
+Also appears automatically on first visit (if user.firstLogin === true)
+
+Button to close/minimize the panel should be included
+
+🧠 TASKS TO INCLUDE
+Each task has:
+
+Task Label	XP Reward	Completion Condition
+📁 Upload your first file	+50 XP	vault.files.length >= 1
+📡 Emit your first signal	+30 XP	signal.broadcasts.length >= 1
+🆔 Choose your .fsn name	+10 XP	user.fsnName !== null
+🎮 Complete a daily quest	+25 XP	dailyQuest.completedToday === true
+🛡️ Equip a badge	+10 XP	user.activeBadge !== null
+
+💾 DATA STORAGE LOGIC
+Use your existing user state object (userProgress, xp, vault, etc.). Add a new structure:
+
+js
+Copy
+Edit
+// in userProgress object or similar
+missionTracker: {
+  tasks: {
+    uploadFile: true,
+    emitSignal: false,
+    chooseFSN: true,
+    completeQuest: false,
+    equipBadge: false
+  },
+  xpEarnedFromTasks: 0,
+  completed: false
+}
+💻 MISSIONTRACKER.JSX (Skeleton Pseudocode)
+jsx
+Copy
+Edit
+import React from 'react';
+import MissionTaskItem from './MissionTaskItem';
+import './missionTracker.css';
+
+const MissionTracker = ({ tasks, onClose }) => {
+  const taskList = [
+    {
+      id: 'uploadFile',
+      label: 'Upload your first file',
+      xp: 50,
+      completed: tasks.uploadFile,
+      icon: '📁',
+    },
+    {
+      id: 'emitSignal',
+      label: 'Emit your first signal',
+      xp: 30,
+      completed: tasks.emitSignal,
+      icon: '📡',
+    },
+    {
+      id: 'chooseFSN',
+      label: 'Choose your .fsn name',
+      xp: 10,
+      completed: tasks.chooseFSN,
+      icon: '🆔',
+    },
+    {
+      id: 'completeQuest',
+      label: 'Complete a daily quest',
+      xp: 25,
+      completed: tasks.completeQuest,
+      icon: '🎮',
+    },
+    {
+      id: 'equipBadge',
+      label: 'Equip a badge',
+      xp: 10,
+      completed: tasks.equipBadge,
+      icon: '🛡️',
+    },
+  ];
+
+  return (
+    <div className="mission-tracker-panel">
+      <h2>🚀 Welcome to FSN</h2>
+      <p>Complete these missions to build your identity and earn XP:</p>
+      <ul>
+        {taskList.map(task => (
+          <MissionTaskItem key={task.id} {...task} />
+        ))}
+      </ul>
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
+};
+
+export default MissionTracker;
+✅ MISSIONTASKITEM.JSX
+jsx
+Copy
+Edit
+import React from 'react';
+
+const MissionTaskItem = ({ label, xp, completed, icon }) => {
+  return (
+    <li className={`mission-task ${completed ? 'completed' : ''}`}>
+      <span className="icon">{icon}</span>
+      <div className="task-label">{label}</div>
+      <div className="task-xp">{completed ? '✓' : `+${xp} XP`}</div>
+    </li>
+  );
+};
+
+export default MissionTaskItem;
+🎨 STYLES (MISSIONTRACKER.CSS)
+css
+Copy
+Edit
+.mission-tracker-panel {
+  position: fixed;
+  right: 0;
+  top: 80px;
+  width: 280px;
+  background: rgba(10, 10, 30, 0.95);
+  border-left: 2px solid #0ff;
+  padding: 16px;
+  z-index: 2000;
+  font-family: 'Orbitron', sans-serif;
+  color: #fff;
+}
+
+.mission-task {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #222;
+}
+
+.mission-task.completed {
+  color: #0f0;
+  text-decoration: line-through;
+}
+🔄 HOOK INTO APP STATE
+Wherever you manage XP or task-triggering actions (e.g. when file is uploaded, broadcast happens, etc.), update the task flags:
+
+js
+Copy
+Edit
+if (!userProgress.missionTracker.tasks.uploadFile && vault.files.length >= 1) {
+  userProgress.missionTracker.tasks.uploadFile = true;
+  userProgress.xp += 50;
+}
+Repeat for each task condition.
+
+📌 FINISHING TOUCHES
+Add a floating task button to HUD: 📋 Missions (bottom-right or top-right)
+
+If user.firstLogin === true, open Mission Tracker automatically
+
+Optional: After all 5 missions are complete:
+
+Show a small “🎉 You’re Ready!” popup
+
+Give a bonus badge (“First Signal Sent” or “Core Initialized”)
+
+When this is live, the app will feel:
+
+🔥 Alive, guided, and rewarding. Users will know what to do, why it matters, and how they’re progressing.

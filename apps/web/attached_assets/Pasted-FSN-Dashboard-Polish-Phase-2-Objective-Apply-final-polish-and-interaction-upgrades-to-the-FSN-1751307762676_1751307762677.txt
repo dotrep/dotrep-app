@@ -1,0 +1,190 @@
+FSN Dashboard Polish – Phase 2)
+🎯 Objective:
+Apply final polish and interaction upgrades to the FSN Identity Dashboard gauges (Pulse, Signal, Beacon) and panels. Focus on Tron-style motion, glow, animation, and microinteractions to enhance user immersion and give the cockpit an "alive" feeling.
+
+1. 🧭 Gauge Enhancements: Add Radar Sweep Animation
+Target Elements:
+
+.pulse-gauge, .signal-gauge, .beacon-gauge
+
+Instructions:
+
+Inside each gauge div, add an SVG or canvas-based rotating semi-transparent arc or sector (30°–45°) rotating clockwise.
+
+Use a radial-gradient with opacity fading from center outward.
+
+Animate with CSS or JS keyframes:
+
+css
+Copy
+Edit
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-sweep {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(0,255,255,0.2), rgba(0,255,255,0) 70%);
+  animation: radarSweep 5s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+Insert the radar-sweep inside each gauge container but below the needle layer.
+
+2. 🎚️ Neon Needle Glow Trail
+Target Elements:
+
+.needle inside Pulse and Signal gauges
+
+Instructions:
+
+Add a blurred duplicate of the needle underneath, rotated the same angle.
+
+Use:
+
+css
+Copy
+Edit
+.needle-glow {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  transform-origin: left center;
+  transform: rotate(var(--needle-angle));
+  filter: blur(1px);
+  z-index: 0;
+}
+Optional: Animate the trail glow opacity pulse when needle moves.
+
+3. 🌈 Beacon Gauge – Offline Pulse Effect
+Target Elements:
+
+.beacon-gauge when locked
+
+Instructions:
+
+When beacon is locked, show a slow pulsing ring with purple glow and low opacity.
+
+Add animation:
+
+css
+Copy
+Edit
+@keyframes beaconPulse {
+  0% { box-shadow: 0 0 2px #a726f7; opacity: 0.3; }
+  50% { box-shadow: 0 0 10px #a726f7; opacity: 0.7; }
+  100% { box-shadow: 0 0 2px #a726f7; opacity: 0.3; }
+}
+
+.beacon-gauge.locked::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: beaconPulse 3s infinite;
+  background: transparent;
+}
+Keeps the beacon visually active without suggesting it's online.
+
+4. 📟 Signal Toggle Glow State
+Target Element:
+
+.signal-toggle
+
+Instructions:
+
+When ON, add:
+
+css
+Copy
+Edit
+background: #00ffff;
+box-shadow: 0 0 8px #00ffff, inset 0 0 4px #007777;
+When OFF, flicker between low white glow and off state using:
+
+css
+Copy
+Edit
+@keyframes flicker {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.signal-toggle.off {
+  background: #ffffff33;
+  animation: flicker 1.2s infinite;
+}
+5. 🖋️ Font Upgrade for Labels
+Target Elements:
+
+.gauge-label, .quest-panel-title, .username, etc.
+
+Instructions:
+
+Import and use "Audiowide" or "Eurostile Extended" from Google Fonts for all cockpit labels:
+
+html
+Copy
+Edit
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+css
+Copy
+Edit
+.gauge-label, .quest-panel-title, .username {
+  font-family: 'Audiowide', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+6. 🎇 Ambient Glow Points Around Gauges
+Target Elements:
+
+Decorative ambient glow divs surrounding .pulse-gauge, .signal-gauge, .beacon-gauge
+
+Instructions:
+
+Add 2–3 tiny animated divs per gauge positioned randomly around their perimeter.
+
+Example:
+
+html
+Copy
+Edit
+<div class="ambient-glow" style="top: 10%; left: 90%;"></div>
+css
+Copy
+Edit
+.ambient-glow {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(0,255,255,0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,255,255,0.8);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+✅ Notes
+Do not alter top navbar, XP indicator, or Pulse bar — retain current layout.
+
+All new elements should be position: absolute or inside each gauge container.
+
+Ensure performance optimization: keep animation frame rates smooth and lightweight using GPU-accelerated CSS where possible.
+
+Use consistent neon color palette:
+
+Cyan: #00ffff
+
+Magenta (Beacon): #a726f7
+
+Soft white: #ffffffaa
+

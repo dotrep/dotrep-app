@@ -1,0 +1,146 @@
+**FSN Phase 0 Replit AI Instructions**
+
+---
+
+### 🧠 Objective
+Upgrade the current FSN Vault codebase to complete **Phase 0**, implementing Vault + XP + Pulse functionality with polished UX, defensive logic, and future modularity. This is the final locked version.
+
+---
+
+### ✅ PART 1: Identity & Vault System
+
+1. **Ensure .fsn Name Claim Flow is Working**
+   - `.fsn` name must be stored in `user.fsnName`
+   - Restrict names to lowercase
+   - Add validation: 3–20 characters, no symbols except `-`
+
+2. **Vault Upload Functionality**
+   - On successful upload:
+     - Add entry to `user.vaultFiles[]`
+     - Grant XP (+10 per file)
+     - Trigger Pulse Level 1 if XP > 0 and first time
+   - Display file list with:
+     - Filename
+     - Upload time (e.g., “2 hours ago”)
+     - XP awarded (fixed or dynamic)
+
+3. **Allow File Renaming**
+   - Add pencil/edit icon next to filename
+   - Inline renaming updates file metadata
+
+4. **Ensure Uploads Grant XP Once**
+   - Prevent re-upload XP farming
+   - Store `fileID` or hash in metadata to detect re-uploads
+
+---
+
+### ✅ PART 2: XP + Pulse System
+
+1. **Track Total XP**
+   - Show bar: `XP: 40 / 250`
+   - Style should match FSN visuals (glow, clean spacing)
+
+2. **Pulse Activation Logic**
+   - If `user.totalXP > 0` → `pulseLevel = 1`
+   - Show: `Pulse: Active ✅`
+
+3. **Pulse Ring UI Component**
+   - Add animated ring or beating orb visual
+   - Centered near top of Vault screen
+   - Include hover tooltip:
+     - “Your Pulse shows you’re active.
+       Signal unlocks at Level 2.”
+
+4. **Add Pulse-to-Signal Progress Tracker**
+   - Static visual: 3-step progress bar
+     - Step 1: XP earned
+     - Step 2: Pulse Active ✅
+     - Step 3: Signal Locked (grayed)
+   - Include hover explainer: “Signal unlocks in Phase 1”
+
+---
+
+### ✅ PART 3: UX & Layout Polish
+
+1. **Layout Cleanup**
+   - Top: `.fsn name` & Pulse ring
+   - Center: Vault upload / file list
+   - Bottom: XP + tracker bar
+   - Footer: Terms placeholder
+
+2. **Text Minimization**
+   - Reduce redundant headers
+   - Convert long copy into tooltips
+
+3. **Add Visual Accent to Upload Button**
+   - Use FSN blue or animated hover pulse effect
+
+4. **Responsive Mobile Layout**
+   - Pulse ring shrinks for mobile
+   - XP and progress bar stack under Vault
+
+---
+
+### ✅ PART 4: Modular Flags & Debug Logic
+
+1. **Modularization Comments in Code**
+   - Label clearly:
+     - `// XP LOGIC MODULE`
+     - `// PULSE UI MODULE`
+     - `// STORAGE BACKEND MODULE`
+
+2. **User Data Schema (JSON)**
+   ```json
+   {
+     "fsnName": "jason.fsn",
+     "pulseLevel": 1,
+     "totalXP": 170,
+     "vaultFiles": [{ "id": "123", "name": "proof.txt", "xp": 10, "uploadedAt": "2025-06-09" }],
+     "signalEligible": false,
+     "lastActive": "2025-06-09"
+   }
+   ```
+
+3. **Optional Debug Panel (Hidden)**
+   - Route: `/debug`
+   - Shows:
+     - XP total
+     - Pulse level
+     - Signal status (locked)
+     - Vault contents
+   - Protect behind simple flag `isAdmin = true`
+
+---
+
+### ✅ PART 5: Defensive & Error Handling
+
+1. **Upload Error Handling**
+   - Show inline toast on failure
+   - Ensure XP not granted on failed upload
+
+2. **Missing .fsn Name Behavior**
+   - If no `user.fsnName`, redirect to claim page
+
+3. **XP & Pulse State Sync**
+   - XP → triggers Pulse
+   - Pulse → shows tracker state
+   - All UI must reflect XP changes in real-time
+
+---
+
+### ✅ PART 6: Phase Lock Readiness
+
+1. **Snapshot Instructions**
+   - Create `phase0-final` branch/tag in Replit
+   - Label all modules by phase (e.g., `// Phase 0 ONLY`)
+   - Save final version for reference before Phase 1 begins
+
+---
+
+## ✅ You’re Done
+This file contains every feature, polish, and logic structure required to:
+- Complete the Vault + Pulse MVP
+- Avoid regressions later
+- Look good during stealth Phase 0 rollout
+
+When ready, respond: **"Run these instructions with Replit AI."**

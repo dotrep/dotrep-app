@@ -1,0 +1,98 @@
+1.	Purpose
+You’ll run a small backend job that:
+
+	•	Reads the users who earned “daily login” XP today from your DB (fast, off-chain).
+	•	Mints the same XP on-chain by calling Points.award(user, amount, actionId) once per user.
+	•	Uses a stable actionId so re-runs don’t double-award.
+
+	2.	Environment variables (Replit Secrets)
+Add these (names exactly):
+
+	•	AWARD_ONCHAIN = false (set to true only when PUBLIC)
+	•	AWARD_PRIVATE_KEY = 0x… a dedicated hot key for awarding (not your deployer)
+	•	RPC_URL = http://127.0.0.1:8545 (STEALTH) or your Base Sepolia RPC when PUBLIC
+	•	POINTS_ADDRESS = the deployed Points contract address (from deployments/local.json or base-sepolia.json)
+	•	AWARD_XP_DAILY = 10 (or whatever XP per day you want)
+
+	3.	DB expectations (adjust to your schema)
+You should have:
+
+	•	users table with address (primary), last_seen, streak, xp (mirror field)
+	•	xpLogs table with fields: id, address, type (“daily”), day_key (e.g., 2025-08-29), action_id, tx_hash, onchain (boolean), created_at
+If xpLogs doesn’t exist, create it now. This table prevents accidental re-award and gives you an audit trail.
+
+	4.	Define the day key and actionId (idempotency)
+
+	•	day_key = YYYY-MM-DD in UTC (avoid timezone bugs).
+	•	actionId = keccak256(address + “|daily|” + day_key) conceptually (actual code will hash a concatenated string or bytes).
+	•	Points.award must reject duplicates via usedActionIds[actionId]; you also check xpLogs to skip what you already processed.
+
+	5.	Query which users to award
+Daily job logic (pseudo):
+
+	•	Select all users who logged in today (last_seen >= today 00:00 UTC).
+	•	For each, check xpLogs for a “daily” row with this day_key; if it exists and onchain=true, skip.
+	•	Build a list of addresses to award.
+
+	6.	Connect signer and chain
+
+	•	Instantiate an ethers/viem provider with RPC_URL.
+	•	Create a wallet from AWARD_PRIVATE_KEY and connect it to the provider.
+	•	Load the Points ABI and POINTS_ADDRESS.
+
+	7.	Award loop (chunked)
+
+	•	For each address in the list (or in batches of 50–100 to be safe):
+	•	Compute actionId for that address+day_key.
+	•	If AWARD_ONCHAIN == true: call Points.award(address, AWARD_XP_DAILY, actionId).
+	•	Capture tx hash.
+	•	Insert xpLogs row with address, type=daily, day_key, action_id, tx_hash, onchain = true if call was sent, or false if you’re in STEALTH and only mirroring.
+	•	If AWARD_ONCHAIN == false (STEALTH), skip chain calls and just write xpLogs with onchain=false so the UI still reflects XP growth while you’re private.
+
+	8.	Safety and retries
+
+	•	Wrap each award in try/catch.
+	•	If revert says “used” (duplicate actionId), mark xpLogs onchain=true and continue (it means a previous run succeeded).
+	•	If RPC rate-limit, backoff and resume.
+	•	If a user’s call fails for other reasons, log an xpLogs row with onchain=false, error message, and continue; you can retry that single user later.
+
+	9.	Scheduling in Replit
+
+	•	Easiest: create a small endpoint /cron/award and hit it daily via an external uptime pinger (Better Uptime, Cron-job.org) at 00:05 UTC.
+	•	Or run a tiny in-process scheduler (node-cron) that fires at 00:05 UTC daily while the Replit is running.
+	•	Public mode later: keep the same schedule; just set AWARD_ONCHAIN=true and ensure the awarder wallet has small Base ETH.
+
+	10.	Security hygiene
+
+	•	Use a separate AWARD_PRIVATE_KEY with limited funds; do not reuse deployer.
+	•	Rotate the key before going PUBLIC.
+	•	Never log private keys; never commit them.
+	•	Rate-limit the /cron/award route by IP and require a secret token (CRON_SECRET) if you expose it.
+
+	11.	Frontend changes to reflect on-chain XP
+
+	•	Replace the old 5-second polling with:
+	•	Read Points.totalOf(address) when the dashboard mounts and whenever a Points.Awarded event is seen.
+	•	Show DB streaks from your server for daily UX, but the big XP number should come from the contract (or from DB in STEALTH if AWARD_ONCHAIN=false).
+	•	Add a small “synced” indicator: green when on-chain XP ≥ DB mirror; yellow while a new daily award is pending.
+
+	12.	Testing locally (STEALTH)
+
+	•	Start Hardhat local node; deploy Registry/Points/Files locally.
+	•	Set AWARD_ONCHAIN=false and RPC_URL=http://127.0.0.1:8545.
+	•	Simulate a few “today logins” in the DB (or just log in through the app with a test wallet).
+	•	Run the cron once; confirm xpLogs rows are written and the dashboard uses DB XP (since onchain is off).
+	•	Flip AWARD_ONCHAIN=true; fund the awarder from a local account; run cron again; now Points totals should increase and your frontend should pick it up via event or read.
+
+	13.	Going PUBLIC later
+
+	•	Change RPC_URL to your Base Sepolia endpoint and POINTS_ADDRESS to your Sepolia Points address.
+	•	Set AWARD_ONCHAIN=true.
+	•	Fund the awarder wallet with a small amount of Base Sepolia ETH.
+	•	Run the cron; confirm txs appear on Basescan (don’t verify contract/source if you’re still low-profile).
+	•	When fully public, you can verify code and show explorer links.
+
+	14.	Optional: referrals and milestones
+
+	•	You can reuse the same path: when a referral completes 7 consecutive days, award a one-time bonus with actionId = keccak256(address + “|referral7|” + inviter + day_key).
+	•	Same idempotency, same xpLogs, just a different “type” and amount.

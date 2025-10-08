@@ -1,0 +1,167 @@
+/* PULSE UI MODULE - Animated ring component styles */
+
+.pulse-ring-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.pulse-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pulse-ring.active {
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.2) 0%, rgba(0, 240, 255, 0.05) 70%);
+  border: 2px solid rgba(0, 240, 255, 0.6);
+  box-shadow: 
+    0 0 20px rgba(0, 240, 255, 0.4),
+    inset 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+.pulse-ring.inactive {
+  background: radial-gradient(circle, rgba(128, 128, 128, 0.1) 0%, rgba(128, 128, 128, 0.02) 70%);
+  border: 2px solid rgba(128, 128, 128, 0.3);
+  box-shadow: 0 0 10px rgba(128, 128, 128, 0.1);
+}
+
+.pulse-core {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.pulse-ring.active .pulse-core {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(0, 180, 255, 0.3));
+  border: 1px solid rgba(0, 240, 255, 0.5);
+}
+
+.pulse-ring.inactive .pulse-core {
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.pulse-indicator {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.pulse-ring.inactive .pulse-indicator {
+  color: #888;
+  text-shadow: none;
+}
+
+.pulse-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pulse-ripple div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 50%;
+  animation: pulse-ripple 2s infinite;
+}
+
+.ripple-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.ripple-2 {
+  width: 120%;
+  height: 120%;
+  animation-delay: 0.7s;
+}
+
+.ripple-3 {
+  width: 140%;
+  height: 140%;
+  animation-delay: 1.4s;
+}
+
+@keyframes pulse-ripple {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+.pulse-status {
+  text-align: center;
+}
+
+.pulse-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.pulse-text.active {
+  color: #00f0ff;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+.pulse-text.inactive {
+  color: #888;
+}
+
+.pulse-level {
+  font-size: 0.75rem;
+  color: rgba(0, 240, 255, 0.8);
+  font-weight: 500;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pulse-ring {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .pulse-core {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .pulse-indicator {
+    font-size: 1.2rem;
+  }
+  
+  .pulse-text {
+    font-size: 0.8rem;
+  }
+  
+  .pulse-level {
+    font-size: 0.7rem;
+  }
+}

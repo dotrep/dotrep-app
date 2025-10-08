@@ -1,0 +1,191 @@
+Objective
+Rebuild the FSN homepage to match the reference image Homepage.png. The goal is a modern, crypto-native splash page that feels premium, responsive, and professional. The current implementation has several visual and functional issues that need correction.
+
+1. Layout and Structure
+Current Issues:
+The layout appears zoomed in and crowded on desktop screens.
+
+There is no top margin or visual breathing room above the headline.
+
+The FSN logo and brand name are missing.
+
+Required Fix:
+Add top padding or margin above the headline (recommend 40–80px).
+
+Center the content and apply a maximum width to avoid stretching.
+
+Add the FSN logo and the text “FreeSpace Network” above the headline, as shown in the Homepage.png reference. This should be left-aligned on desktop and centered on mobile.
+
+Use a full-bleed, edge-to-edge layout that fills 100% of the viewport width and height.
+
+2. Fonts and Text Styling
+Current Issues:
+The current font is too bold and not professionally styled.
+
+The neon glow effect looks heavy and unrefined.
+
+Required Fix:
+Use a modern, rounded sans-serif font such as Manrope, Poppins, Inter, or Sora.
+
+Update text color and glow using the following CSS:
+
+css
+Copy
+Edit
+color: #00f0ff;
+text-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+Use consistent spacing and line height for readability.
+
+3. Headline and Subheadline
+Current Issues:
+The headline appears too large and crowded.
+
+The subheadline text breaks awkwardly (e.g., "ident'ty").
+
+Required Fix:
+Use a responsive font size for the headline (consider using clamp() for scaling across breakpoints).
+
+For the subheadline, use the following text with proper spacing:
+
+nginx
+Copy
+Edit
+Claim your Web3 identity.  
+Earn XP. Emit your Signal.
+Set the subheadline block to a maximum width of 400px with centered alignment. Apply consistent font weight and spacing:
+
+css
+Copy
+Edit
+font-weight: 400;
+line-height: 1.5;
+font-size: 1.25rem;
+4. Claim Button and Input Interaction
+Current State:
+Button reads “Claim your .fsn name” and transforms into a text input field.
+
+Input placeholder currently reads “Type your name.”
+
+Required Fix:
+Keep the button labeled: “Claim your .fsn name”
+
+When clicked, the button should morph into a text input field with the placeholder:
+“This will be your Signal”
+
+Add subtle animation on transition (fade or slide is acceptable).
+
+Optional: Add muted guidance text below input: e.g. jason.fsn
+
+Recommended placeholder styling:
+
+css
+Copy
+Edit
+input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.8;
+}
+5. Right-Side Visual Element
+Current Issue:
+The .fsn hexagon graphic is missing from the live site.
+
+Required Fix:
+Add the glowing .fsn hexagon graphic from the Homepage.png image.
+
+On desktop, this graphic should be positioned to the right of the subheadline block.
+
+On mobile, stack it below the CTA button/input.
+
+Optionally animate the outer edges of the hexagon or apply a soft pulse effect to the center.
+
+6. Background and Animation
+Current Issue:
+The existing background grid is static and visually flat.
+
+Required Fix:
+Implement a dark radial background gradient. For example:
+
+css
+Copy
+Edit
+background: radial-gradient(circle at center, #0a0f1c, #04070b);
+Overlay this with a subtle node network animation that mimics pulses of light traveling between node points.
+
+The animation should be faint, slow-moving, and non-distracting.
+
+7. Mobile Responsiveness
+Required Adjustments:
+Stack all components vertically on mobile.
+
+Ensure the logo, headline, subheadline, and CTA/input scale down using media queries or responsive utility classes.
+
+Use relative units for text and layout (em, rem, or responsive clamp() values).
+
+8. Input Validation and Error Handling
+a. Name Format Enforcement
+Restrict name input to alphanumeric characters, hyphens, and underscores (no special symbols or spaces).
+
+Limit name length to 3–20 characters.
+
+js
+Copy
+Edit
+const isValidName = (name) => /^[a-zA-Z0-9_-]{3,20}$/.test(name);
+b. Name Availability Check (Stub for Now)
+Simulate an availability check for now with a short delay.
+
+Later, this should ping an API or check against a reserved list.
+
+js
+Copy
+Edit
+setTimeout(() => {
+  if (name.toLowerCase() === 'admin' || nameTaken(name)) {
+    showError('This Signal is already taken.');
+  } else {
+    showSuccess('Available! Signal is yours.');
+  }
+}, 500);
+c. Real-Time Feedback UX
+Show live validation status as the user types:
+
+✅ "Available"
+
+❌ "Invalid characters"
+
+❌ "This Signal is already taken"
+
+d. Error Message Styling
+Red text below the field for errors.
+
+Green (or cyan glow) for success confirmation.
+
+css
+Copy
+Edit
+.error-message {
+  color: #ff4c4c;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+.success-message {
+  color: #00f0ff;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+Optional (but recommended):
+e. Rate Limit Entry Attempts
+Prevent abuse by disabling the input after multiple failed submissions (or implement CAPTCHA later).
+
+f. Edge Case Handling
+Block reserved names: admin, root, null, etc.
+
+Strip leading/trailing whitespace
+
+Reject empty submissions immediately
+
+Final Notes:
+These validations can be client-side only for now.
+
+Once you're ready to launch, hook this into a backend service (even Firebase or Supabase).

@@ -1,0 +1,14 @@
+node_modules/
+.next/
+dist/
+build/
+coverage/
+*.log
+.env
+.venv/
+__pycache__/
+.replit
+*.zip
+*.tar*
+zi*
+*.DS_Store

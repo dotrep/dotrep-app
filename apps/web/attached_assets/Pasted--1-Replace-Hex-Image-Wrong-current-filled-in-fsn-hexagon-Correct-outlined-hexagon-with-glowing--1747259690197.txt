@@ -1,0 +1,150 @@
+✅ 1. Replace Hex Image
+Wrong: current filled-in .fsn hexagon
+Correct: outlined hexagon with glowing lines
+Fix:
+
+Replace current hex image with fsn-hex-outline.png
+
+Resize to: max-width: 300px;
+
+Add CSS:
+
+css
+Copy
+Edit
+.hex-image {
+  filter: drop-shadow(0 0 15px #00f0ff);
+  animation: pulse 5s ease-in-out infinite;
+}
+✅ 2. Fix Logo Area
+Fix layout and glow:
+
+html
+Copy
+Edit
+<div class="logo-bar">
+  <img src="/assets/fsn-logo.svg" alt="FSN Logo" class="logo-icon" />
+  <span class="logo-text">FreeSpace Network</span>
+</div>
+css
+Copy
+Edit
+.logo-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+.logo-icon {
+  height: 48px;
+  filter: drop-shadow(0 0 5px #00f0ff);
+}
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #00f0ff;
+  font-family: 'Manrope', sans-serif;
+}
+✅ 3. Correct Typography
+css
+Copy
+Edit
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  color: #00f0ff;
+  line-height: 1.2;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  max-width: 600px;
+  margin: 0 0 2rem 0;
+}
+
+h1 .highlight {
+  color: #00f0ff;
+}
+Fix the broken layout by avoiding line breaks inside the h1. Use CSS max-width instead.
+
+✅ 4. Add Background Mesh
+Upload bg-grid.png (or use any SVG grid) and use this:
+
+css
+Copy
+Edit
+body {
+  background: #04070b url('/assets/bg-grid.png') center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+✅ 5. Button Rebuild
+css
+Copy
+Edit
+.cta {
+  font-size: 1.1rem;
+  padding: 0.75rem 2.25rem;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  background: transparent;
+  color: #00f0ff;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+.cta:hover {
+  background: rgba(0, 240, 255, 0.05);
+  transform: scale(1.02);
+}
+✅ 6. Final Layout Instructions
+css
+Copy
+Edit
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 4rem;
+  box-sizing: border-box;
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.hero-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+✅ 7. Responsive Fixes
+css
+Copy
+Edit
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+  .hero-left,
+  .hero-right {
+    flex: none;
+    width: 100%;
+  }
+  .cta {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 1rem;
+  }
+}
+✅ 8. Check Your Asset List
+Ensure these files are uploaded:
+
+Filename	Used For
+fsn-logo.svg	FSN icon logo
+fsn-hex-outline.png	Correct glowing hexagon
+bg-grid.png	Subtle grid overlay
+

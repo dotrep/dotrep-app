@@ -1,0 +1,48 @@
+.fsn-navigation {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  padding: 8px 15px;
+  background-color: transparent;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.nav-links {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-link {
+  color: #00f0ff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+@media (max-width: 600px) {
+  .fsn-navigation {
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+  }
+  
+  .nav-links {
+    gap: 8px;
+  }
+  
+  .nav-link {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
+}

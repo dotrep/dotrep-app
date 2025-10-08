@@ -1,0 +1,171 @@
+We are creating a retro arcade-style bonus stage called DISC, inspired by Shinobi’s throwing-star mini-game, with a futuristic FSN twist.
+
+Use the uploaded pixel art reference image as the visual layout for this project. Here's exactly what to do:
+
+🎮 Game Overview
+The player is in first-person POV, throwing glowing discs instead of shuriken.
+
+Neon 80s-style computers pop up and move across two platforms (a near and far tier).
+
+The goal is to hit computers with discs before they disappear.
+
+Each hit gives +33 XP; reaching 100 XP activates Pulse.
+
+Game runs in a fullscreen modal inside the FSN Game Center. User returns to Game Center on "Back to Arcade."
+
+📂 Folder Structure
+bash
+Copy
+Edit
+/games/disc/
+├── index.html
+├── style.css
+├── script.js
+├── /assets/
+│   ├── disc.png
+│   ├── computer_far.png
+│   ├── computer_near.png
+│   └── background.png
+🧱 Step-by-Step Build Plan
+1. index.html
+Basic game canvas layout:
+
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DISC Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="discCanvas" width="800" height="600"></canvas>
+  <div id="hud">
+    <span id="fsnName">user123.fsn</span>
+    <span id="xpBar">XP: 0 / 100</span>
+    <button id="exitBtn">↩ Back to Arcade</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+2. style.css
+Match FSN brand (glowing neon, TRON-like aesthetic):
+
+css
+Copy
+Edit
+body {
+  margin: 0;
+  background: #0b0c12;
+  font-family: 'Courier New', monospace;
+  color: #00ffff;
+  overflow: hidden;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 20px;
+}
+
+#exitBtn {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: #00ffff;
+  color: #000;
+  border: none;
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+3. script.js
+Key logic:
+
+Draw background + platforms
+
+Spawn enemies randomly on near/far rows
+
+Detect hits (mouse click → throw)
+
+Track XP and show Pulse animation on win
+
+Include:
+
+js
+Copy
+Edit
+let canvas = document.getElementById('discCanvas');
+let ctx = canvas.getContext('2d');
+
+let xp = 0;
+let fsnName = "user123.fsn";
+let enemies = [];
+let discs = [];
+
+function spawnEnemy() {
+  const y = Math.random() > 0.5 ? 300 : 200;
+  enemies.push({ x: 800, y: y, hit: false });
+}
+
+function shootDisc(x, y) {
+  discs.push({ x: 400, y: 550, targetX: x, targetY: y });
+}
+
+function checkCollisions() {
+  discs.forEach(disc => {
+    enemies.forEach(enemy => {
+      if (!enemy.hit && Math.abs(disc.x - enemy.x) < 30 && Math.abs(disc.y - enemy.y) < 30) {
+        enemy.hit = true;
+        xp += 33;
+        updateXP();
+      }
+    });
+  });
+}
+
+function updateXP() {
+  document.getElementById('xpBar').textContent = `XP: ${xp} / 100`;
+  if (xp >= 100) {
+    alert("Pulse Activated!");
+    // Optionally play animation or store in localStorage
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  enemies.forEach(enemy => {
+    if (!enemy.hit) {
+      ctx.fillStyle = "#00ffcc";
+      ctx.fillRect(enemy.x, enemy.y, 30, 30);
+    }
+    enemy.x -= 2;
+  });
+
+  discs.forEach(disc => {
+    ctx.beginPath();
+    ctx.arc(disc.x, disc.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "#00ffff";
+    ctx.fill();
+    disc.y -= 5;
+  });
+
+  checkCollisions();
+
+  requestAnimationFrame(draw);
+}
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  shootDisc(e.clientX - rect.left, e.clientY - rect.top);
+});
+
+document.getElementById("exitBtn").onclick = () => {
+  window.parent.postMessage("exitDISC", "*");
+};
+
+setInterval(spawnEnemy, 1000);
+draw();

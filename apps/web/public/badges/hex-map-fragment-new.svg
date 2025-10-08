@@ -1,0 +1,24 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hex map fragment centered and properly sized -->
+  <g transform="translate(60,60)">
+    <!-- Main hexagon -->
+    <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" 
+             fill="none" stroke="#00f0ff" stroke-width="3"/>
+    
+    <!-- Inner hex pattern -->
+    <polygon points="0,-18 15,-9 15,9 0,18 -15,9 -15,-9" 
+             fill="rgba(0,240,255,0.2)" stroke="#66ccff" stroke-width="2"/>
+    
+    <!-- Fragment lines -->
+    <line x1="-26" y1="-15" x2="-40" y2="-24" stroke="#00f0ff" stroke-width="2" opacity="0.6"/>
+    <line x1="26" y1="-15" x2="40" y2="-24" stroke="#00f0ff" stroke-width="2" opacity="0.6"/>
+    <line x1="26" y1="15" x2="40" y2="24" stroke="#00f0ff" stroke-width="2" opacity="0.6"/>
+    
+    <!-- Center crystal -->
+    <polygon points="0,-10 6,-3 6,3 0,10 -6,3 -6,-3" fill="#ffffff" opacity="0.8"/>
+    
+    <!-- Grid lines -->
+    <line x1="-18" y1="0" x2="18" y2="0" stroke="#00f0ff" stroke-width="1" opacity="0.5"/>
+    <line x1="0" y1="-18" x2="0" y2="18" stroke="#00f0ff" stroke-width="1" opacity="0.5"/>
+  </g>
+</svg>

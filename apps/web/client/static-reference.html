@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSpace Network - Claim your Web3 identity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Variables */
+    :root {
+      --background-color: #0A1A2F;
+      --grid-color: #1E4A6F;
+      --text-color: #00D4FF;
+      --glow-color: #00D4FF;
+    }
+    
+    /* Base Styles */
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Grid Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(to right, rgba(30, 74, 111, 0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 74, 111, 0.3) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: center;
+      z-index: -2;
+    }
+    
+    /* Grid Dots */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: radial-gradient(circle, var(--text-color) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: center;
+      opacity: 0.3;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 20px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+    
+    /* Logo Section */
+    .logo-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    
+    .logo {
+      height: 60px;
+      width: auto;
+    }
+    
+    /* Main Headline */
+    .headline {
+      font-size: 72px;
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 30px;
+      text-align: center;
+      text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color), 0 0 30px var(--glow-color);
+    }
+    
+    .headline .emphasize {
+      font-size: 80px;
+    }
+    
+    /* Flex Container for Subtext and Hexagon */
+    .content-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 50px;
+    }
+    
+    /* Subtext */
+    .subtext {
+      font-size: 24px;
+      line-height: 1.5;
+      margin-right: 40px;
+    }
+    
+    /* Hexagon */
+    .hexagon-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+    
+    .hexagon {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .hexagon svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .hexagon-text {
+      position: absolute;
+      font-size: 36px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-color);
+      z-index: 2;
+      text-shadow: 0 0 5px var(--glow-color);
+    }
+    
+    /* Pulsing Animation */
+    @keyframes pulseGlow {
+      0%, 100% {
+        filter: drop-shadow(0 0 5px var(--glow-color));
+      }
+      50% {
+        filter: drop-shadow(0 0 15px var(--glow-color)) drop-shadow(0 0 25px var(--glow-color));
+      }
+    }
+    
+    .pulse {
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    
+    /* Button */
+    .claim-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 300px;
+      height: 60px;
+      border: 2px solid var(--text-color);
+      border-radius: 25px;
+      background-color: transparent;
+      color: var(--text-color);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-shadow: 0 0 5px var(--glow-color);
+    }
+    
+    .claim-button:hover {
+      background-color: rgba(0, 212, 255, 0.2);
+      text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+    }
+    
+    /* Success Message */
+    .success-message {
+      margin-top: 24px;
+      font-size: 18px;
+      color: var(--text-color);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .success-message.visible {
+      opacity: 1;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(10, 26, 47, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      width: 500px;
+      height: 300px;
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      position: relative;
+      color: black;
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    
+    .modal-close:hover {
+      color: red;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+    
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .modal-input {
+      width: 400px;
+      height: 40px;
+      margin-bottom: 30px;
+      border: 1px solid black;
+      padding: 0 10px;
+    }
+    
+    .modal-submit {
+      width: 150px;
+      height: 40px;
+      border: 1px solid black;
+      border-radius: 25px;
+      background-color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .modal-submit:hover {
+      background-color: #f0f0f0;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+      .headline {
+        font-size: 58px;
+      }
+      
+      .headline .emphasize {
+        font-size: 64px;
+      }
+      
+      .subtext {
+        font-size: 20px;
+      }
+      
+      .hexagon-container {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .hexagon-text {
+        font-size: 30px;
+      }
+      
+      .claim-button {
+        width: 250px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .headline {
+        font-size: 48px;
+      }
+      
+      .headline .emphasize {
+        font-size: 56px;
+      }
+      
+      .content-row {
+        flex-direction: column;
+      }
+      
+      .subtext {
+        margin-right: 0;
+        margin-bottom: 30px;
+        font-size: 18px;
+        text-align: center;
+      }
+      
+      .hexagon-container {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 30px;
+      }
+      
+      .hexagon-text {
+        font-size: 24px;
+      }
+      
+      .claim-button {
+        width: 200px;
+      }
+      
+      .modal {
+        width: 90%;
+        max-width: 500px;
+      }
+      
+      .modal-input {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo -->
+    <div class="logo-container">
+      <img src="/attached_assets/FreeSpace_Logo.jpg" alt="FreeSpace Network" class="logo">
+    </div>
+    
+    <!-- Main Content -->
+    <div class="content">
+      <!-- Main Headline -->
+      <h1 class="headline">
+        Crypto starts with<br>
+        your <span class="emphasize">.fsn</span> name
+      </h1>
+      
+      <!-- Subtext and Hexagon -->
+      <div class="content-row">
+        <!-- Subtext -->
+        <div class="subtext">
+          <p>Claim your Web3 ident'ty.</p>
+          <p>Earn XP.</p>
+          <p>Emit your Signal.</p>
+        </div>
+        
+        <!-- Hexagon -->
+        <div class="hexagon-container">
+          <div class="hexagon">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="pulse">
+              <polygon 
+                points="50 0, 100 25, 100 75, 50 100, 0 75, 0 25" 
+                fill="transparent" 
+                stroke="#00D4FF" 
+                stroke-width="3"
+              />
+            </svg>
+            <div class="hexagon-text">.fsn</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Claim Button -->
+      <div style="text-align: center;">
+        <button class="claim-button" id="claimButton">
+          Claim your .fsn name
+        </button>
+        
+        <!-- Success Message (hidden by default) -->
+        <div class="success-message" id="successMessage">
+          Success! Your .fsn name has been claimed.
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal (hidden by default) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">×</button>
+      <h2 class="modal-title">Enter your desired .fsn name</h2>
+      <form class="modal-form" id="modalForm">
+        <input type="text" class="modal-input" id="fsnNameInput" autocomplete="off">
+        <button type="submit" class="modal-submit">Submit</button>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // DOM Elements
+    const claimButton = document.getElementById('claimButton');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalClose = document.getElementById('modalClose');
+    const modalForm = document.getElementById('modalForm');
+    const fsnNameInput = document.getElementById('fsnNameInput');
+    const successMessage = document.getElementById('successMessage');
+    
+    // Open Modal
+    claimButton.addEventListener('click', () => {
+      modalOverlay.classList.add('visible');
+      setTimeout(() => {
+        fsnNameInput.focus();
+      }, 100);
+    });
+    
+    // Close Modal
+    modalClose.addEventListener('click', () => {
+      modalOverlay.classList.remove('visible');
+    });
+    
+    // Close Modal on Outside Click
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('visible');
+      }
+    });
+    
+    // Close Modal on Escape Key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('visible')) {
+        modalOverlay.classList.remove('visible');
+      }
+    });
+    
+    // Form Submission
+    modalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      if (fsnNameInput.value.trim()) {
+        modalOverlay.classList.remove('visible');
+        successMessage.classList.add('visible');
+        fsnNameInput.value = '';
+      }
+    });
+  </script>
+</body>
+</html>

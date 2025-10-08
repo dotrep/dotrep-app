@@ -1,0 +1,117 @@
+
+FSN HOMEPAGE – REVISED BUILD INSTRUCTIONS FOR REPLIT AI AGENT
+=============================================================
+
+OBJECTIVE
+---------
+Rebuild the FSN homepage to EXACTLY match the reference image "Homepage.png." The current output does not follow the design system, layout spacing, or branding tone. Use modern, clean, minimal Web3 visual language (inspired by sites like Uniswap, Phantom Wallet, or Coinbase).
+
+--
+
+1. LAYOUT AND STRUCTURE
+-----------------------
+- Create a centered, full-bleed hero layout using flex or grid.
+- Vertically stack the logo, headline, subheadline, and call-to-action (CTA).
+- Position the .fsn hex graphic to the right of this stack on desktop. On mobile, stack below.
+- Ensure all content sits inside a max-width container (max 1000px) with margin auto.
+
+2. TYPOGRAPHY
+-------------
+- Use 'Manrope', 'Poppins', or 'Inter' — no system fonts.
+- Font color: #00f0ff.
+- Avoid all-uppercase. Do NOT use `text-transform: uppercase`.
+- Headline font size should use:
+  font-size: clamp(2rem, 5vw, 4rem);
+- Subheadline:
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.5;
+
+3. TEXT STYLING & GLOW
+----------------------
+- Apply light glow:
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+- Do NOT over-blur text or make glow too bright.
+
+4. LOGO AND BRAND
+-----------------
+- Place the FSN logo above the headline, left-aligned on desktop, center-aligned on mobile.
+- Next to or below the logo, include text: "FreeSpace Network"
+- Use subtle glow on logo, not heavy neon.
+
+5. HEADLINE / CTA CONTENT
+--------------------------
+Headline:
+  "Crypto starts with your .fsn name"
+
+Subheadline:
+  "Claim your Web3 identity.
+Earn XP. Emit your Signal."
+
+CTA Button:
+- Label: "Claim your .fsn name"
+- Rounded edges
+- Glow border (subtle)
+- On click, morphs into an input field
+
+6. INPUT FIELD BEHAVIOR
+------------------------
+- Placeholder: "This will be your Signal"
+- Field appears in place of button with same dimensions
+- Input field styling:
+  input::placeholder {
+    color: #00f0ff;
+    font-style: italic;
+    opacity: 0.8;
+  }
+
+7. BACKGROUND DESIGN
+---------------------
+- Use dark gradient background:
+  background: radial-gradient(circle at center, #0a0f1c, #04070b);
+- Overlay faint glowing node pattern
+- Animate white/teal pulses traveling between node points
+- Animation must be subtle and smooth (not distracting)
+
+8. RIGHT-SIDE HEX GRAPHIC
+--------------------------
+- Insert hexagon visual that says ".fsn" (provided in Homepage.png)
+- Do not make it full height. Position it balanced with text block.
+- Allow soft pulse or hover animation.
+
+9. RESPONSIVENESS
+------------------
+- All components must scale fluidly on mobile
+- Use media queries or flex-wrap to stack hex below content on screens < 768px
+- Fonts should shrink smoothly using clamp() or rem-based sizing
+
+10. VALIDATION AND INTERACTION FEEDBACK
+---------------------------------------
+- Name input validation:
+  - Allow: a-z, A-Z, 0-9, underscores, hyphens
+  - Length: 3–20 characters
+  - Reject empty inputs or names like "admin"
+
+- Live feedback messaging:
+  .error-message {
+    color: #ff4c4c;
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+  .success-message {
+    color: #00f0ff;
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+- Optionally show: "e.g. jason.fsn" under the input field.
+
+---
+
+IMPORTANT NOTES
+---------------
+- The result MUST match Homepage.png visually and structurally.
+- Do not add extra visual effects or unrelated stylizations.
+- Ensure every element is readable, polished, and mobile-friendly.
+

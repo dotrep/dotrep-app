@@ -1,0 +1,30 @@
+client/src/components/QuestSystem.tsx:    // Route users to the appropriate section based on quest type
+client/src/components/RouteGuard.tsx:interface RouteGuardProps {
+client/src/components/RouteGuard.tsx: * Route guard that ensures proper authentication flow:
+client/src/components/RouteGuard.tsx:export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
+client/src/components/RouteGuard.tsx:    // Public routes that don't require authentication
+client/src/components/RouteGuard.tsx:    const publicRoutes = ['/', '/login', '/register'];
+client/src/components/RouteGuard.tsx:    const isPublicRoute = publicRoutes.includes(location);
+client/src/components/RouteGuard.tsx:    console.log('RouteGuard check:', { 
+client/src/components/RouteGuard.tsx:      isPublicRoute,
+client/src/components/RouteGuard.tsx:    // If user has claimed FSN but not logged in, and trying to access protected route
+client/src/components/RouteGuard.tsx:    if (hasClaimedFsn && !isLoggedIn && !isPublicRoute) {
+client/src/components/RouteGuard.tsx:export default RouteGuard;
+client/src/pages/not-found.tsx:            Did you forget to add the page to the router?
+client/src/components_backup_1749783585/QuestSystem.tsx:    // Route users to the appropriate section based on quest type
+client/src/App.tsx:import { Switch, Route, Redirect } from "wouter";
+client/src/App.tsx:// Admin protected route component
+client/src/App.tsx:const AdminProtectedRoute = ({ component: Component, ...rest }: any) => {
+client/src/App.tsx:function Router() {
+client/src/App.tsx:      <Route path="/claim-fsn" component={ClaimFSN} />
+client/src/App.tsx:      <Route path="/claim" component={ClaimFSN} />
+client/src/App.tsx:      <Route path="/" component={LockInHomepage} />
+client/src/App.tsx:      <Route path="/register" component={Register} />
+client/src/App.tsx:      <Route path="/login" component={Login} />
+client/src/App.tsx:      <Route path="/forgot-password" component={ForgotPassword} />
+client/src/App.tsx:      <Route path="/reset-password" component={ResetPassword} />
+client/src/App.tsx:      <Route path="/dashboard" component={Dashboard} />
+client/src/App.tsx:      <Route path="/vault" component={Vault} />
+client/src/App.tsx:      <Route path="/vault-secure" component={VaultSecure} />
+client/src/App.tsx:      <Route path="/social" component={Social} />
+client/src/App.tsx:      <Route path="/game-center" component={GameCenter} />

@@ -1,0 +1,111 @@
+✅ REPLIT INSTRUCTIONS: Signal Active Badge in XP Modal
+📂 Step 1: Locate the XP Modal Component
+Open your component file where the XP modal is defined. It's likely named:
+
+bash
+Copy
+Edit
+/src/components/XPModal.jsx
+If it's named differently (like LevelModal.jsx or XPStats.jsx), open that file instead.
+
+🧠 Step 2: Pull in signalActive State
+If you're using context or props for user status, make sure signalActive is available inside the modal:
+
+js
+Copy
+Edit
+import { useUser } from "../context/UserContext"; // or similar
+
+const { signalActive } = useUser();
+If passed down via props, ensure you receive it like this:
+
+js
+Copy
+Edit
+function XPModal({ signalActive }) {
+🎯 Step 3: Add Conditional Display of the Badge
+In the JSX just below the XP Boost display, insert this:
+
+jsx
+Copy
+Edit
+{signalActive && (
+  <div className="signal-status">
+    <span className="signal-status-dot"></span>
+    Signal Active
+  </div>
+)}
+💡 Make sure this comes before the "Recent Activity" section.
+
+🎨 Step 4: Add CSS Styles for Signal Badge
+Open your modal’s CSS file — likely something like:
+
+bash
+Copy
+Edit
+/src/styles/XPModal.css
+Then paste the following:
+
+css
+Copy
+Edit
+.signal-status {
+  background-color: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  margin: 12px 0;
+  box-shadow: 0 0 6px #00ff88;
+  transition: all 0.2s ease-in-out;
+}
+
+.signal-status-dot {
+  height: 12px;
+  width: 12px;
+  background-color: #00ff88;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 6px #00ff88;
+  }
+  50% {
+    box-shadow: 0 0 14px #00ff88;
+  }
+}
+🔗 Step 5: Ensure Font Consistency
+Make sure Orbitron is loaded globally in your project. In your index.html or global CSS file (index.css or App.css):
+
+html
+Copy
+Edit
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+And apply it globally if not already done:
+
+css
+Copy
+Edit
+body {
+  font-family: 'Orbitron', sans-serif;
+}
+✅ Final Behavior Test
+Set signalActive = true in dev/test context.
+
+Open XP modal → confirm:
+
+A glowing green "Signal Active" badge appears under XP Boost
+
+Dot is animated
+
+Font is Orbitron
+
+Badge hides when signalActive === false
+

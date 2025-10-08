@@ -1,0 +1,379 @@
+/* Beacon Unlock Modal Styles */
+.beacon-unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(8px);
+}
+
+.beacon-unlock-modal {
+  position: relative;
+  background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 50%, #2a2a6e 100%);
+  border: 2px solid #8844ff;
+  border-radius: 20px;
+  padding: 40px;
+  width: 90%;
+  max-width: 550px;
+  text-align: center;
+  box-shadow: 
+    0 0 40px rgba(136, 68, 255, 0.6),
+    0 0 80px rgba(136, 68, 255, 0.3),
+    inset 0 0 30px rgba(136, 68, 255, 0.1);
+  animation: beaconSlideIn 0.7s ease-out;
+  overflow: hidden;
+}
+
+@keyframes beaconSlideIn {
+  from {
+    transform: translateY(-80px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Globe Background Animation */
+.globe-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.globe-sphere {
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(136, 68, 255, 0.3);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(136, 68, 255, 0.2), transparent 60%);
+  animation: globeRotate 20s linear infinite;
+}
+
+@keyframes globeRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.globe-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+}
+
+.globe-ring {
+  position: absolute;
+  border: 1px solid rgba(136, 68, 255, 0.4);
+  border-radius: 50%;
+  animation: ringPulse 4s ease-in-out infinite;
+}
+
+.ring-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+  animation-delay: 1.3s;
+}
+
+.ring-3 {
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  animation-delay: 2.6s;
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Beacon Glyph Animation */
+.beacon-glyph {
+  margin: 0 auto 30px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8844ff, #6622dd);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.beacon-glyph.beacon-pulse-active {
+  transform: scale(1.15);
+  box-shadow: 
+    0 0 50px rgba(136, 68, 255, 0.9),
+    0 0 100px rgba(136, 68, 255, 0.6);
+}
+
+.beacon-icon {
+  font-size: 42px;
+  color: #fff;
+  animation: beaconIconGlow 3s ease-in-out infinite;
+}
+
+@keyframes beaconIconGlow {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.1);
+  }
+}
+
+/* Achievement Header */
+.beacon-header {
+  margin-bottom: 30px;
+}
+
+.beacon-achievement {
+  font-family: 'Audiowide', 'Montserrat', sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: #8844ff;
+  margin: 0 0 15px 0;
+  text-shadow: 
+    0 0 25px rgba(136, 68, 255, 0.8),
+    0 0 50px rgba(136, 68, 255, 0.6);
+  animation: beaconTitlePulse 3s ease-in-out infinite;
+}
+
+@keyframes beaconTitlePulse {
+  0%, 100% { 
+    text-shadow: 
+      0 0 25px rgba(136, 68, 255, 0.8),
+      0 0 50px rgba(136, 68, 255, 0.6);
+  }
+  50% { 
+    text-shadow: 
+      0 0 35px rgba(136, 68, 255, 1),
+      0 0 70px rgba(136, 68, 255, 0.8);
+  }
+}
+
+.beacon-subtitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  color: #bb88ff;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(187, 136, 255, 0.5);
+}
+
+/* Achievement Message */
+.beacon-message {
+  margin-bottom: 30px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.beacon-message p {
+  font-size: 16px;
+  color: #ffffff;
+  margin: 10px 0;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+/* Beacon Stats */
+.beacon-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(136, 68, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(136, 68, 255, 0.3);
+}
+
+.beacon-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: #bb88ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-family: 'Audiowide', sans-serif;
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+/* Action Buttons */
+.beacon-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.preview-button {
+  font-family: 'Audiowide', 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #8844ff, #6622dd);
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 25px rgba(136, 68, 255, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.preview-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 35px rgba(136, 68, 255, 0.8),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.close-button {
+  font-family: 'Montserrat', sans-serif;
+  background: transparent;
+  color: #8844ff;
+  border: 2px solid #8844ff;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background: rgba(136, 68, 255, 0.1);
+  box-shadow: 0 0 20px rgba(136, 68, 255, 0.3);
+}
+
+/* Broadcast Waves Animation */
+.broadcast-waves {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.broadcast-wave {
+  position: absolute;
+  border: 2px solid rgba(136, 68, 255, 0.4);
+  border-radius: 50%;
+  animation: waveExpand 4s ease-out infinite;
+}
+
+.wave-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  animation-delay: 1.3s;
+}
+
+.wave-3 {
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  animation-delay: 2.6s;
+}
+
+@keyframes waveExpand {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .beacon-unlock-modal {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .beacon-achievement {
+    font-size: 24px;
+  }
+  
+  .beacon-subtitle {
+    font-size: 14px;
+  }
+  
+  .beacon-stats {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .beacon-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .preview-button,
+  .close-button {
+    width: 100%;
+    max-width: 250px;
+  }
+}

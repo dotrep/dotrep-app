@@ -1,0 +1,158 @@
+✅ Replit AI Instructions: RECAST + SHARE Functionality for Broadcast Modal
+📂 File Structure & Component Targets
+File	Purpose
+BeaconModal.jsx	Contains the modal for broadcast data (what’s currently visible)
+SignalContext.js or XPContext.js	Global state: XP, pulse, recent casts
+SocialShare.js (new or existing)	If needed for future sharing UI
+utils.js	Helper for copying link, formatting timestamps
+
+🔁 PART 1 — RECAST BUTTON FUNCTIONALITY
+🧠 Behavior:
+When the user clicks RECAST, the app should:
+
+Recast to the same frequency
+
+Award XP
+
+Visually animate the Beacon bars
+
+Add the recast event to the XP log
+
+🔧 Implementation Steps:
+RECAST Button Handler
+Inside BeaconModal.jsx, add:
+
+js
+Copy
+Edit
+const handleRecast = () => {
+  const now = new Date();
+  addXP(10); // XP reward
+  logXP(`+10 XP – Recast to ${frequency} MHz`);
+  animateBeaconBars(); // trigger Beacon animation (see below)
+  updateCastHistory(frequency, now); // store timestamp
+  closeModal(); // optional auto-close
+};
+Animate Beacon Bars
+If not already built, create a function:
+
+js
+Copy
+Edit
+const animateBeaconBars = () => {
+  const bars = document.querySelectorAll('.beacon-bar');
+  bars.forEach((bar, index) => {
+    bar.classList.add('pulse-wave');
+    setTimeout(() => bar.classList.remove('pulse-wave'), 500);
+  });
+};
+In Beacon.css:
+
+css
+Copy
+Edit
+@keyframes pulse-wave {
+  0%   { transform: scaleY(1); opacity: 1; }
+  50%  { transform: scaleY(1.3); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+.pulse-wave {
+  animation: pulse-wave 0.5s ease-in-out;
+}
+Log XP
+Ensure XP logs and counter update:
+
+js
+Copy
+Edit
+addXP(10);
+logXP(`+10 XP – Recast to ${frequency} MHz`);
+📤 PART 2 — SHARE BUTTON FUNCTIONALITY
+🧠 Behavior:
+When user clicks SHARE, present a modal with:
+
+“Copy Link” → copies a dummy broadcast URL to clipboard
+
+“Post to Feed” (optional future)
+
+“Download PNG” of the beacon chart + metadata
+
+🔧 Implementation Steps:
+Share Modal Structure
+On click of SHARE:
+
+js
+Copy
+Edit
+setShowShareModal(true);
+Modal includes:
+
+jsx
+Copy
+Edit
+<button onClick={copyToClipboard}>📋 Copy Link</button>
+<button onClick={downloadPNG}>🖼 Download Card</button>
+Copy to Clipboard Logic
+In utils.js:
+
+js
+Copy
+Edit
+export const copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text);
+};
+Use:
+
+js
+Copy
+Edit
+copyToClipboard(`https://fsn.network/signal/${frequency}`);
+Download Beacon Card as Image
+Install html2canvas:
+
+bash
+Copy
+Edit
+npm install html2canvas
+In code:
+
+js
+Copy
+Edit
+import html2canvas from 'html2canvas';
+
+const downloadPNG = () => {
+  const target = document.getElementById('beacon-card');
+  html2canvas(target).then((canvas) => {
+    const link = document.createElement('a');
+    link.download = `fsn_beacon_${frequency}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+};
+Wrap the chart in:
+
+html
+Copy
+Edit
+<div id="beacon-card"> ... </div>
+🎨 Design Notes (Optional)
+Modal buttons should match FSN UI:
+
+Orbitron font
+
+Neon blue glow on hover
+
+Rounded corners
+
+Use a 📡 icon next to “Broadcast Data” title
+
+Style “Copy Link” and “Download” in columns
+
+✅ Completion Checklist
+Feature	Status
+RECAST button triggers XP + Beacon animation	✅
+XP counter updates in real time	✅
+SHARE button opens modal	✅
+Copy Link to clipboard works	✅
+Download Beacon card as PNG works	✅

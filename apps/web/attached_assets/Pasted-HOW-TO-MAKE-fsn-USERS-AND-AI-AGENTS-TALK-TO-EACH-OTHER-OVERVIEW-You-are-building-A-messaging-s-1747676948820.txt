@@ -1,0 +1,193 @@
+HOW TO MAKE .fsn USERS AND AI AGENTS TALK TO EACH OTHER
+🟩 OVERVIEW
+You are building:
+
+A messaging system between users like jason.fsn and alice.fsn
+
+AI agents with .fsn usernames like ghost.fsn or core.fsn that respond to messages automatically
+
+A way to earn XP, trigger quests, and unlock stuff
+
+You already own:
+✅ The domain: fsnvault.com (good job)
+
+Do exactly what this says.
+Don’t skip anything.
+Don’t get cute.
+Just follow the damn steps.
+
+🧱 STEP 1: USER DATABASE
+Create a file or database called users.json or users.db.
+
+Each user should look like this:
+
+👤 Human User
+json
+Copy
+Edit
+{
+  "fsn_name": "jason.fsn",
+  "user_type": "human",
+  "email_alias": "jason.fsn@fsnvault.com",
+  "vault_id": "vault_001",
+  "messages": [],
+  "xp": 0,
+  "inventory": []
+}
+🤖 AI Agent User
+json
+Copy
+Edit
+{
+  "fsn_name": "ghost.fsn",
+  "user_type": "ai_agent",
+  "email_alias": "ghost.fsn@fsnvault.com",
+  "agent_script": "ghost-agent.js",
+  "vault_id": null,
+  "messages": [],
+  "xp": 0,
+  "inventory": []
+}
+💡 Every .fsn name must be unique
+If someone tries to register with ghost.fsn, reject them
+
+🧑‍💻 STEP 2: MESSAGE SENDING FORM
+Build a simple web form with:
+
+Input: To: (the user types ghost.fsn or alice.fsn)
+
+Input: Message: (they type anything like "hi", "yes", or "help")
+
+Button: Send
+
+📦 STEP 3: MESSAGE HANDLING LOGIC
+When the user clicks "Send":
+
+✅ Look up the recipient by fsn_name
+
+✅ If recipient is a human:
+
+Store the message in that person’s .messages array
+
+✅ If recipient is an AI agent:
+
+Load the script listed in agent_script
+
+Run the function handleMessage(sender, message)
+
+Save the reply as a new message from the agent back to the user
+
+🧠 STEP 4: GHOST AGENT SCRIPT (copy exactly)
+Create this file: ghost-agent.js
+Put this in it:
+
+js
+Copy
+Edit
+module.exports = {
+  handleMessage: function(sender, message) {
+    const m = message.toLowerCase();
+
+    if (m.includes("hi") || m.includes("hello")) {
+      return "👻 Boo. You found me. Want a challenge?";
+    }
+
+    if (m.includes("yes")) {
+      // Grant XP
+      addXP(sender, 25);
+      return "Decrypt this: RnJlZVNwYWNlIEtleQ==";
+    }
+
+    return "Ghost fades away into the code...";
+  }
+};
+Also add this somewhere in your main code:
+
+js
+Copy
+Edit
+function addXP(fsn_name, points) {
+  const user = users.find(u => u.fsn_name === fsn_name);
+  if (user) {
+    user.xp = (user.xp || 0) + points;
+  }
+}
+💌 STEP 5: STORE MESSAGES CORRECTLY
+When a message is sent, store it like this:
+
+json
+Copy
+Edit
+{
+  "from": "jason.fsn",
+  "to": "ghost.fsn",
+  "message": "hi",
+  "timestamp": "2025-05-19T22:00Z"
+}
+When the agent replies, store this:
+
+json
+Copy
+Edit
+{
+  "from": "ghost.fsn",
+  "to": "jason.fsn",
+  "message": "👻 Boo. You found me. Want a challenge?",
+  "timestamp": "2025-05-19T22:00Z"
+}
+All messages must go into the recipient’s .messages array.
+
+📬 STEP 6: SHOW INBOX
+On the dashboard, build a view that shows:
+
+All messages to or from the logged-in user
+
+Include:
+
+From
+
+Message
+
+Timestamp
+
+Sort by newest at the top.
+
+📈 STEP 7: XP & INVENTORY (OPTIONAL BUT BADASS)
+Every time a user gets XP, update their profile:
+
+json
+Copy
+Edit
+"xp": 75
+If they earn gear, update:
+
+json
+Copy
+Edit
+"inventory": ["starter_skin", "vault_patch"]
+Later, you can have agents give skins, files, rewards, NFTs, etc.
+
+✅ LIST OF AI AGENTS TO ADD
+Name	Handle	Role
+core.fsn	core-agent.js	Central AI that gives onboarding & quests
+ghost.fsn	ghost-agent.js	Secret drops, XP, riddles, puzzles
+vault.fsn	vault-agent.js	XP tracker + gear manager
+forge.fsn	forge-agent.js	Skin/item creation + cosmetic upgrades
+echo.fsn	echo-agent.js	Journaling, history, past actions
+
+Just copy the ghost-agent.js format for others.
+
+✅ CHECKLIST (DO NOT MARK COMPLETE UNTIL IT’S TRUE)
+ You created a user table with .fsn names
+
+ Users can send messages to other users and agents
+
+ Agent scripts respond based on the message
+
+ XP is tracked and updated
+
+ You show an inbox with messages + timestamps
+
+ You NEVER show raw emails in the interface (only .fsn names)
+
+ You added ghost.fsn and confirmed it replies with something creepy and fun

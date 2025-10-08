@@ -1,0 +1,201 @@
+🎨 Batch 3: UI Consistency + Badge/NFT Logic Polish
+Objective:
+
+Unify badge/NFT display across all modules
+
+Fix logic issues with earned vs locked states
+
+Improve display clarity (e.g., “EQUIPPED,” “LOCKED,” glow states)
+
+Standardize the art pipeline and overlay logic for badges
+
+✅ 1. Normalize Badge/NFT Visual Display Across Components
+You have at least 3 components where NFTs and badges appear:
+
+Vault → DataManager
+
+Profile → NFT / Badge panel
+
+Library → FSN Library modal
+
+🎯 Goal:
+Ensure all three show:
+
+Element	Spec
+🔒 Lock Icon	Appears if badge not yet earned
+💎 XP label	Only shown on mission badges
+🟣 Glow Ring	If equipped or "rare" status
+🪪 Soulbound Label	Show "Soulbound" tag if non-transferable
+
+🔧 Code Change: Create a Shared Display Component
+Create a reusable BadgeCard.jsx component for badges and NFTs:
+
+jsx
+Copy
+Edit
+// BadgeCard.jsx
+import React from 'react';
+
+const BadgeCard = ({ title, earned, icon, soulbound, equipped, xpBonus }) => {
+  return (
+    <div className={`badge-card ${earned ? 'earned' : 'locked'} ${equipped ? 'equipped' : ''}`}>
+      {icon}
+      <div className="badge-title">{title}</div>
+      {soulbound && <span className="badge-tag">SOULBOUND</span>}
+      {xpBonus && <span className="badge-xp">+{xpBonus} XP</span>}
+      {!earned && <div className="lock-overlay">🔒</div>}
+      {equipped && <div className="glow-ring" />}
+    </div>
+  );
+};
+
+export default BadgeCard;
+Use this everywhere a badge/NFT is shown. That means:
+
+Vault panel (NFT section)
+
+Profile (NFTs + badges)
+
+FSN Library
+
+✅ 2. Fix Equip Logic for Badges
+Users should only be able to equip one badge at a time.
+
+Backend logic (in userProgress):
+js
+Copy
+Edit
+userProgress = {
+  earnedBadges: ['onboarding', 'coreSignal'],
+  equippedBadge: 'coreSignal'
+};
+Equip action:
+When a user clicks “Equip” on a badge:
+
+js
+Copy
+Edit
+if (badgeId in userProgress.earnedBadges) {
+  userProgress.equippedBadge = badgeId;
+}
+Display:
+In profile:
+
+jsx
+Copy
+Edit
+{badge.id === userProgress.equippedBadge && <div className="badge-equipped-label">EQUIPPED</div>}
+In vault or library: show faint glow if equipped.
+
+✅ 3. Fix Earned vs Locked State Logic
+Bug:
+Some badges show as "earned" even when user never completed the condition.
+
+Fix:
+Write a checkBadgeStatus() function that runs on load:
+
+js
+Copy
+Edit
+function checkBadgeStatus(userProgress) {
+  return {
+    onboarding: userProgress.tasks.onboardingComplete === true,
+    coreSignal: userProgress.signalUnlocked === true,
+    trustVerified: userProgress.kycPassed === true,
+    signalRank: userProgress.broadcasts.length >= 10,
+    ...
+  };
+}
+Use this when rendering earnedBadges list and when displaying badges.
+
+✅ 4. Label and Sort Logic in FSN Library
+In FSNLibrary.jsx:
+
+Add toggle filter: All | Earned | Locked
+
+Add sort dropdown: Most Recent | Rarity | XP Value
+
+Add category indicators:
+
+js
+Copy
+Edit
+badgeMeta = {
+  coreSignal: { rarity: 'rare', soulbound: true, xpBonus: 0 },
+  onboarding: { rarity: 'common', soulbound: true, xpBonus: 50 },
+  trustVerified: { rarity: 'uncommon', soulbound: true, xpBonus: 75 },
+  ...
+}
+Display rarity badge color:
+
+Rarity	Glow Color
+Common	Light Blue
+Uncommon	Neon Purple
+Rare	Gold
+Legendary	White w/ Pulse
+
+✅ 5. Cosmetic Tagging for Marketplace/Upgrade Prep
+Futureproof your badge/NFT items by tagging them now:
+
+js
+Copy
+Edit
+{
+  id: "signalCastParticleTrail",
+  type: "signalEffect",
+  cost: 200,
+  cosmetic: true,
+  equipSlot: "signal"
+}
+Use this to:
+
+Separate cosmetic NFTs from functional badges
+
+Enable badge “slots” in profile screen (Signal, Vault, Aura, etc.)
+
+Prevent users from equipping two badges of same type later
+
+🎨 Optional CSS Styling (for Glow, Lock, Equipped)
+css
+Copy
+Edit
+.badge-card {
+  position: relative;
+  border-radius: 10px;
+  padding: 12px;
+  background: #0a0a1a;
+  color: #fff;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.badge-card.earned {
+  border: 1px solid #0ff;
+}
+
+.badge-card.equipped .glow-ring {
+  border: 2px solid #ff0;
+  box-shadow: 0 0 12px #ff0;
+}
+
+.lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  color: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+}
+✅ Summary of What You’ll Have After Batch 3
+Feature	Result
+Unified Badge/NFT Visuals	Same style across all panels and screens
+Lock/Earn/Equip Logic Fix	Users only see what they’ve earned, clearly
+One Badge Equipped System	Sets stage for cosmetic/functional loadouts
+FSN Library Sorted and Filtered	Easier to explore rewards and plan XP journey
+Reusable Component	Easier to scale XP shop, airdrop, avatar system
+

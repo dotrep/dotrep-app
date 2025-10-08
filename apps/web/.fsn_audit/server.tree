@@ -1,0 +1,14 @@
+server/
+├── utils/
+├── routes/
+│   └── api/
+├── ai-agents/
+├── agents/
+├── data/
+├── db-migrations/
+├── middleware/
+├── validation/
+├── config/
+├── migrations/
+├── services/
+└── storage/

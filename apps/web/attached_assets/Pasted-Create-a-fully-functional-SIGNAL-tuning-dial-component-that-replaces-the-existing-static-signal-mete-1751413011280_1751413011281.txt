@@ -1,0 +1,207 @@
+Create a fully functional SIGNAL tuning dial component that replaces the existing static signal meter on your FSN homepage. The new dial must look identical to your approved image, operate with real-time interactivity (knob controls needle), and display the active frequency in a legible, glowing digital readout. It must visually match the Pulse and Beacon UI (same neon grid aesthetic) and be pixel-perfect, scalable, and fast.
+
+🧩 VISUAL REQUIREMENTS
+Overall Design:
+Maintain Tron-inspired neon blue aesthetic
+
+Match glow, gradient, stroke thickness, and spacing from your approved image
+
+Layout proportions must match the Pulse and Beacon widgets for visual symmetry
+
+Red tuning needle with glow, no motion blur
+
+Clean digital number readout in Orbitron or similar square-tech font
+
+Remove any physical "connection" between knob and needle — purely logical
+
+Responsive scaling on all screen sizes from desktop to mobile
+
+All elements placed inside a dark container with subtle outer glow
+
+Dial Face Details:
+Outer Arc Scale (Radio Frequencies):
+
+Range: 5.0 to 16.0
+
+Major ticks: every full number (5, 6, ..., 16)
+
+Minor ticks: every 0.5
+
+Font: glow blue, capitalized numerals, spacing consistent with image
+
+Inner Arc Scale (Optional Enhancement):
+
+Secondary ticks at half the density to add depth
+
+Radius slightly smaller than outer arc
+
+Digital Frequency Display:
+
+Positioned centrally below arc, above knob
+
+Font: Orbitron or Share Tech Mono
+
+Color: #00F6FF glow with soft drop shadow
+
+Rounded glowing rectangle container (as in your reference)
+
+Knob:
+
+Should appear 3D (metal-ridged face with neon ring)
+
+Fixed position at bottom center
+
+Click + drag OR scroll-wheel interaction rotates the needle
+
+Rotation snaps in 0.1 increments
+
+Needle:
+
+Red, glowy, anchored at center bottom of arc
+
+Rotates from -60° (5.0) to +60° (16.0)
+
+Rotation should be smooth (CSS transition)
+
+Label ("SIGNAL"):
+
+Must match existing font/weight in “PULSE” and “BEACON”
+
+Neon blue with strong outer glow
+
+Spaced appropriately below knob
+
+🧪 INTERACTION DESIGN
+Knob Mechanics:
+Scroll-wheel or click-and-drag rotates the knob
+
+Knob movement directly updates:
+
+Red needle angle
+
+Digital display frequency
+
+Rotation range: -60° to +60°
+
+Input constraints:
+
+Clamped to min/max values
+
+Snaps to tenths place (5.0, 5.1, ..., 16.0)
+
+Prevent over-spin
+
+🧠 TECH SPECS
+React + Tailwind + CSS3 Transformations
+Compatible with existing FSN frontend stack
+
+SignalDial.jsx (React Component)
+jsx
+Copy
+Edit
+import React, { useState } from 'react';
+import './signal.css';
+
+const SignalDial = () => {
+  const minFreq = 5.0;
+  const maxFreq = 16.0;
+  const [frequency, setFrequency] = useState(9.5);
+
+  const handleScroll = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const next = Math.min(maxFreq, Math.max(minFreq, +(frequency + delta).toFixed(1)));
+    setFrequency(next);
+  };
+
+  const angle = ((frequency - minFreq) / (maxFreq - minFreq)) * 120 - 60;
+
+  return (
+    <div className="signal-container" onWheel={handleScroll}>
+      <img src="/assets/signal-dial-bg.png" className="dial-bg" alt="Signal Dial" />
+      <div className="needle" style={{ transform: `rotate(${angle}deg)` }} />
+      <div className="frequency-display">{frequency.toFixed(1)}</div>
+      <img src="/assets/knob.png" className="knob" alt="Knob" />
+      <div className="signal-label">SIGNAL</div>
+    </div>
+  );
+};
+
+export default SignalDial;
+signal.css (Styling)
+css
+Copy
+Edit
+.signal-container {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+}
+
+.dial-bg {
+  width: 100%;
+  z-index: 1;
+}
+
+.needle {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 6px;
+  height: 110px;
+  background: red;
+  border-radius: 3px;
+  box-shadow: 0 0 10px red;
+  transform-origin: bottom center;
+  transition: transform 0.2s ease-out;
+  z-index: 2;
+}
+
+.frequency-display {
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  color: #00faff;
+  text-shadow: 0 0 10px #00faff;
+  z-index: 3;
+}
+
+.knob {
+  width: 64px;
+  height: 64px;
+  margin-top: -15px;
+  z-index: 4;
+}
+
+.signal-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  margin-top: 4px;
+  color: #00faff;
+  text-shadow: 0 0 10px #00faff;
+  z-index: 5;
+}
+📁 Required Assets (placed in /public/assets/)
+File	Description
+signal-dial-bg.png	The full dial background image (your approved version) with no red needle or numbers baked in
+needle.png	(Optional) If you prefer a graphical needle instead of a red div
+knob.png	Knob image, glowing circular style
+Orbitron Font	Include via Google Fonts or locally
+
+🧪 QA Checklist
+✅ It integrates perfectly into your homepage grid layout
+✅ It replaces the previous SIGNAL component
+✅ It matches your uploaded image 1:1 in styling
+✅ It's functional: scroll to adjust frequency
+✅ It's performant and clean — no layout shifts
+✅ It's responsive and readable on all screen sizes
+✅ It’s visually and thematically in harmony with PULSE and BEACON
+

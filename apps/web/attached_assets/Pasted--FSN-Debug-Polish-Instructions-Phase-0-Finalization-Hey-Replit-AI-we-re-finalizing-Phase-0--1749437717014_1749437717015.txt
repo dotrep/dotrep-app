@@ -1,0 +1,129 @@
+🛠️ FSN Debug + Polish Instructions (Phase 0 Finalization)
+Hey Replit AI — we’re finalizing Phase 0 of FSN (a crypto onboarding platform with XP and pseudonymous .fsn identity). The Vault works, but the XP feedback UI and quest list need cleanup. Please follow this step-by-step:
+
+🔧 1. Fix Overlapping Quest Text in VaultTab
+Go to components/VaultTab.tsx (or wherever XP tasks are rendered)
+
+Wrap each XP quest in a vertically spaced container:
+
+tsx
+Copy
+Edit
+<div className="flex flex-col space-y-3">
+  {xpTasks.map((task) => (
+    <div key={task.id} className="flex justify-between items-center">
+      <span>{task.label}</span>
+      <span className="text-xs text-muted-foreground">+{task.xp} XP</span>
+    </div>
+  ))}
+</div>
+🔧 2. Make Interactive XP Tasks Clickable
+Still in the XP tasks section:
+
+For tasks like “Verify Email” or “Connect Wallet”, replace static text with buttons:
+
+tsx
+Copy
+Edit
+<button 
+  onClick={() => handleTask(task.id)} 
+  className="text-left hover:text-blue-500 transition cursor-pointer"
+>
+  {task.label}
+</button>
+Ensure the handleTask() function calls relevant modals or performs task logic.
+
+🔧 3. Improve Mobile Responsiveness
+Check pages like Vault, Overview, Messages, etc.
+
+Use responsive Tailwind classes:
+
+Wrap XP tasks and vault files in grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4
+
+Ensure buttons and inputs don’t overflow: w-full, truncate, min-w-0
+
+🔧 4. Show Visual Feedback for Completed XP Tasks
+Check if the user has already completed a task:
+
+tsx
+Copy
+Edit
+{user.completedTasks.includes(task.id) ? (
+  <div className="flex justify-between opacity-50 line-through">
+    <span>{task.label}</span>
+    <span>✓</span>
+  </div>
+) : (
+  <button 
+    onClick={() => handleTask(task.id)} 
+    className="text-left hover:text-blue-500 transition cursor-pointer"
+  >
+    {task.label}
+  </button>
+)}
+Optionally, you can hide completed tasks entirely.
+
+🔧 5. Style XP / Signal / Pulse Feedback Box (After Upload)
+After a file upload completes, show this feedback box:
+
+tsx
+Copy
+Edit
+<div className="bg-muted border rounded-md p-3 mt-4 text-sm space-y-1">
+  <p><strong>XP granted:</strong> ✅</p>
+  <p><strong>Signal:</strong> 🟢 Core</p>
+  <p><strong>Pulse Qualified:</strong> ❌ Not yet</p>
+</div>
+Replace values dynamically using user.signal and user.pulseQualified
+
+✅ BONUS POLISHES
+🟣 Vault File Display Improvements
+Go to VaultTab or wherever files are displayed
+
+Wrap uploaded file cards in:
+
+tsx
+Copy
+Edit
+<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  {user.uploadedFiles.map(file => (
+    <FileCard key={file.id} file={file} />
+  ))}
+</div>
+🟢 Public Toggle for .fsn Name Visibility
+In the Profile section:
+
+tsx
+Copy
+Edit
+<label className="flex items-center gap-2 text-sm">
+  <input 
+    type="checkbox" 
+    checked={user.isPublic} 
+    onChange={(e) => updateVisibility(e.target.checked)} 
+  />
+  Make my .fsn name public (visible on global map)
+</label>
+Default isPublic = true
+
+🧠 Signal and Pulse Indicators
+Replace raw text like “Signal: Core” with icons:
+
+tsx
+Copy
+Edit
+<span title="Signal Level: Core" className="flex items-center gap-1">
+  🟢 <span className="text-sm text-muted-foreground">Core</span>
+</span>
+Add hover tooltips using title="" or <Tooltip> component
+
+✅ Final Wrap
+🧪 After completing all above:
+
+Check Home, Vault, Messages, Wallet, Profile
+
+Confirm all quests look spaced, clickable, and visually polished
+
+Upload a file → Confirm feedback is readable, accurate, and responsive
+
+Try a completed XP task → Confirm strikethrough or ✓ shown

@@ -1,0 +1,161 @@
+Goal:
+Clean up layout, spacing, UX rough edges, and consistency across all panels before Phase 0.2 (airdrop, waitlist, map, wallet, or DAO logic).
+
+✅ 1. Layout & Spacing Fixes
+🔧 Pulse/Signal/Beacon Row
+ Ensure these are visually centered and evenly spaced
+
+ Add hover tooltips for each:
+
+Pulse: “Your crypto frequency”
+
+Signal: “Cast your presence to FSN”
+
+Beacon: “Mark your place on the network”
+
+🔧 Vault Layout
+ Add bottom margin so content doesn’t scroll off-screen
+
+ Ensure file/NFT sections scale properly with number of uploads
+
+ Display “Total storage used: X GB / Y GB” at bottom
+
+ Fix any float-overlap issues with badges/NFTs near the vault summary
+
+🔧 XP Header
+ Make XP count + level glow subtly on hover
+
+ Ensure spacing doesn’t crowd top navbar or mission tracker toggle
+
+ Pulse the XP ring briefly after XP is earned
+
+✅ 2. Mobile & Responsive Touch-Ups
+ Hide or collapse Mission Tracker on mobile screen widths (< 768px)
+
+ Fix layout issues in Game Center on smaller devices (buttons breaking rows)
+
+ Add hamburger menu if nav elements stack
+
+✅ 3. Loading State & Edge Case Handling
+ Add loading spinners for:
+
+Vault loading
+
+XP recalculation
+
+Signal broadcast
+
+ Gracefully handle:
+
+User has 0 XP
+
+No files uploaded yet
+
+No badge earned yet
+
+Use empty state messages:
+
+txt
+Copy
+Edit
+"You haven’t uploaded anything yet. Start building your vault."
+"You haven’t earned any badges... yet. Try completing a mission!"
+✅ 4. Icon & Color Audit
+🔧 Consistency Pass
+ All icons (Pulse, Signal, Beacon, Mission Tracker, Vault, XP, etc.) should:
+
+Use same color scheme (Tron-cyan, white, yellow, magenta)
+
+Be SVGs or styled React icons for scalability
+
+Include alt text or accessible labels for hover/click
+
+ Background gradients or borders should match the FSN brand:
+
+Black background: #0a0a1a
+
+Tron glow: #00ffff
+
+Badge glow: #f0f or #ff0
+
+✅ 5. Sound Control Settings
+ Add mute/unmute toggle (top-right corner or settings drawer)
+
+ Default = ON
+
+ Store setting in localStorage or userPrefs:
+
+js
+Copy
+Edit
+userPrefs.soundFX = true;
+Apply sound setting to:
+
+XP gain
+
+Level up
+
+Badge unlock
+
+Quest complete
+
+Signal cast
+
+✅ 6. Error & Alert Messaging
+ Add global toast or modal for:
+
+Upload failure
+
+XP cap reached (if you plan to implement XP daily limits)
+
+Invalid file type or oversized file
+
+Attempt to broadcast without enough XP
+
+Example Toast:
+🚫 Cannot broadcast. You need 70Hz Pulse and 100 XP.
+
+✅ 7. Code Cleanup & Dev Tools
+ Remove console logs or placeholder TODO: comments
+
+ Comment major functions clearly (e.g. “// Handles vault upgrade logic”)
+
+ Use DEV_MODE = true toggle in settings for debugging features (fake XP, unlock all, etc.)
+
+✅ 8. Final Avatar/Badge/UI Visual Lock
+ Lock in final visual pipeline:
+
+Avatar art style: stroke width, neon glow, modular compatibility
+
+Badge shape & framing: circular? card-style?
+
+Button and modal corner radius: soft 2xl across all pages
+
+ Use consistent component names (.badge-card, .vault-panel, etc.)
+
+✅ 9. Mission Tracker Reset / Reuse
+ If user finishes all 5 onboarding missions:
+
+Optionally allow daily XP missions (rotate with quests)
+
+Example:
+
+"🔄 Upload 2 files today (+20 XP)"
+
+"💬 Broadcast your Signal (+15 XP)"
+
+"🎮 Complete a daily quest (+25 XP)"
+
+ Add missions.completed = true flag in userProgress
+
+ Prevent badge/NFT rewards from being given twice unless allowed
+
+✅ 10. Final Phase 0.1 Review Hook
+Optional but smart — add a self-check modal to show Phase 0.1 completion
+
+jsx
+Copy
+Edit
+if (user.xp >= 500 && signalUnlocked && badgeCount >= 3) {
+  showModal("✅ Phase 0.1 Complete — You're now Core Ready");
+}

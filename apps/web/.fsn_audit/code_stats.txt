@@ -1,0 +1,27 @@
+FSN Vault - Code Statistics
+==========================
+
+File Counts:
+- Total source files (TS/TSX/JS/JSX/JSON): 498
+- Total TypeScript lines: 81,710
+
+Directory Structure:
+- Client-side code: React + TypeScript + Tailwind CSS
+- Server-side code: Express.js + TypeScript
+- Shared types and utilities
+- Smart contracts (Hardhat + Solidity)
+- Public assets (games, sounds, badges)
+
+Key Technologies:
+- Frontend: React 18.3.1, TypeScript 5.9.2, Vite 5.4.14
+- Backend: Node.js 20.19.3, Express 4.21.2, TypeScript
+- Database: PostgreSQL + Drizzle ORM
+- Web3: Wagmi 2.16.8, Viem 2.36.0, Ethers 6.15.0
+- UI: Radix UI components, Tailwind CSS
+- Gaming: Custom games with HTML5 Canvas
+
+Package Dependencies:
+- Production dependencies: 95 packages
+- Development dependencies: 23 packages  
+- Optional dependencies: 1 package
+- Total: 119 packages

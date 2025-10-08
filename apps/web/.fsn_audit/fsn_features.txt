@@ -1,0 +1,30 @@
+client/src/components/ui/skeleton.tsx:      className={cn("animate-pulse rounded-md bg-muted", className)}
+client/src/components/ui/modal.tsx:      <div className="fsn-modal-container">
+client/src/components/ui/modal.tsx:        <div className="fsn-modal-header">
+client/src/components/ui/modal.tsx:          <h2>Claim Your .fsn Name</h2>
+client/src/components/ui/modal.tsx:            className="fsn-modal-close"
+client/src/components/ui/modal.tsx:        <div className="fsn-modal-content">
+client/src/components/ui/modal.tsx:          <div className="fsn-modal-input-container">
+client/src/components/ui/modal.tsx:            <Label htmlFor="fsnName">Enter your desired name</Label>
+client/src/components/ui/modal.tsx:            <div className="fsn-input-wrapper">
+client/src/components/ui/modal.tsx:                id="fsnName"
+client/src/components/ui/modal.tsx:                className="fsn-name-input"
+client/src/components/ui/modal.tsx:              <span className="fsn-domain-suffix">.fsn</span>
+client/src/components/ui/modal.tsx:              <p className="fsn-validation-message">
+client/src/components/ui/modal.tsx:              <p className="fsn-taken-message">
+client/src/components/ui/modal.tsx:          <div className="fsn-modal-actions">
+client/src/components/ui/modal.tsx:              className="fsn-submit-button"
+client/src/components/ChatSystem/FixedChatInterface.tsx:  fromFsn: string;
+client/src/components/ChatSystem/FixedChatInterface.tsx:  toFsn: string;
+client/src/components/ChatSystem/FixedChatInterface.tsx:  contactFsn: string;
+client/src/components/ChatSystem/FixedChatInterface.tsx:  userFsn: string;
+client/src/components/ChatSystem/FixedChatInterface.tsx:  contactFsn, 
+client/src/components/ChatSystem/FixedChatInterface.tsx:  userFsn, 
+client/src/components/ChatSystem/FixedChatInterface.tsx:  }, [contactFsn]);
+client/src/components/ChatSystem/FixedChatInterface.tsx:      const sentResponse = await fetch(`/api/fsn/messages/sent/${userFsn}`);
+client/src/components/ChatSystem/FixedChatInterface.tsx:      const inboxResponse = await fetch(`/api/fsn/messages/inbox/${userFsn}`);
+client/src/components/ChatSystem/FixedChatInterface.tsx:          msg.toFsn === contactFsn
+client/src/components/ChatSystem/FixedChatInterface.tsx:          msg.fromFsn === contactFsn
+client/src/components/ChatSystem/FixedChatInterface.tsx:      const response = await fetch(`/api/fsn/messages/read/${messageId}`, {
+client/src/components/ChatSystem/FixedChatInterface.tsx:        fromFsn: userFsn,
+client/src/components/ChatSystem/FixedChatInterface.tsx:        toFsn: contactFsn,

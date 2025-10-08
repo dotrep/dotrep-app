@@ -1,0 +1,112 @@
+Data model (use/confirm these tables)
+
+users: address (pk), name, streak, xp_mirror, last_seen
+
+xpLogs: id, address, type (“daily”, “referral7”), day_key, action_id, tx_hash, onchain (bool), created_at
+
+referrals: id, inviter, invitee, created_at, activated_at, qualifies (bool), bonus_awarded (bool)
+
+fsnDomains: address, name, created_at
+
+vaultItems: id, address, cid, mime, size, filename, tx_hash, created_at
+Add indexes: users(xp_mirror desc), referrals(inviter), referrals(invitee), xpLogs(address, day_key).
+
+Leaderboard logic (fast, credible)
+
+Primary source for ranking = users.xp_mirror (fast DB value).
+
+In PUBLIC, periodically sync Points.totalOf(address) into xp_mirror via a background job (e.g., every 5–10 minutes or on Points.Awarded events).
+
+Expose /api/leaderboard?limit=100 returning: rank, name (or short address), xp_mirror, streak.
+
+Add a “verify” button per row that fetches Points.totalOf(address) and shows “verified ✓” if equal or higher than xp_mirror.
+
+Referral system (gated, anti-farm)
+
+Referral link format: ?ref=<inviterAddress> (avoid emails/phones to keep stealth).
+
+On new wallet connect + first successful login/claim, if ref present and not self, create referrals row: inviter, invitee, created_at; activated_at null.
+
+Activation rule: set activated_at when invitee completes name claim AND achieves first-day login.
+
+Qualification rule (anti-bot): set qualifies=true only after invitee completes 7 consecutive days of streak.
+
+Reward rule: when qualifies flips to true, enqueue a one-time XP award to inviter via cron (same actionId/idempotency pattern as daily XP).
+
+Referral award (cron flow)
+
+Extend the daily cron from Part 5:
+
+Query referrals where qualifies=true AND bonus_awarded=false.
+
+For each, compute actionId = keccak256(inviter + “|referral7|” + invitee).
+
+If AWARD_ONCHAIN=true, call Points.award(inviter, REFERRAL_BONUS_XP, actionId).
+
+Mark bonus_awarded=true with tx_hash.
+
+Set REFERRAL_BONUS_XP in env (e.g., 50–200).
+
+Idempotent: if contract says duplicate, mark as awarded and continue.
+
+Anti-bot measures (lightweight, privacy-aware)
+
+One name per wallet is enforced on-chain already.
+
+Rate-limit register attempts per IP and per wallet (e.g., 10/hour).
+
+Require a human check on claim (hCaptcha or turnstile) when APP_MODE=PUBLIC.
+
+Only count referrals that reach 7-day streak; do not award for day-1 signups.
+
+Optional: soft device check (store anonymized user-agent hash) and throttle identical patterns abusing referrals.
+
+Add a server-side denylist table for known-abuse wallets; cron skips them.
+
+Frontend UI (clean and minimal)
+
+Leaderboard page shows top 100: position, name, XP, streak.
+
+User profile/ dashboard shows:
+
+“Your referral progress”: friends invited, qualifying in-progress (e.g., “3/7 days”), qualified count, total bonus XP.
+
+A share link (only in PUBLIC; hide in STEALTH).
+
+Add “Verified on-chain” badge next to XP when xp_mirror == Points.totalOf.
+
+In STEALTH, generic labels (“ID”, “handle”) and hide share buttons.
+
+Event-driven updates
+
+Subscribe to Points.Awarded for the current user: when seen, refresh dashboard and, optionally, bump them in the local leaderboard list.
+
+For the global leaderboard: keep a timed refresh (e.g., every 30–60s) or use your DB’s realtime channel; full event streaming for all users isn’t necessary.
+
+Edge cases to handle
+
+Self-referral: ignore if inviter==invitee.
+
+Multiple referrers: bind the first inviter seen; ignore changes after activation.
+
+Lost streak: if invitee breaks streak before 7 days, keep activation but don’t qualify; reset the “days toward 7” counter.
+
+Name changes: not allowed; but if you later add recovery, keep referral links tied to wallet, not name.
+
+Admin controls
+
+ENV toggles: REFERRAL_ENABLED, REFERRAL_BONUS_XP.
+
+Admin routes to view: top inviters, top qualifying referrals, suspicious clusters (same IP, same UA, same timestamp skew).
+
+Ability to pause awarding (Points-awarder signer can be paused/revoked).
+
+QA checklist
+
+Referral without streak: no bonus.
+
+Referral with 7-day streak: bonus awarded exactly once; actionId prevents double-award.
+
+Leaderboard loads fast, sorts by xp_mirror; verify button works and shows on-chain match.
+
+Abuse test: burst of claims from same IP gets throttled; self-referral ignored; multiple invites to same wallet do not produce multiple bonuses.

@@ -1,0 +1,83 @@
+🔧 REPLIT AI IMPLEMENTATION INSTRUCTIONS — VAULT + DATA MANAGER MODAL
+OVERVIEW
+We are updating the current FSN Vault interface to include a Data Manager modal that allows users to view, explore, and manage their uploaded Files and NFTs from a clean, on-brand modal popup. This improves UX while maintaining visual consistency with our glowing, neon-cyan FSN aesthetic.
+
+✅ PART 1: VAULT BUTTON INTERACTION
+1. Assign Click Targets
+Assign the existing "FILES" and "NFT" buttons as triggers to open the Data Manager Modal.
+
+Remove or hide the "KEYS" button entirely — we are not including key management in Phase 0.
+
+2. On Click: Trigger Modal
+When a user clicks either FILES or NFT, trigger the modal popup defined below.
+
+✅ PART 2: DESIGN THE MODAL ("Data Manager")
+1. Style
+Full-screen dark overlay.
+
+Centered modal container with subtle outer glow and soft cyan borders.
+
+Use FSN's standard Orbitron font.
+
+Design colors must match the rest of the app’s cyan + purple neon theme.
+
+2. Modal Header
+Large bold title: "📁 Data Manager"
+
+Subheader: "Secure decentralized storage view"
+
+Right-side corner "X" close icon, top-right
+
+✅ PART 3: CONTENT LAYOUT (INSIDE MODAL)
+Use tabs or toggle buttons across the top:
+
+Tabs: FILES (default), NFTS
+
+Each tab should dynamically switch content.
+
+A. FILES VIEW (default tab)
+Display:
+
+Grid or list of uploaded files
+
+Columns: Filename, Size, Date Uploaded, Download button, Delete icon
+
+Show animated placeholder if no files yet: "No files uploaded. Try sending your first one to the Vault 🚀"
+
+Buttons at bottom:
+
+"Upload New File" → opens native file picker and uploads to IPFS or your decentralized backend
+
+"Back to Vault" → closes modal
+
+B. NFT VIEW
+Display:
+
+Grid of NFT tiles (image thumbnail + name)
+
+Include token ID, collection, and view on chain button (optional)
+
+If no NFTs: "No NFTs detected in your Vault 🧬"
+
+✅ PART 4: FUNCTIONAL BEHAVIOR
+Uploading a file should immediately update the list in the modal without requiring a reload.
+
+Deleting a file prompts a confirmation modal: “Are you sure you want to delete this file?”
+
+The modal should not reset when switching tabs (retain scroll position, uploaded content, etc.)
+
+Modal must be fully responsive on all screen sizes, especially mobile.
+
+✅ PART 5: ANIMATIONS + EFFECTS
+Animate the modal fading in from the center with slight zoom effect.
+
+Glow hover states on buttons (Upload, Download, Delete)
+
+Subtle particle motion in background like elsewhere in FSN
+
+✅ PART 6: CODE ORGANIZATION SUGGESTIONS
+Place modal component in components/Modal/DataManager.vue (or .js/.jsx if using React)
+
+Route uploads to backend /upload/file endpoint (assumes IPFS or similar)
+
+Save NFT data as JSON in /vault/nftData.json mock for now if you’re not using an on-chain connection yet

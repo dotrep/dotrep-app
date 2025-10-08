@@ -1,0 +1,189 @@
+🛠️ FSN SIGNAL DIAL MODULE: Final Implementation Instructions
+Replace Existing Signal Component with this new interactive radio-style module
+🔁 Fully interactive
+🎛️ Knob-controlled red needle
+📟 Live digital frequency display (5.0 – 16.0 MHz)
+🧠 Retro-futuristic design that matches FSN’s neon/Tron/glow aesthetic
+
+✅ GOAL
+Replace the current SIGNAL element in the FSN web UI (center of Pulse–Signal–Beacon trio) with a functional radio dial interface. Users will turn a knob that:
+
+Rotates visually
+
+Moves a red frequency needle
+
+Updates a glowing digital readout (centered: “9.5”)
+
+Seamlessly fits with existing layout — no layout shift, distortion, or style clash
+
+Uses FSN design language: neon glow, crisp UX, gamified vibe
+
+🧩 1. HTML STRUCTURE
+Place this in the center slot where SIGNAL currently exists:
+
+html
+Copy
+Edit
+<div id="signal-module">
+  <img id="dial-bg" src="/assets/signal-dial.png" alt="Signal Dial" />
+  <div id="needle"></div>
+  <div id="digital-frequency">9.5</div>
+  <div id="knob"></div>
+  <div id="signal-label">SIGNAL</div>
+</div>
+Positioning Notes:
+
+Must match width/height of Pulse and Beacon cards
+
+Transparent PNG (signal-dial.png) should be used as the base background dial image (512x512 or scaled to fit)
+
+🎨 2. CSS STYLING (FULL)
+css
+Copy
+Edit
+#signal-module {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#dial-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+#needle {
+  position: absolute;
+  width: 4px;
+  height: 125px;
+  background: #ff2c2c;
+  top: 76px;
+  left: 50%;
+  transform-origin: bottom center;
+  transform: rotate(0deg);
+  z-index: 2;
+  box-shadow: 0 0 8px red;
+}
+
+#digital-frequency {
+  position: absolute;
+  top: 205px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85px;
+  height: 40px;
+  font-family: 'Orbitron', 'Share Tech Mono', 'Audiowide', sans-serif;
+  font-size: 28px;
+  color: #00ffff;
+  text-shadow: 0 0 5px #0ff;
+  z-index: 3;
+}
+
+#knob {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(#333, #111);
+  border-radius: 50%;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  cursor: grab;
+  box-shadow: 0 0 10px #0ff;
+}
+
+#signal-label {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  font-size: 20px;
+  font-family: 'Orbitron', sans-serif;
+  color: #00ffff;
+  text-shadow: 0 0 6px #0ff;
+  letter-spacing: 2px;
+}
+🧠 3. JAVASCRIPT: FULL FUNCTIONALITY
+javascript
+Copy
+Edit
+const needle = document.getElementById("needle");
+const knob = document.getElementById("knob");
+const display = document.getElementById("digital-frequency");
+
+let isDragging = false;
+let rotation = 0;
+let centerX, centerY;
+
+const MIN_ROT = -120;
+const MAX_ROT = 120;
+const MIN_FREQ = 5.0;
+const MAX_FREQ = 16.0;
+
+function angleToFrequency(angle) {
+  let percent = (angle - MIN_ROT) / (MAX_ROT - MIN_ROT);
+  return (MIN_FREQ + percent * (MAX_FREQ - MIN_FREQ)).toFixed(1);
+}
+
+function updateDial() {
+  const frequency = angleToFrequency(rotation);
+  needle.style.transform = `rotate(${rotation}deg)`;
+  knob.style.transform = `rotate(${rotation}deg)`;
+  display.innerText = frequency;
+}
+
+knob.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  const rect = knob.getBoundingClientRect();
+  centerX = rect.left + rect.width / 2;
+  centerY = rect.top + rect.height / 2;
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+
+  const dx = e.clientX - centerX;
+  const dy = e.clientY - centerY;
+  let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  angle -= 90;
+
+  angle = Math.max(MIN_ROT, Math.min(MAX_ROT, angle));
+  rotation = angle;
+  updateDial();
+});
+
+window.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+🧱 4. IMAGE ASSETS & INTEGRATION NOTES
+✅ signal-dial.png: This is the dial you loved (uploaded version with red needle at 9.5)
+
+✅ Ensure this is preloaded and responsive (WebP fallback optional)
+
+✅ The rest of the site (Pulse, Beacon) must retain grid layout and alignment
+
+✅ Apply dark neon starfield or grid background behind the module for visual harmony
+
+💡 BONUS IDEAS (Optional)
+Feature	Purpose
+🎧 Static/Click sound	Enhance interactivity
+🌌 Radio "scan" effect	Add light shimmer across dial arc
+📡 Frequency states	Unlock hidden content at 7.3, 13.0
+
+✅ TESTING CHECKLIST
+ Works on mobile and desktop (check knob drag touch events)
+
+ Pixel-perfect alignment with Pulse and Beacon
+
+ Frequency updates precisely with drag
+
+ Needle rotation math doesn't jitter or snap
+
+ Matches FSN glow branding and style
+

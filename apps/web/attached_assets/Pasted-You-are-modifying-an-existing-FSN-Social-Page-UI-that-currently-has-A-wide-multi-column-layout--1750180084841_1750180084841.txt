@@ -1,0 +1,242 @@
+You are modifying an existing FSN Social Page UI that currently has:
+
+A wide, multi-column layout.
+
+A full-width constellation background.
+
+A scrollable activity feed with timestamps.
+
+A horizontally spread metrics section under the Core Signal icon.
+
+Action buttons placed vertically on the right.
+
+Your task is to transform this existing structure into a compact, vertically stacked layout with simplified elements, reduced scrolling, and no timeline timestamps — while preserving existing components where possible.
+
+1️⃣ GLOBAL LAYOUT ADJUSTMENT
+Modify the main container:
+
+Change from multi-column to single-column.
+
+Set the maximum width of the main container to 440px.
+
+Use margin: 0 auto to center horizontally.
+
+Use flexbox to center vertically: display: flex; justify-content: center; align-items: center; min-height: 100vh;.
+
+Remove any horizontal grid or multi-column structures.
+
+2️⃣ CORE SIGNAL ICON
+Do not replace the icon — keep existing Core Signal icon and structure fully intact.
+
+Scale the Core Signal block down by approximately 10% from its current size to better fit the narrower layout.
+
+Leave it horizontally centered at the top of the main container.
+
+Retain pulse lock and glyph as-is.
+
+Do not add or remove text above or below the icon at this stage.
+
+3️⃣ METRICS SECTION
+Locate the section where Followers, Following, Signal, and XP metrics are displayed.
+
+Modify this section from horizontal row to vertical stack:
+
+Use flex-direction: column.
+
+Stack the metrics in this exact order:
+
+125 Followers
+
+47 Following
+
+C3GAL Core Signal
+
+2,350 XP
+
+Apply the following style rules to each row:
+
+Text center-aligned.
+
+Font-weight: 600 for the numeric values.
+
+Font-weight: 500 for the label text.
+
+Font-size: 18px.
+
+Line-height: 22px.
+
+Vertical margin between each metric row: 10px.
+
+Remove any extra padding or horizontal spacing previously used for the old row format.
+
+4️⃣ ACTIVITY FEED MODIFICATION
+Locate the existing social activity feed code.
+
+Completely remove the following:
+
+Timeline scroll bar.
+
+Timestamps (e.g. "2m", "5m", "1h", etc).
+
+Vertical timeline lines or dividers.
+
+Any scroll-related functions or event listeners.
+
+Replace dynamic timestamp display with a static vertical list limited to 7 recent events.
+
+Use this static content for now (replace current feed data):
+
+text
+Copy
+Edit
+satoshi.fsn unlocked Signal  
+cryptoai.fsn reached Sentinel!  
+vitalik.fsn completed a quest  
+0xghost.fsn is now following you  
+jonny.fsn linked a new NFT!  
+alethra.fsn unlocked Signal  
+aldega.fsn unlocked Signal
+Apply the following formatting for each feed item:
+
+Username (.fsn) in bold: font-weight: 600; color: #FFFFFF;.
+
+Event text: font-weight: 400; color: #AAAAAA;.
+
+Font-size: 16px.
+
+Line-height: 20px.
+
+Vertical spacing between feed items: 12px.
+
+Entire text block left-aligned inside the container.
+
+No additional icons, unless already present for events like "unlocked Signal" (where 🔓 may be preserved).
+
+Ensure no vertical or horizontal scroll bars remain.
+
+5️⃣ CONSTELLATION BACKGROUND ADJUSTMENT
+Locate the current constellation background component or canvas layer.
+
+Modify as follows:
+
+Limit the constellation effect to only cover the upper portion directly behind the Core Signal icon.
+
+Reduce node density by approximately 70%.
+
+Decrease brightness of star nodes by 80%.
+
+Set line opacity to 0.2 or equivalent faint line rendering.
+
+Do not extend constellation behind the feed or button areas.
+
+Completely remove wide network grid effect behind full page.
+
+Ensure background remains static — no movement, animation, or interactivity.
+
+6️⃣ ACTION BUTTON STACK (LIVE / CHAT / FEATURED NFT)
+Do not replace existing buttons — modify positions and sizing.
+
+Move the existing button stack slightly to tightly align with the right edge of the new narrow container.
+
+Maintain vertical order:
+
+LIVE
+
+CHAT
+
+FEATURED NFT
+
+Apply updated sizing for each button:
+
+Width: 120px
+
+Height: 50px
+
+Border-radius: 10px
+
+Vertical margin between buttons: 15px
+
+Font-size: 16px
+
+Font-weight: 500
+
+Background colors: keep existing theme palette.
+
+Apply soft neon glow: box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);.
+
+For the FEATURED NFT button specifically:
+
+Keep the flame icon.
+
+Apply a subtle outer glow to the flame.
+
+Round the square shape: border-radius: 15px.
+
+Apply flame shadow: box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);.
+
+7️⃣ TYPOGRAPHY UNIFICATION
+Review and standardize font usage globally:
+
+Font-family: FSN system font.
+
+Default font-weight for body text: 400.
+
+Headings and metrics: 600.
+
+Subheadings: 500.
+
+Font-size default: 16px.
+
+Line-height default: 20px.
+
+Primary text color: #FFFFFF.
+
+Secondary text color: #AAAAAA.
+
+8️⃣ COLOR PALETTE & GLOW EFFECTS
+Maintain dark background: #0A0B10.
+
+Slightly increase Core Signal glow brightness by 15%.
+
+Apply consistent soft glow effect to all buttons to match FSN visual identity.
+
+Use warm orange glow and slight inner glow on flame icon for Featured NFT.
+
+9️⃣ RESPONSIVE BEHAVIOR
+Verify that the entire layout properly scales for devices as small as 360px wide.
+
+No horizontal scrolling should ever occur at any screen size.
+
+The activity feed should always be limited to the 7 hardcoded items with no scrolling or dynamic loading.
+
+Core Signal icon, metrics, feed, and button stack should all shrink proportionally on smaller screens.
+
+10️⃣ CODE CLEANUP
+Remove all unused timeline and scrolling logic.
+
+Remove timestamp generation functions.
+
+Remove scroll event listeners tied to the feed.
+
+Simplify code to static layout using vertical flexbox containers.
+
+Retain only the following main containers:
+
+Core Signal section.
+
+Metrics block.
+
+Activity feed list.
+
+Action button stack.
+
+✅ FINAL RULES
+
+Do not invent or introduce any new elements.
+
+Do not optimize the design beyond what is written.
+
+Execute each modification step precisely.
+
+End result must visually match the more compact design layout.
+

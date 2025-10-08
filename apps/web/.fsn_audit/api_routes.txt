@@ -1,0 +1,20 @@
+server/routes/fsn-contacts.ts:router.get('/api/fsn/contacts/:userId', async (req, res) => {
+server/routes/fsn-contacts.ts:router.post('/api/fsn/contacts/add', async (req, res) => {
+server/routes/fsn-contacts.ts:router.delete('/api/fsn/contacts/:contactId', async (req, res) => {
+server/routes/user-settings.ts:router.get('/:userId', async (req, res) => {
+server/routes/user-settings.ts:router.post('/:userId', async (req, res) => {
+server/routes/email.ts:router.post('/incoming', async (req, res) => {
+server/routes/email.ts:router.post('/test', async (req, res) => {
+server/routes/api/vault.ts:router.post('/upload', upload.single('file'), async (req, res) => {
+server/routes/api/vault.ts:router.get('/items', async (req, res) => {
+server/routes/api/vault.ts:router.get('/stats', async (req, res) => {
+server/routes/api/vault.ts:router.get('/download/:id', async (req, res) => {
+server/routes/api/vault.ts:router.post('/email-test', async (req, res) => {
+server/routes/api/vault.ts:router.delete('/delete/:id', async (req, res) => {
+server/routes/ghost-agent.ts:router.post('/register', async (req: Request, res: Response) => {
+server/routes/ghost-agent.ts:router.get('/check', async (req: Request, res: Response) => {
+server/routes/contacts.ts:router.get('/:userId', async (req, res) => {
+server/routes/contacts.ts:router.post('/', async (req, res) => {
+server/routes/contacts.ts:router.delete('/:contactId', async (req, res) => {
+server/routes/fsn-messages.ts:router.post('/send', handleAIAgentMessage);
+server/routes/fsn-messages.ts:router.get('/sent/:fsnName', async (req: Request, res: Response) => {

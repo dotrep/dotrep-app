@@ -1,0 +1,157 @@
+🔧 1. PULSE DECAY LOGIC + VISUAL FEEDBACK
+🔁 Logic: Pulse Decay Over Time
+Where: Home.jsx or your Pulse state file
+
+What to do:
+
+Store lastActiveTimestamp (localStorage or backend)
+
+On page load, calculate time since last activity
+
+If > 48 hrs:
+
+-3Hz per day of inactivity
+
+Floor at 0Hz
+
+js
+Copy
+Edit
+const hoursSinceLastActivity = getHoursSince(lastActiveTimestamp);
+if (hoursSinceLastActivity > 48) {
+  const decay = Math.floor(hoursSinceLastActivity / 24) * 3;
+  setPulseHz(Math.max(0, pulseHz - decay));
+}
+Update lastActiveTimestamp whenever:
+
+User logs in
+
+Uploads file
+
+Plays quest
+
+Follows user, etc.
+
+🌘 Visual: Flicker and Dim When Pulse < 30Hz
+Where: CSS for your Pulse dial (e.g., PulseGauge.css)
+
+css
+Copy
+Edit
+@keyframes flicker {
+  0%   { opacity: 1; }
+  45%  { opacity: 0.7; }
+  70%  { opacity: 1; }
+  85%  { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.pulse-fading {
+  animation: flicker 3s infinite;
+  filter: brightness(0.4);
+}
+Where to apply:
+In JSX:
+
+jsx
+Copy
+Edit
+<div className={`pulse-dial ${pulseHz < 30 ? 'pulse-fading' : ''}`}>
+  {pulseHz} Hz
+</div>
+🧠 Tooltip (Optional):
+On hover, show:
+
+“⚠️ Your Pulse is degrading. Complete tasks to restore power.”
+
+🔧 2. SIGNAL ACTIVATION STATUS + XP REWARD
+✅ Once user reaches ≥ 70Hz:
+Trigger:
+
+js
+Copy
+Edit
+if (pulseHz >= 70 && !signalUnlocked) {
+  setShowSignalModal(true);
+  setXP(xp + 100); // or call addXP(100)
+  setSignalUnlocked(true);
+  logXP('+100 XP – Signal Unlocked');
+  localStorage.setItem('signalUnlocked', true);
+}
+🎉 After Clicking "Activate Signal":
+Set signalActive = true
+
+Close modal
+
+Optionally update HUD:
+
+jsx
+Copy
+Edit
+<span className="signal-status">🟢 Signal Active</span>
+🔧 3. PULSE RECOVERY QUEST (WHEN PULSE = 0)
+📁 Create: src/components/PulseRecoveryModal.jsx
+Display this when:
+
+js
+Copy
+Edit
+if (pulseHz === 0) setShowRecoveryModal(true);
+Content:
+less
+Copy
+Edit
+Your Signal has gone dark.
+Reignite your Pulse by completing:
+
+[ ] Log in again  
+[ ] Upload 1 Vault item  
+[ ] Play 1 Mini Mission
+
+✔ Complete all to restore to 30Hz and gain +50 XP.
+When all are completed:
+
+setPulseHz(30)
+
+addXP(50)
+
+logXP("+50 XP – Pulse Recovered")
+
+Close modal
+
+🔧 4. BEACON UNLOCK MODAL (PHASE 1+)
+Trigger Condition:
+js
+Copy
+Edit
+if (pulseHz >= 100 && signalActive && signalDaysActive >= 3 && !beaconUnlocked) {
+  setShowBeaconModal(true);
+}
+📁 Create: src/components/BeaconUnlockModal.jsx
+Content:
+
+vbnet
+Copy
+Edit
+🌐 You’ve unlocked Beacon Access!
+
+You've maintained full Pulse and active Signal for 3 days.
+
+Prepare to broadcast across the global FSN map.
+Beacon goes live in Phase 1.
+Button: “Preview Beacon” (optional)
+
+Flag: beaconUnlocked = true
+
+Add log: +50 XP – Beacon Access Granted
+
+💾 Store These Flags in localStorage or Context:
+signalUnlocked
+
+signalActive
+
+beaconUnlocked
+
+hasShownRecoveryModal
+
+This avoids duplicate modals across sessions.

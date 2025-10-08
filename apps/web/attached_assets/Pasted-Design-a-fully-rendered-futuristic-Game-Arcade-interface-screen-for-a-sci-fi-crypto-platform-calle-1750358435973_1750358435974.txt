@@ -1,0 +1,116 @@
+Design a fully-rendered futuristic “Game Arcade” interface screen for a sci-fi crypto platform called FSN. Use an aesthetic inspired by TRON and Zaxxon: deep space background, glowing blue neon, angled 3D elements, floating light particles, and visual symmetry. Every object must feel lit, dimensional, and radiant.
+
+View: Isometric 3/4 perspective — viewer is looking slightly **downward and from the front-right**. All objects must be angled accordingly.
+
+------------------------------------------------------
+🌌 1. BACKGROUND
+------------------------------------------------------
+- Dark cosmic background with:
+  - Glowing star map/constellation effect (network of faint glowing nodes and lines)
+  - Misty, subtle moving particle clouds
+  - Faint gradient radial light from center behind mascot
+  - Ground plane: black reflective base with glints, particle shimmer, and floor glow rings under machines
+
+------------------------------------------------------
+🧠 2. TOP HEADER
+------------------------------------------------------
+- FSN logo centered at top with electric blue glow and soft bloom
+- Below logo: Large glowing text “GAME ARCADE”
+  - Font: futuristic sans-serif, wide letter spacing, all caps
+  - Color: neon blue with outer glow and slight inner light
+
+Behind this header, add faint flickering vertical light beams or signal trails for ambient motion
+
+------------------------------------------------------
+🕹 3. LEFT ARCADE MACHINE — “DAILY QUEST”
+------------------------------------------------------
+A glowing 1980s-style arcade cabinet, drawn in perfect 3/4 isometric view from above, **facing slightly rightward toward the center mascot**.
+
+📐 Geometry:
+- Overall shape: Tall **trapezoidal wedge** (classic arcade shape) — front is wider at base, tapers slightly at top
+- Side: Slightly angled back wall, visible to the viewer
+- Screen: Black inset display, tilted backward, not vertical. Emits a blue glow
+- Control panel: Slanted surface below the screen with:
+  - 2–3 round glowing blue buttons
+  - 1 short joystick
+- Top marquee: Glowing horizontal banner labeled **“DAILY QUEST”**, protruding slightly forward at the top
+- Base: Sits on a **glowing circular floor ring** (neon blue), with blue mist particles rising around it
+
+🧪 FX:
+- All edges emit electric blue glow
+- Subtle inner shadows and lighting gradients for depth
+- Glowing seams on the sides
+
+------------------------------------------------------
+🧬 4. CENTER MASCOT + SIGNAL POINTS
+------------------------------------------------------
+At center of the page, draw the FSN mascot as a glowing, happy drop-shaped character, standing upright, facing forward.
+
+📐 Geometry:
+- Body: Round teardrop form with slight limb suggestions
+- Face: Glowing smile, wide glowing white eyes
+- Arms: Outstretched in joy (wings or arms raised)
+- Aura: Surrounded by:
+  - Soft blue radiating glow
+  - Floating particles
+  - Shimmer trails or sparkles
+
+🧾 Text elements:
+- Above: **“+12 SIGNAL POINTS!”** — bold glowing text in electric blue
+- Below: **“New Quest in…”** — smaller glowing caption
+
+The mascot should be the **visual focal point** and scaled to match the arcade machines flanking it
+
+------------------------------------------------------
+🕹 5. RIGHT ARCADE MACHINE — “MINI MISSIONS”
+------------------------------------------------------
+Same design and orientation as left machine, but **mirrored to face leftward toward the mascot**.
+
+📐 Geometry:
+- Trapezoidal wedge shape, angled properly
+- Label: **“MINI MISSIONS”** on the top glowing banner
+- Screen: Glowing **star icon** on dark background
+- Control panel: Buttons and joystick as on left side
+- Base: Blue floor ring with mist effects
+
+🎯 Important: This cabinet must be **geometrically symmetrical** with the left one — identical size, lighting, glow intensity, and 3D taper
+
+------------------------------------------------------
+🧩 6. BOTTOM SECTION — GAME MODE CARDS
+------------------------------------------------------
+Create 3 glowing, floating info panels lined up at the bottom of the page. These are interactive buttons to start game modes.
+
+📐 Geometry:
+- Rectangular floating panels with rounded corners
+- Each card has a glowing neon outline, soft inner shadow, and light bloom
+
+🧾 Panel contents:
+- Title (e.g., “QUEST CHALLENGES”, “CRYPTO PUZZLES”, “NETWORK WARS”)
+- Icon near the top (glowing puzzle piece, star, or battle shield)
+- 1–2 lines of short placeholder description
+- Button at bottom: glowing blue outline with hoverable feel (text: “ENTER QUESTS” or “START NOW”)
+
+🧪 FX:
+- Each card should have a floating, backlit glow
+- Use light particle flickers above or around them
+- Maintain equal spacing and alignment
+
+------------------------------------------------------
+🎨 COLOR + LIGHTING STYLE GUIDE
+------------------------------------------------------
+- Primary color: Electric blue
+- Accents: Cyan, deep black, white-hot highlights
+- All major shapes must cast glow (outer + inner glow)
+- Use shading and gradients for 3D volume (no flat vectors)
+- All geometry should follow isometric 3/4 perspective from above
+- Maintain symmetry between left/right arcade machines
+- Avoid clutter: composition must be clean, centered, and heroic
+
+------------------------------------------------------
+🔐 BRAND AESTHETIC REFERENCE
+------------------------------------------------------
+- Inspired by: TRON (1982), Zaxxon cabinet shape, vaporwave synth UI
+- Keywords: sci-fi neon, crypto gameverse, high-glow fidelity, arcade futurism
+- Make it feel alive: layered glow effects, signal pulses, ambiance
+
+This is the FSN Game Arcade — make it glow, breathe, and feel like a gateway into a digital metaverse.

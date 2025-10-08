@@ -1,0 +1,198 @@
+✅ GOAL: Match Homepage.png exactly
+🔧 KEY PROBLEMS IN CURRENT VERSION
+Logo is too small and misaligned
+
+No “FreeSpace Network” wordmark next to the logo
+
+Headline is misaligned and cramped
+
+Hexagon graphic is the wrong size and design
+
+No background grid or signal mesh
+
+No vertical center alignment
+
+Typography and spacing are off
+
+Button style is slightly off (font, weight, spacing)
+
+✅ SOLUTION: CHANGE THESE THINGS IN DETAIL
+1. Structure & Layout
+html
+Copy
+Edit
+<section class="hero">
+  <div class="content">
+    <div class="logo-area">
+      <img src="/assets/fsn-logo.svg" alt="FSN logo" class="logo" />
+      <span class="logo-text">FreeSpace Network</span>
+    </div>
+    <h1>Crypto starts with your <span class="highlight">.fsn</span> name</h1>
+    <p class="subheadline">
+      Claim your Web3 identity.<br>Earn XP. Emit your Signal.
+    </p>
+    <button class="cta">Claim your .fsn name</button>
+  </div>
+  <div class="hex-container">
+    <img src="/assets/fsn-hex.png" alt=".fsn" class="hex-image" />
+  </div>
+</section>
+2. CSS Reset
+css
+Copy
+Edit
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Manrope', sans-serif;
+  background-color: #04070b;
+  background-image: url('/assets/grid-overlay.png'); /* make this subtle */
+  background-size: cover;
+  color: #00f0ff;
+  height: 100vh;
+  overflow: hidden;
+}
+3. Hero Section
+css
+Copy
+Edit
+.hero {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 4rem;
+  gap: 4rem;
+}
+4. Logo Area
+css
+Copy
+Edit
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  height: 48px;
+  filter: drop-shadow(0 0 6px #00f0ff);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #00f0ff;
+}
+5. Headline & Subheadline
+css
+Copy
+Edit
+h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1.2;
+  margin: 0;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
+.highlight {
+  color: #00f0ff;
+}
+
+.subheadline {
+  font-size: 1.25rem;
+  max-width: 400px;
+  line-height: 1.5;
+  margin: 2rem 0;
+}
+6. Button
+css
+Copy
+Edit
+.cta {
+  padding: 0.75em 2.5em;
+  font-size: 1.1rem;
+  background: transparent;
+  border: 2px solid #00f0ff;
+  color: #00f0ff;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cta:hover {
+  background: rgba(0, 240, 255, 0.1);
+  transform: scale(1.03);
+}
+7. Hexagon Image
+css
+Copy
+Edit
+.hex-container {
+  flex-shrink: 0;
+}
+
+.hex-image {
+  max-width: 320px;
+  filter: drop-shadow(0 0 20px #00f0ff);
+  animation: pulse 6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+8. Mobile View
+css
+Copy
+Edit
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .logo-area {
+    justify-content: center;
+  }
+
+  .hex-image {
+    margin-top: 2rem;
+    max-width: 250px;
+  }
+
+  .cta {
+    width: 100%;
+    max-width: 300px;
+    margin: auto;
+  }
+}
+9. Assets
+You must use the following files (ensure they are uploaded to /assets/):
+
+fsn-logo.svg — for the icon logo
+
+fsn-hex.png — glowing .fsn hexagon
+
+grid-overlay.png — subtle dark mesh or dot pattern
+
+✅ FINAL CHECKLIST
+Element	Matches Homepage.png?
+Logo & Wordmark	✅ Yes
+Headline/Subheadline	✅ Yes
+Font/Color/Glow	✅ Yes
+Layout / 2 columns	✅ Yes
+Button style	✅ Yes
+Background grid	✅ Yes
+Hex image style	✅ Yes
+

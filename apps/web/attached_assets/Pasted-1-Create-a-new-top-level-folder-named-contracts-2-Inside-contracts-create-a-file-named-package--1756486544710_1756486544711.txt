@@ -1,0 +1,87 @@
+1.	Create a new top-level folder named: contracts
+	2.	Inside contracts, create a file named package.json with exactly these fields:
+name: fsn-contracts
+version: 0.1.0
+private: true
+type: module
+scripts:
+
+	•	compile: hardhat compile
+	•	test: hardhat test
+	•	node: hardhat node
+	•	deploy:local: hardhat run scripts/deploy.ts –network localhost
+	•	deploy:sepolia: hardhat run scripts/deploy.ts –network baseSepolia
+devDependencies (these exact packages/versions):
+	•	@nomicfoundation/hardhat-toolbox@^5.0.0
+	•	@typechain/ethers-v6@^0.5.1
+	•	dotenv@^16.4.5
+	•	ethers@^6.13.0
+	•	hardhat@^2.22.10
+	•	ts-node@^10.9.2
+	•	typescript@^5.6.2
+	•	typechain@^8.3.2
+
+	3.	Still inside contracts, create tsconfig.json with these compiler options:
+target ES2020; module ES2020; moduleResolution Node; esModuleInterop true; resolveJsonModule true; strict true; types include node and hardhat.
+	4.	Create .env.example (do not put real secrets here):
+BASE_SEPOLIA_RPC_URL=https://base-sepolia.g.alchemy.com/v2/REPLACE_ME
+PRIVATE_KEY=0xREPLACE_WITH_DEPLOYER_PRIVATE_KEY
+	5.	In Replit “Secrets”, add the real values later as:
+BASE_SEPOLIA_RPC_URL = your Alchemy/Infura Base Sepolia URL
+PRIVATE_KEY = your deployer private key (0x…)
+	6.	Create hardhat.config.ts in contracts with this configuration:
+
+	•	import dotenv and load env first.
+	•	import “@nomicfoundation/hardhat-toolbox”.
+	•	solidity version 0.8.24 with optimizer enabled, runs 200.
+	•	networks:
+	•	localhost: url http://127.0.0.1:8545 (no accounts field needed; Hardhat node supplies them)
+	•	baseSepolia: url from process.env.BASE_SEPOLIA_RPC_URL, accounts array with process.env.PRIVATE_KEY
+	•	etherscan: apiKey can be a placeholder for now (no verification in stealth).
+
+	7.	Create the contracts folder path: contracts/contracts
+	8.	In contracts/contracts, create a neutral-named registry contract file Registry.sol with this logic (copy the exact content):
+
+	•	SPDX: MIT, pragma 0.8.24.
+	•	contract name: Registry
+	•	events: Registered(address indexed owner, string name)
+	•	storage: mapping(bytes32 => address) ownerOfHash; mapping(address => bool) hasName
+	•	internal function to lowercase ASCII A–Z to a–z
+	•	public view function ownerOf(string calldata name) returns (address) by hashing keccak256(lower(name))
+	•	public function register(string calldata name):
+	•	require !hasName[msg.sender]
+	•	lowercase name; enforce length 3..20; allowed chars [a–z 0–9 -]
+	•	compute key = keccak256(bytes(lower(name)))
+	•	require ownerOfHash[key] == address(0)
+	•	set ownerOfHash[key] = msg.sender; hasName[msg.sender] = true; emit Registered(msg.sender, lower(name))
+
+	9.	Create contracts/scripts/deploy.ts (TypeScript):
+
+	•	import { ethers } from “hardhat”
+	•	main(): getContractFactory(“Registry”), deploy, wait for deployed, console.log(“Registry deployed:”, address)
+	•	catch errors and process.exit(1)
+
+	10.	Open the Replit shell, run inside the contracts folder, in order:
+
+	•	npm install
+	•	npx hardhat (if prompted to create a project, decline; you already created files)
+	•	npm run compile
+
+	11.	Stealth local test (no public footprint):
+
+	•	In one shell: npm run node   (starts a local Hardhat node at http://127.0.0.1:8545)
+	•	In another shell: npm run deploy:local   (deploys to the local chain; prints “Registry deployed: 0x…”)
+	•	Copy the local deployed address for later wiring.
+
+	12.	(Do not go public yet) When you eventually want a public test deploy, add Replit Secrets for BASE_SEPOLIA_RPC_URL and PRIVATE_KEY, then run:
+
+	•	npm run deploy:sepolia
+	•	Save the printed address; do not verify code if you want to remain low-profile.
+
+	13.	Create a deployments file so the frontend can read addresses:
+
+	•	For local: create contracts/deployments/local.json with a single key/value: { “Registry”: “PASTE_LOCAL_ADDRESS” }
+	•	For Base Sepolia later: contracts/deployments/base-sepolia.json with { “Registry”: “PASTE_SEPOLIA_ADDRESS” }
+
+	14.	Confirm compile/deploy status and stop here.
+This finishes Part 1: you have a Hardhat contracts workspace, a neutral Registry contract, local deployment for fully private testing, and optional Base Sepolia deployment for later.

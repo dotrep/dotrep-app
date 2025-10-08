@@ -1,0 +1,147 @@
+Beacon RECAST — Phase 0 Behavior (No Trust)
+0) Goal
+RECAST grants small XP, increments Broadcasts, updates Streak, enforces daily cooldown, and shows feedback.
+
+No navigation to Trust/KYC anywhere in Phase 0.
+
+1) Environment flags (Secrets)
+Set these in Replit:
+
+FEATURE_TRUST=off
+
+FEATURE_BEACON_RECAST=phase0 (switch to trust in Phase 1)
+
+XP_RECAST_AWARD=10 (tune as needed)
+
+RECAST_COOLDOWN_SECONDS=86400 (24h; tune as needed)
+
+2) Data model (confirm or add)
+User/game state must persist:
+
+beacon.broadcasts_total (integer)
+
+beacon.streak_days (integer)
+
+beacon.last_recast_at (ISO timestamp)
+
+XP ledger supports labeled writes (see §6).
+
+If these fields don’t exist, add them in the user profile or a beacon_state table keyed by user_id.
+
+3) Remove Trust handoff from RECAST
+Find the Beacon component and its RECAST onClick. Remove/disable:
+
+Any route push to /trust, verify, or external KYC.
+
+Any API call that initiates Trust.
+Guard any leftover Trust init behind FEATURE_TRUST=on.
+
+4) Backend endpoint for recast
+Identify or create a single endpoint (e.g., /api/beacon/recast) that:
+
+Authenticates the user.
+
+Computes cooldown: now - last_recast_at.
+
+If still cooling down, return cooldown_remaining (seconds).
+
+If allowed:
+
+Increment broadcasts_total by 1.
+
+Update streak_days:
+
+If previous recast was within the last 48h window (or your exact streak rule), +1.
+
+Else reset to 1.
+
+Set last_recast_at = now.
+
+Write an XP transaction for XP_RECAST_AWARD.
+
+Respond with JSON:
+
+broadcasts_total
+
+streak_days
+
+xp_awarded (0 or XP_RECAST_AWARD)
+
+cooldown_remaining (0 when success)
+
+Important: Rate‑limit this endpoint server‑side to prevent spam; align with RECAST_COOLDOWN_SECONDS.
+
+5) Frontend wiring
+RECAST onClick calls the recast endpoint (not Trust).
+
+On success (cooldown 0):
+
+Update Beacon UI counts from response.
+
+Trigger micro‑animation (glow/pulse) ~800ms.
+
+Show toast: “Broadcast sent. +{xp_awarded} XP • Streak {streak_days}.”
+
+Disable button and start countdown from RECAST_COOLDOWN_SECONDS.
+
+On cooldown:
+
+Do not change counts or XP.
+
+Show toast: “Recast available in {HH:MM:SS}.”
+
+Keep button disabled with countdown label.
+
+6) XP ledger write (server‑side)
+When awarding XP, record a labeled transaction:
+
+type: "beacon_recast"
+
+amount: XP_RECAST_AWARD
+
+source: "beacon"
+
+metadata: { cooldown_seconds: <value>, server_ts: <iso> }
+
+Ensure the user’s visible XP total reflects the ledger write on the next state refresh.
+
+7) Copy and UI states (exact)
+Button label: RECAST
+
+Success toast: Broadcast sent. +{XP} XP • Streak {N}.
+
+Cooldown label on button: Recast in {HH:MM:SS}
+
+Tooltip (optional): Send one broadcast per day to extend your streak and earn XP.
+
+Remove any Trust/KYC hints or tooltips in the Beacon area.
+
+8) Analytics (non‑PII)
+Fire client events:
+
+beacon_recast_click
+
+beacon_recast_success with { xp_awarded, streak_days }
+
+beacon_recast_cooldown_blocked with { cooldown_remaining }
+
+Do not include PII.
+
+9) QA checklist (acceptance)
+With FEATURE_TRUST=off and FEATURE_BEACON_RECAST=phase0:
+
+First click: animations run, toast shows XP and Streak, counts update, button disables with countdown.
+
+During cooldown: click is blocked; countdown/tooltip shows remaining time; no XP granted; no state change.
+
+After cooldown expires: RECAST works again; streak increments per rule.
+
+No navigation to /trust or external KYC anywhere from Beacon.
+
+Mobile: button tap target large; countdown legible; toasts readable.
+
+Console/network: no errors; endpoint returns expected JSON; rate‑limit effective.
+
+10) Phase 1 re‑enable note (for later)
+To restore Trust handoff later: set FEATURE_TRUST=on and FEATURE_BEACON_RECAST=trust, and re‑point RECAST to the Trust init flow (no UI redesign required).
+

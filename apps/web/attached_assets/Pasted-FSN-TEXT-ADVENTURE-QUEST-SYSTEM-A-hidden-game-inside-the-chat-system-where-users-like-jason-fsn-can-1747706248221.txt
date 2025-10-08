@@ -1,0 +1,197 @@
+FSN TEXT ADVENTURE QUEST SYSTEM
+
+A hidden game inside the chat system where users like jason.fsn can:
+	•	Message core.fsn to play a Zork-style quest
+	•	Use commands like look, go east, use terminal
+	•	Earn XP, collect items, and save progress
+	•	Trigger Easter eggs and secret rewards
+
+⸻
+
+🧱 STEP 1: User Data Format
+
+Update each FSN user’s data to look like this:
+
+{
+  "fsn_name": "jason.fsn",
+  "user_type": "human",
+  "email_alias": "jason.fsn@fsnvault.com",
+  "vault_id": "vault_001",
+  "messages": [],
+  "xp": 0,
+  "inventory": [],
+  "quest": {
+    "active": false,
+    "location": null,
+    "completed": false,
+    "progress_log": []
+  }
+}
+
+Every user should have the quest object above so their progress is tracked.
+
+⸻
+
+🤖 STEP 2: Create core.fsn Agent (core-agent.js)
+
+Create a file called: core-agent.js
+
+Paste this exact code into the file:
+
+const users = require('./users.json'); // Or replace with your DB logic
+
+function getUser(fsn_name) {
+  return users.find(u => u.fsn_name === fsn_name);
+}
+
+function addXP(fsn_name, amount) {
+  const user = getUser(fsn_name);
+  if (user) {
+    user.xp = (user.xp || 0) + amount;
+  }
+}
+
+function startQuest(user) {
+  user.quest = {
+    active: true,
+    location: "dark_corridor",
+    completed: false,
+    progress_log: ["started_quest"]
+  };
+}
+
+function continueQuest(user, input) {
+  const loc = user.quest.location;
+  const log = user.quest.progress_log;
+
+  if (loc === "dark_corridor") {
+    if (input === "look") {
+      return "You see a flickering terminal to the east and a sealed door to the west. Type: `go east` or `go west`.";
+    }
+
+    if (input === "go east") {
+      user.quest.location = "terminal_room";
+      log.push("entered_terminal_room");
+      return "You approach the terminal. It sparks. Type: `use terminal`.";
+    }
+
+    if (input === "go west") {
+      if (user.inventory.includes("humming_key")) {
+        user.quest.location = "secret_room";
+        log.push("opened_locked_door");
+        addXP(user.fsn_name, 20);
+        user.inventory.push("vault_patch");
+        return "You unlocked the door. Inside, you find a glowing badge: `vault_patch`. +20 XP.";
+      } else {
+        return "The door is locked. You need a key.";
+      }
+    }
+  }
+
+  if (loc === "terminal_room") {
+    if (input === "use terminal") {
+      if (!user.inventory.includes("humming_key")) {
+        addXP(user.fsn_name, 10);
+        user.inventory.push("humming_key");
+        log.push("got_key");
+        return "The terminal flashes: ACCESS GRANTED. You receive: `humming_key` (+10 XP). Type: `go back`.";
+      } else {
+        return "You’ve already used this terminal.";
+      }
+    }
+
+    if (input === "go back") {
+      user.quest.location = "dark_corridor";
+      return "You're back in the corridor.";
+    }
+  }
+
+  if (loc === "secret_room") {
+    return "You’ve completed this section. Type `exit` to finish or keep exploring.";
+  }
+
+  return "Unknown command. Try: `look`, `go east`, `use terminal`, `go back`, `go west`, `exit`.";
+}
+
+module.exports = {
+  handleMessage: function (sender, message) {
+    const m = message.toLowerCase().trim();
+    const user = getUser(sender);
+
+    if (!user.quest || !user.quest.active) {
+      if (m.includes("start quest")) {
+        startQuest(user);
+        return "You awaken in a dark vault. The air is cold. There is a faint humming in the walls. Type: `look`.";
+      } else {
+        return "Greetings, operator. Type `start quest` to enter the FSN vault.";
+      }
+    }
+
+    return continueQuest(user, m);
+  }
+};
+
+const users = require('./users.json'); // Or replace with your DB logic
+
+function getUser(fsn_name) {
+  return users.find(u => u.fsn_name === fsn_name);
+}
+
+function addXP(fsn_name, amount) {
+  const user = getUser(fsn_name);
+  if (user) {
+    user.xp = (user.xp || 0) + amount;
+  }
+}
+
+function startQuest(user) {
+  user.quest = {
+    active: true,
+    location: "dark_corridor",
+    completed: false,
+    progress_log: ["started_quest"]
+  };
+}
+
+function continueQuest(user, input) {
+  const loc = user.quest.location;
+  const log = user.quest.progress_log;
+
+  if (loc === "dark_corridor") {
+    if (input === "look") {
+      return "You see a flickering terminal to the east and a sealed door to the west. Type: `go east` or `go west`.";
+    }
+
+    if (input === "go east") {
+      user.quest.location = "terminal_room";
+      log.push("entered_terminal_room");
+      return "You approach the terminal. It sparks. Type: `use terminal`.";
+    }
+
+    if (input === "go west") {
+      if (user.inventory.includes("humming_key")) {
+        user.quest.location = "secret_room";
+        log.push("opened_locked_door");
+        addXP(user.fsn_name, 20);
+        user.inventory.push("vault_patch");
+        return "You unlocked the door. Inside, you find a glowing badge: `vault_patch`. +20 XP.";
+      } else {
+        return "The door is locked. You need a key.";
+      }
+    }
+  }
+
+  if (loc === "terminal_room") {
+    if (input === "use terminal") {
+      if (!user.inventory.includes("humming_key")) {
+        addXP(user.fsn_name, 10);
+        user.inventory.push("humming_key");
+        log.push("got_key");
+        return "The terminal flashes: ACCESS GRANTED. You receive: `humming_key` (+10 XP). Type: `go back`.";
+      } else {
+        return "You’ve already used this terminal.";
+      }
+    }
+
+    if (input === "go back") {
+      user.quest.location = "dark_corridor";

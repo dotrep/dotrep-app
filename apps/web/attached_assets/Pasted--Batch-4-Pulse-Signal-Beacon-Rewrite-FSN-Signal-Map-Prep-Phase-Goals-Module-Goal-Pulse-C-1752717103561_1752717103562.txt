@@ -1,0 +1,166 @@
+🔭 Batch 4: Pulse → Signal → Beacon Rewrite + FSN Signal Map Prep
+🎯 Phase Goals
+Module	Goal
+Pulse	Clearly show XP-powered progress toward unlocks
+Signal	Make Signal unlock feel meaningful, gated, and immersive
+Beacon	Visualize Beacon tiers + requirements in a compelling way
+Signal Map	Prepare frontend logic and layout for FSN Global Map (placeholder OK)
+
+✅ 1. Pulse Panel: XP Integration + Unlock Teasers
+🔧 Update: PulseGauge.jsx
+Add level progress ring around Pulse gauge (based on XP)
+
+Overlay “Next Unlock at: 70Hz (Signal)” message below Pulse
+
+Animate glow when XP crosses a threshold that unlocks something
+
+jsx
+Copy
+Edit
+const pulse = user.pulse; // e.g., 55Hz
+const nextUnlockPulse = 70;
+const unlockReady = pulse >= nextUnlockPulse;
+
+return (
+  <div className={`pulse-gauge ${unlockReady ? 'glow' : ''}`}>
+    <div className="pulse-value">{pulse} Hz</div>
+    <div className="pulse-subtext">
+      {unlockReady ? 'Ready to Unlock Signal' : 'Next: Signal at 70Hz'}
+    </div>
+  </div>
+);
+✅ 2. Signal Panel: Rewrite Unlock Conditions + Animations
+Requirements to Unlock Signal:
+Pulse ≥ 70Hz
+
+XP ≥ 100
+
+≥ 1 Broadcast attempted
+
+🔧 Signal Lock Logic (in SignalPanel.jsx or similar):
+js
+Copy
+Edit
+const signalUnlocked = user.pulse >= 70 && user.xp >= 100 && user.broadcasts.length >= 1;
+If locked:
+
+Show “LOCKED: Reach 70Hz + 100 XP”
+
+Disable all casting or tuning buttons
+
+Pulse the lock icon with subtle animation
+
+If unlocked:
+
+Glow panel in cyan
+
+Show "Mode: Ready" + frequency tuning
+
+Add tooltip: “🛰️ You’re now broadcasting to the FSN constellation”
+
+✅ 3. Beacon Panel: Add Tier Display + Requirements
+Create Beacon Tier System:
+Tier	Requirements	Visual
+🔒 Locked	Signal not yet unlocked	Greyed out
+Level 1	Signal unlocked + 3 login streak	Dim bars
+Level 2	+5 broadcasts	2 bars lit
+Level 3	XP ≥ 750 + 10-day activity streak	3–4 bars lit
+
+Update: BeaconPanel.jsx
+Show current tier as progress bars (already exists, just make it dynamic):
+
+js
+Copy
+Edit
+const beaconUnlocked = signalUnlocked && user.loginStreak >= 3;
+const beaconLevel = getBeaconLevel(user);
+
+function getBeaconLevel(user) {
+  if (!beaconUnlocked) return 0;
+  if (user.xp >= 750 && user.loginStreak >= 10) return 3;
+  if (user.broadcasts.length >= 5) return 2;
+  return 1;
+}
+Add hover tooltips to each bar:
+
+“Requires 3-day login streak”
+
+“Requires 5 total broadcasts”
+
+“Requires 10-day streak + XP ≥ 750”
+
+✅ 4. Add a Pulse–Signal–Beacon Overview Modal
+Optional but HIGHLY recommended — it builds world/lore logic.
+
+Create new file: ConstellationPathModal.jsx
+
+This shows the 3-stage user journey:
+
+txt
+Copy
+Edit
+🌀 Pulse → Emits your identity frequency
+📡 Signal → Casts your trust + intent
+🔦 Beacon → Lights up the FSN constellation
+Each stage has:
+
+XP/behavior requirement
+
+Benefits gained
+
+Glowing ring for unlocked stage
+
+💡 Trigger this modal on first Signal unlock OR by clicking “?” icon near Pulse
+
+✅ 5. Signal Map Prep (Placeholder Version)
+This will eventually show a real-time global constellation of active .fsn users. For now, prep:
+
+Add new route/view: /map or modal via “Beacon” panel
+Display rotating globe or starfield (placeholder canvas OK)
+
+Show user dot: You Are Here: jason.fsn • Signal Active
+
+Add placeholder:
+
+“🔭 FSN Global Signal Map coming soon.
+Your broadcasts will light up the network in real-time.”
+
+Create a dummy data array of users:
+
+js
+Copy
+Edit
+const fakeSignals = [
+  { name: 'satoshi.fsn', location: 'Japan', signal: true },
+  { name: 'vitalik.fsn', location: 'Canada', signal: true },
+  ...
+];
+Show glowing dots or pins on map/star grid. You can render this with:
+
+SVG overlay
+
+Three.js scene
+
+Canvas 2D (minimal at first)
+
+✅ Final Touch: XP & Signal Toasts
+For any Pulse/Signal/Beacon unlock:
+
+jsx
+Copy
+Edit
+showToast({
+  message: "📡 Signal Unlocked — You are now broadcasting",
+  type: "level-up",
+  duration: 3000
+});
+Create reusable ToastManager.jsx with timed fade/slide animations.
+
+✅ What You’ll Have When Done
+System	Result
+Pulse	Feels like an XP engine with purpose
+Signal	Gated properly, unlocks feel earned
+Beacon	Teases status system, tracks daily progress
+Signal Map	Early immersion for real-time FSN world
+Modal	Explains identity journey and roles
+

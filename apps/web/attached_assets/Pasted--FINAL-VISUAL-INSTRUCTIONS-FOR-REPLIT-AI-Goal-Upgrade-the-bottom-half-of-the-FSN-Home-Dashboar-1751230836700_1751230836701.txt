@@ -1,0 +1,76 @@
+🛠 FINAL VISUAL INSTRUCTIONS FOR REPLIT AI
+🧠 Goal: Upgrade the bottom half of the FSN Home Dashboard to match the attached cockpit-style image exactly, improving gauge design, lighting, and structure.
+✅ SECTION 1: Keep These Top Elements UNCHANGED
+Do not modify the following:
+
+Top nav bar (Home, Vault, Social, Game Center)
+
+.fsn username (e.g. rachel_2183.fsn)
+
+XP display (e.g. 325 XP)
+
+✨ SECTION 2: Improve the GAUGES
+Gauge	Current Issue	Fix
+Pulse	No glow, needle too flat	Add radial tick marks, glowing inner ring, and sharper needle. Animate on change.
+Signal	Slightly better but too static	Add glow effect, needle inertia, and dynamic pulse based on trust level.
+Beacon	Missing radar or sense of activation	Add radar sweep ring that rotates when active. Lock icon should fade when Beacon is unlocked.
+
+ALL GAUGES MUST HAVE:
+
+Neon cyan or white glow
+
+Tick marks (like cockpit RPM meters)
+
+Glowing dynamic needles that move when score changes
+
+Flicker at low levels (optional)
+
+Radar sweep animation on Beacon (if online)
+
+Use reference image for glow intensity, thickness, and realism.
+
+✅ SECTION 3: Tile Layout Enhancements (Bottom Row)
+You already have the correct 3-panel structure — now enhance:
+
+Panel	Fixes
+Pulse Quests	Add brighter border, make “PULSE QUESTS” title slightly bolder, use light cyan bullets (✅), align text perfectly
+Signal Toggle	Style ON/OFF switch like glowing neon (see reference image), animate toggle. Background panel should glow slightly
+Beacon Panel	Soften the text, remove “jagged” font style. Add a soft radar glow behind or around the panel (even if beacon is locked). Subtle lock shimmer when hovering.
+
+✅ SECTION 4: Add Motion and Lighting FX
+Add subtle glowing dust particles or node lines behind the gauges (Tron-style background effect)
+
+Slight pulse animation on gauge borders
+
+XP or signal increase triggers a brief pulse or glow expansion
+
+Add soft drop shadows under gauges and tile boxes
+
+✅ SECTION 5: “IDENTITY INCENTIVIZED” Footer
+Keep centered
+
+Increase brightness to match neon gauge style
+
+Animate a slow pulsing glow behind the letters
+
+Optional: add horizontal tracer line underneath like an energy bar
+
+📎 Visual Reference:
+Use the attached image showing:
+
+Full glowing cockpit-style gauges
+
+Glowing pulse ring accents
+
+Toggle button that glows ON
+
+Panels with clear structure, glow and hierarchy
+
+📐 Responsive Behavior
+On mobile:
+
+Stack gauges vertically
+
+Stack panels vertically below them
+
+Center-align everything

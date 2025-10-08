@@ -1,0 +1,47 @@
+Here’s Part 2 (plain text, stealth-first): add XP + Vault event contracts and deploy all three locally.
+
+—
+	1.	In contracts/contracts, create a neutral XP ledger contract named Points.sol.
+	•	Contract name: Points.
+	•	Events: Awarded(address indexed user, uint256 amount, bytes32 actionId).
+	•	Storage: mapping(address => uint256) totals; mapping(bytes32 => bool) usedActionIds (to prevent double-award).
+	•	Access: only an authorized signer (the deployer for now) can award.
+	•	Functions:
+	•	totalOf(address) view returns total XP.
+	•	setAwarder(address) onlyOwner.
+	•	award(address user, uint256 amount, bytes32 actionId) onlyAwarder, require usedActionIds[actionId] == false, then mark usedActionIds[actionId] = true, add to totals[user], emit Awarded.
+	2.	In contracts/contracts, create a neutral file-anchoring contract named Files.sol.
+	•	Contract name: Files.
+	•	Event: Pinned(address indexed user, bytes32 cid).
+	•	Function: pin(bytes32 cid) public { emit Pinned(msg.sender, cid); }
+	•	Note: we’re only emitting the event; actual file is pinned off-chain (IPFS). This gives you an on-chain proof without leaking brand strings.
+	3.	Update contracts/scripts/deploy.ts to deploy all three contracts.
+	•	Deploy order: Registry → Points → Files.
+	•	After deploying Points, call setAwarder(deployer.address).
+	•	Log all three addresses clearly: “Registry deployed: …”, “Points deployed: …”, “Files deployed: …”.
+	4.	Add a combined deployments file for local testing.
+	•	After a successful local deploy, create/overwrite contracts/deployments/local.json with keys:
+	•	Registry: “0x…”,
+	•	Points: “0x…”,
+	•	Files: “0x…”.
+	5.	Re-run install/compile (inside contracts).
+	•	npm install (in case you added any new deps—should be none).
+	•	npm run compile (should compile Registry, Points, Files).
+	6.	Start a local chain and deploy (stealth, no public footprint).
+	•	One shell: npm run node (Hardhat local RPC at http://127.0.0.1:8545).
+	•	Another shell: npm run deploy:local.
+	•	Confirm the script prints three addresses and that deployments/local.json was created/updated.
+	7.	Quick local sanity checks (optional, but recommended).
+	•	Use Hardhat console or a quick script to:
+	•	Call ownerOf(“testname”) before and after register; confirm it changes from 0x0 to the deployer.
+	•	Call totalOf(deployer) before and after award; confirm XP increases.
+	•	Call pin(cid) with a fake 32-byte value; confirm a Pinned event is emitted (you’ll see it in local node logs).
+	8.	Prepare for later Base Sepolia (but do not go public yet).
+	•	Add a second deployments file path: contracts/deployments/base-sepolia.json (will be created later by the same deploy script when you run npm run deploy:sepolia).
+	•	Keep contract names neutral (Registry, Points, Files). Do not verify code on Basescan while in stealth.
+	9.	Document your local addresses for the frontend.
+	•	Copy the three local addresses into your project notes; the frontend will read from deployments/local.json in Part 3 to wire wagmi/viem calls.
+	10.	Stop here.
+
+	•	At this point, you have three neutral contracts deployed locally, with events and minimal access control, and a single deployments JSON your app can consume.
+	•	When you’re ready to go public, you’ll flip to Base Sepolia and rerun the same deploy command to populate deployments/base-sepolia.json.

@@ -1,0 +1,213 @@
+🧠 GOAL:
+When the user clicks the "Claim your .fsn name" button on the homepage:
+
+DO NOT LEAVE THE PAGE.
+
+Show a full-screen signal animation (TRON-style).
+
+After 2 seconds, HIDE the animation and SHOW a glowing terminal-style profile form, on the same page.
+
+🔩 STEP 1 — DELETE ANY PAGE REDIRECTS
+❌ Remove any line like this:
+js
+Copy
+Edit
+window.location.href = "/complete-profile";
+Do not redirect the user to another page.
+The user must remain on the homepage.
+
+🏗️ STEP 2 — ADD TERMINAL-STYLE PROFILE FORM TO HOMEPAGE
+🔨 Do not create a new HTML page.
+Add the following HTML block directly into the homepage.
+Place it inside the <body>, near the bottom of the page.
+This form must be hidden at first using style="display: none;".
+
+html
+Copy
+Edit
+<div id="terminal-ui" style="display: none;">
+  <div class="terminal-glow-frame">
+    <h2 class="terminal-header">🔐 Identity Console: .fsn Vault Access</h2>
+
+    <form id="terminal-form">
+      <label>.fsn Name</label>
+      <input type="text" id="fsn-name" value="yourname.fsn" readonly />
+
+      <label>Email Address</label>
+      <input type="email" placeholder="Enter your email" required />
+
+      <label>Create Password</label>
+      <input type="password" placeholder="8+ characters" required />
+
+      <label>Confirm Password</label>
+      <input type="password" placeholder="Re-enter password" required />
+
+      <button type="submit">🔓 Enter the Network</button>
+    </form>
+  </div>
+</div>
+🎨 STEP 3 — COPY EXACTLY THIS CSS
+Add the following CSS rules to your stylesheet (usually style.css).
+
+css
+Copy
+Edit
+#terminal-ui {
+  background-color: rgba(0, 0, 0, 0.95);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.terminal-glow-frame {
+  background: linear-gradient(to bottom right, #0ff1ff22, #00f0ff11);
+  border: 2px solid #00ffff;
+  border-radius: 10px;
+  padding: 40px;
+  width: 400px;
+  box-shadow: 0 0 15px #00ffff55;
+  color: #ffffff;
+  font-family: 'Orbitron', monospace;
+}
+
+.terminal-header {
+  color: #00ffff;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+#terminal-form label {
+  display: block;
+  margin-top: 15px;
+  color: #00ffff;
+  font-size: 0.9rem;
+}
+
+#terminal-form input {
+  background-color: #000;
+  border: 1px solid #00ffff88;
+  color: #0ff;
+  padding: 8px;
+  width: 100%;
+  margin-top: 5px;
+  font-family: monospace;
+  outline: none;
+}
+
+#terminal-form button {
+  margin-top: 20px;
+  width: 100%;
+  background-color: #00ffff;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  padding: 10px;
+  cursor: pointer;
+  font-family: 'Orbitron';
+  transition: background-color 0.3s ease;
+}
+
+#terminal-form button:hover {
+  background-color: #0ff1ff;
+}
+🌌 STEP 4 — ADD SIGNAL OVERLAY TO HOMEPAGE
+Add this second block of HTML at the very bottom of the homepage, just before </body>.
+It must also be hidden by default using style="display: none;".
+
+html
+Copy
+Edit
+<div id="signal-overlay" style="display: none;">
+  <div class="pulse-ring"></div>
+  <p class="signal-text">Emitting your signal...</p>
+</div>
+🎨 STEP 5 — ADD SIGNAL ANIMATION CSS
+Add the following CSS to your stylesheet:
+
+css
+Copy
+Edit
+#signal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.pulse-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid #00ffff;
+  background-color: rgba(0, 255, 255, 0.1);
+  animation: pulse 1.2s infinite ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.signal-text {
+  color: #00ffff;
+  font-size: 1.5rem;
+  margin-top: 20px;
+  font-family: 'Orbitron', sans-serif;
+}
+🖱️ STEP 6 — LINK IT TO THE BUTTON
+⚠️ REQUIREMENT:
+The "Claim your .fsn name" button must have the ID: claim-btn.
+
+html
+Copy
+Edit
+<button id="claim-btn">Claim your .fsn name</button>
+🧠 STEP 7 — ADD JAVASCRIPT TO CONTROL THE FLOW
+Paste the following JavaScript at the bottom of your script file or in a <script> tag at the bottom of the homepage.
+
+js
+Copy
+Edit
+document.getElementById("claim-btn").addEventListener("click", function (e) {
+  e.preventDefault(); // Do NOT go to a new page
+
+  // Step 1: Show the signal overlay
+  document.getElementById("signal-overlay").style.display = "flex";
+
+  // Step 2: Wait 2 seconds, then show the terminal and hide the overlay
+  setTimeout(function () {
+    document.getElementById("signal-overlay").style.display = "none";
+    document.getElementById("terminal-ui").style.display = "flex";
+  }, 2000);
+});
+✅ RESULT CHECKLIST (DO NOT SKIP)
+After completing all steps above:
+
+✅ You stay on the same page after clicking the button.
+
+✅ A full-screen signal animation appears.
+
+✅ After 2 seconds, a TRON-style terminal form appears.
+
+✅ No redirect happens.
+
+✅ It looks cyber, clean, and completely on-brand.

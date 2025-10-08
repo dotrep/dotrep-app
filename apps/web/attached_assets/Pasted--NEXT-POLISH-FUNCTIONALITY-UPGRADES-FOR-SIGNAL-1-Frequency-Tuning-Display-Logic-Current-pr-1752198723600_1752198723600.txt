@@ -1,0 +1,72 @@
+🔧 NEXT POLISH & FUNCTIONALITY UPGRADES FOR SIGNAL
+1. Frequency Tuning Display Logic ✅🛠️
+Current problem: Dial shows 0.00 MHz by default, with no interaction when pressing buttons.
+
+Fix:
+
+When the user presses 1–9 or ., the frequency readout updates in real time.
+
+The ON button saves that frequency and activates the mode (CAST or LISTEN depending on last button clicked).
+
+Add logic to cap frequency between 00.00 MHz and 99.99 MHz.
+
+2. Mode Toggle Feedback ✅✨
+Current problem: MODE: OFF doesn’t change visibly or give feedback.
+
+Fix:
+
+Pressing CAST, LISTEN, or MULTI should highlight the button, and update the display:
+
+makefile
+Copy
+Edit
+MODE: CAST
+FREQUENCY: 23.42 MHz
+Background glow or subtle animation could indicate active mode.
+
+If LOCK is clicked, freeze keypad and dial interaction, and update MODE: to:
+
+makefile
+Copy
+Edit
+MODE: CAST (LOCKED)
+3. Button Glow + Active State ✅💡
+CAST/LISTEN/MULTI/LOCK should:
+
+Glow cyan or neon green when selected.
+
+Only one mode (CAST or LISTEN) can be active.
+
+MULTI can activate only after a second signal is stored (Phase 1).
+
+🎯 ADDITIONAL INTERACTION (PHASE 0 IMMERSIVE)
+4. Animated Dial or Meter 🎛️
+Visual feedback = mystique and immersion.
+
+Options:
+
+A subtle scanning animation when casting/listening (e.g. MHz digits fluctuate slightly).
+
+Radio-style sweeping glow line across the dial (just visual, no sound yet).
+
+5. XP Feedback Loop (Optional Now) 📈
+You could show:
+
++XP for first time CAST
+
++XP for setting a frequency
+
++XP if user keeps signal active for N minutes
+
+Just log to Recent Activity or toast a notification (no need for points right away).
+
+🧠 FUTURE IDEAS FOR “IMPROVING SIGNAL STRENGTH”
+You asked “how to improve the signal” — once this is wired up, Signal Strength could become:
+
+Action	Effect
+Pulse stays above 80Hz	Stronger casting range
+Setting signal to exact FSN freq (e.g. 13.37 MHz)	XP bonus
+Interacting with other users at same frequency	unlocks new items
+Daily casting streak	Earns stronger “broadcast tier”
+Listening to verified users	Boosts trust metrics
+

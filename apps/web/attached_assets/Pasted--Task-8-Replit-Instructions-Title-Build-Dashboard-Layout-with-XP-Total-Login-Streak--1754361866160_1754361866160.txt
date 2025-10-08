@@ -1,0 +1,126 @@
+## ✅ Task #8 – Replit Instructions  
+**Title**: Build Dashboard Layout with XP Total, Login Streak, and Vault Preview (FSN Phase 0 – Task 8)
+
+---
+
+### 🎯 Objective  
+Create a user dashboard that displays:
+- Current XP total  
+- Login streak (🔥 gamified)
+- Vault file preview (last 3–5 uploads with file name, size, and date)
+
+This dashboard becomes the default landing view after login and gives users a real-time sense of progress, ownership, and momentum.
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Create `Dashboard.jsx` inside `/components` or `/pages`
+
+```jsx
+import { useEffect, useState } from "react";
+import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { db } from "../firebase/initFirebase";
+
+const Dashboard = ({ uid }) => {
+  const [xp, setXP] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [vaultFiles, setVaultFiles] = useState([]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
+      setXP(userData?.xp || 0);
+      setStreak(userData?.loginStreak || 0);
+
+      const vaultRef = collection(db, "users", uid, "vault");
+      const fileQuery = query(vaultRef, orderBy("uploadedAt", "desc"), limit(5));
+      const fileSnap = await getDocs(fileQuery);
+
+      const files = fileSnap.docs.map(doc => doc.data());
+      setVaultFiles(files);
+    };
+
+    fetchDashboardData();
+  }, [uid]);
+
+  return (
+    <div className="dashboard">
+      <h1>Welcome to FSN 👋</h1>
+      <div className="stats">
+        <p>🌟 XP: <strong>{xp}</strong></p>
+        <p>🔥 Login Streak: <strong>{streak}</strong> days</p>
+      </div>
+
+      <div className="vault-preview">
+        <h2>Your Vault</h2>
+        {vaultFiles.length === 0 ? (
+          <p>No files uploaded yet.</p>
+        ) : (
+          <ul>
+            {vaultFiles.map((file, idx) => (
+              <li key={idx}>
+                <strong>{file.name}</strong> — {file.size} KB — {new Date(file.uploadedAt.seconds * 1000).toLocaleDateString()}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+```
+
+---
+
+### ✅ 2. Route to Dashboard After Login
+
+In your login or app wrapper logic:
+
+```js
+// pages/index.js or after login
+import Dashboard from "../components/Dashboard";
+
+{user?.uid && <Dashboard uid={user.uid} />}
+```
+
+---
+
+### ✅ 3. Firestore Requirements
+
+Make sure:
+- `users/{uid}` has:
+  - `xp: Number`
+  - `loginStreak: Number`
+
+- `users/{uid}/vault` subcollection contains:
+  - `name: String`
+  - `size: Number`
+  - `uploadedAt: Timestamp`
+
+---
+
+### 🧪 QA Checklist
+
+| Feature                       | Expected Result                          |
+|------------------------------|-------------------------------------------|
+| Show XP                      | ✅ Value pulled from `users/{uid}`         |
+| Show Login Streak            | ✅ Displays accurate streak count          |
+| Vault Preview                | ✅ Shows up to 5 recent files              |
+| No files in Vault            | ✅ Displays “No files uploaded yet”        |
+| Files shown with name/size   | ✅ List format with readable date & size   |
+
+---
+
+### ✅ Summary
+
+- Dashboard now shows XP, streak, and vault activity
+- Gives users real-time feedback and motivation
+- Ready for future badge display, Signal status, Forge integrations

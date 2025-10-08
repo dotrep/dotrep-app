@@ -1,0 +1,119 @@
+✅ OBJECTIVE
+Update the FSN Vault and identity engine to:
+
+Automatically activate Pulse after any verified XP-earning event
+
+Update the UI to show Pulse as active immediately
+
+Introduce Pulse progression tiers (Level 1, Level 2, etc.)
+
+Add tooltips or messaging explaining progression
+
+🧠 STEP-BY-STEP INSTRUCTIONS (Replit AI-Ready)
+🔧 1. BACKEND LOGIC: Activate Pulse on XP
+File to edit: pulse.ts (or wherever Pulse state is computed)
+
+Change this logic:
+
+ts
+Copy
+Edit
+// Current (example)
+if (user.completedKYC && user.uploadedVaultFile && ...) {
+   user.pulseQualified = true;
+}
+Replace with:
+
+ts
+Copy
+Edit
+// New Logic: Any XP-earning action = Pulse active
+if (user.totalXP > 0) {
+   user.pulse.active = true;
+   user.pulse.level = 1;
+}
+📈 2. BACKEND: Define Pulse Tier Logic
+In pulse.ts or xpEngine.ts, define Pulse levels:
+
+ts
+Copy
+Edit
+function computePulseLevel(totalXP: number): number {
+  if (totalXP >= 1000) return 4; // Sentinel Pulse
+  if (totalXP >= 500) return 3;  // Core Pulse
+  if (totalXP >= 250) return 2;  // Stable Pulse
+  return 1;                      // Initial Pulse
+}
+Then update user object accordingly:
+
+ts
+Copy
+Edit
+user.pulse.level = computePulseLevel(user.totalXP);
+🎨 3. FRONTEND UI UPDATE
+File to edit: VaultPage.tsx or wherever the dashboard info is shown
+
+Replace current Pulse status logic:
+
+jsx
+Copy
+Edit
+<PulseStatus>
+  {user.pulseQualified ? "✅ Qualified" : "❌ Not Qualified"}
+</PulseStatus>
+With:
+
+jsx
+Copy
+Edit
+<PulseStatus>
+  ✅ Pulse Active  
+  <br />Level {user.pulse.level} — {getPulseLabel(user.pulse.level)}
+</PulseStatus>
+Add this helper function:
+
+ts
+Copy
+Edit
+function getPulseLabel(level: number): string {
+  switch(level) {
+    case 1: return "Initial Pulse";
+    case 2: return "Stable Pulse";
+    case 3: return "Core Pulse";
+    case 4: return "Sentinel Pulse";
+    default: return "";
+  }
+}
+💬 4. FRONTEND TOOLTIP OR HINT TEXT
+Add a tooltip or info box next to Pulse display:
+
+jsx
+Copy
+Edit
+<Tooltip content="Pulse tracks your behavior and XP inside FSN. Each action strengthens it. Reach higher levels to unlock new features like Signal and token access.">
+  <InfoIcon />
+</Tooltip>
+Or below the Pulse section:
+
+jsx
+Copy
+Edit
+<small>
+  🧠 Pulse is active! Keep earning XP to level it up and unlock Signal access.
+</small>
+🛡️ 5. OPTIONAL: Store Pulse Activation Timestamp
+In your user schema or Supabase row:
+
+ts
+Copy
+Edit
+user.pulse.activatedAt = new Date().toISOString();
+🧪 TEST CASE
+Create a new user with .fsn name → XP = 0
+→ Pulse should show: Inactive
+
+Upload a file → XP += 50
+→ Pulse should show: Active, Level 1 – Initial Pulse
+
+Add quests or swap → XP += 200
+→ Pulse shows: Level 2 – Stable Pulse

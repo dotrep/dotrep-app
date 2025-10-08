@@ -1,0 +1,80 @@
+## ✅ Task #4 – Replit Instructions  
+**Title**: Store `.fsn` Name in User Profile (FSN Phase 0 – Task 4)
+
+---
+
+### 🎯 Objective  
+After a successful `.fsn` name claim, store the name in the user's Firestore profile under `users/{uid}` as a permanent, queryable field for all downstream features (e.g., dashboard, vault, XP display, signal, etc.).
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Add `.fsn` name to `users/{uid}` profile
+
+In your `handleClaim()` function (inside `ClaimName.jsx`), after successfully writing the `.fsn` name to `fsnNames`, add this:
+
+```js
+await updateDoc(doc(db, "users", user.uid), {
+  fsnName: fullFsnName
+});
+```
+
+---
+
+### 🔒 2. Block future edits to `.fsn` in Firestore rules
+
+In `firestore.rules`, inside your `users/{userId}` match block:
+
+```js
+match /users/{userId} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+
+  allow update: if request.auth.uid == userId 
+    && !("fsnName" in request.resource.data);  // Prevent changing .fsn
+
+  allow create: if request.auth.uid == userId;
+}
+```
+
+✅ This lets the user update profile fields *except* `fsnName` once it’s written.
+
+---
+
+### 🧪 3. Test Cases for QA
+
+| Test                          | Expected Result         |
+|-------------------------------|--------------------------|
+| User claims name              | ✅ `users/{uid}` now contains `fsnName` field |
+| User tries to change it later | ❌ Blocked by security rules |
+| Display on Dashboard          | ✅ Pull from `users/{uid}.fsnName` |
+| `.fsn` appears in nav bar     | ✅ Visible after claim |
+
+---
+
+### 📥 4. Optional: Add `.fsn` to React Context (for global display)
+
+If you're using a user context, add `.fsn` on login:
+
+```js
+const userRef = doc(db, "users", user.uid);
+const userDoc = await getDoc(userRef);
+const fsnName = userDoc.data()?.fsnName;
+setUserContext({ ...user, fsnName });
+```
+
+Then use it anywhere:
+```jsx
+<p>Welcome back, {userContext.fsnName}</p>
+```
+
+---
+
+### ✅ Summary
+
+- `.fsn` name now stored in user profile
+- Globally readable across the app
+- Prevented from being overwritten
+- Ready for use in Vault, Signal, Feed, etc.

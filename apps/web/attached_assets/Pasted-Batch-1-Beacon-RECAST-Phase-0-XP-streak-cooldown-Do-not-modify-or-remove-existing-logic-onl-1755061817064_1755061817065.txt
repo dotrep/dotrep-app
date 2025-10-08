@@ -1,0 +1,157 @@
+Batch 1 — Beacon RECAST (Phase‑0 XP + streak + cooldown)
+Do not modify or remove existing logic; only wire missing pieces.
+
+Env flags (Secrets)
+
+Ensure these exist:
+
+FEATURE_TRUST=off
+
+FEATURE_BEACON_RECAST=phase0
+
+XP_RECAST_AWARD=10
+
+RECAST_COOLDOWN_SECONDS=86400
+
+Backend endpoint
+
+Confirm there is a single endpoint (e.g., /api/beacon/recast) that:
+a) Authenticates user.
+b) Checks cooldown from lastRecastAt; if blocked return {cooldown_remaining}.
+c) If allowed: increment broadcastsTotal, update beaconStreakDays (streak rule), set lastRecastAt=now, write XP log {type:"beacon_recast", amount:XP_RECAST_AWARD}.
+d) Respond with {broadcasts_total, streak_days, xp_awarded, cooldown_remaining:0}.
+
+If an endpoint already exists, do not rename it—only complete missing logic.
+
+Frontend
+
+In the Beacon component, ensure RECAST calls the recast endpoint (not any Trust/KYC route) and handles both responses:
+
+Success → update counts, start cooldown timer, show toast “Broadcast sent. +{XP} XP • Streak {N}.”
+
+Cooldown → disable button and show “Recast in {HH:MM:SS}”.
+
+Acceptance: First click awards XP and updates UI; subsequent clicks during cooldown do not award XP and show a countdown; no navigation to Trust.
+
+Batch 2 — Onboarding Overlay (first‑time only)
+Additive wrapper; do not change existing feature flows.
+
+User flag
+
+Add/confirm user.onboarded boolean in the profile; default false.
+
+Overlay trigger
+
+On auth, if user.onboarded=false, show a modal overlay (top of stack). If true, do nothing.
+
+Checklist (exact items)
+
+Claim .fsn name
+
+Recast Beacon once
+
+Upload first file to Vault
+
+Update profile
+Each item invokes the existing UI action (reuse current handlers/endpoints). Do not create new flows.
+
+Progress + completion
+
+When all items complete, show “You’re Done!” panel and award a one‑time bonus XP (env XP_ONBOARDING_BONUS, default 100).
+
+Set user.onboarded=true; overlay never appears again.
+
+Acceptance: New users see overlay and can complete tasks using current UI; finishing awards bonus and hides overlay forever; existing users never see it.
+
+Batch 3 — Rewards / Perks Feedback (listen‑only UI)
+Subscribe to events; do not alter XP business logic.
+
+Feature flag
+
+FEATURE_REWARDS_FEEDBACK=on
+
+Event hooks
+
+Listen for already‑emitted success events (or API responses) from:
+
+beacon/recast
+
+vault/upload
+
+.fsn/claim
+
+profile/update
+
+On detection, show a toast “+{amount} XP · {friendlyReason}” and update a small XP progress bar.
+
+Level thresholds & streak milestones
+
+Add config (env or JSON):
+
+XP_LEVELS_JSON e.g., [0,100,250,500,1000,2000]
+
+STREAK_MILESTONES_JSON e.g., [3,7,14,30]
+
+Crossing a level → show “Level {N} reached” micro‑banner.
+
+Hitting a streak milestone → show a small celebration modal (respect reduced‑motion).
+
+Acceptance: Any XP‑awarding action shows a toast; progress bar animates; level and streak milestones trigger the correct lightweight UI.
+
+Batch 4 — Security & Stability (small but critical)
+Add protections without changing feature behavior.
+
+Rate‑limit
+
+Attach existing limiter middleware to:
+
+login/auth routes
+
+.fsn claim routes
+
+Beacon recast endpoint
+
+Vault upload endpoint
+
+Vault safety
+
+Remove any hardcoded user fallbacks (e.g., userId || 7).
+
+If antivirus scanner is stubbed, fail closed with a clear error instead of accepting unknown files.
+
+Logs & errors
+
+Ensure no PII in logs; convert noisy warnings to structured logs.
+
+Verify HTTPS redirects are enforced.
+
+Acceptance: Sensitive routes show rate‑limit headers; uploads reject when scanner is unavailable; no hardcoded user IDs; no PII in logs.
+
+Batch 5 — Theme & Responsiveness (additive tokens)
+Apply helpers, not rewrites.
+
+Flag
+
+FEATURE_THEME_UNIFIED=on
+
+Tokens layer
+
+Ensure CSS variables for colors/spacing/typography are loaded once at app root.
+
+Apply helper classes incrementally to: header, Beacon card, Vault cards, modals.
+
+Mobile checks
+
+At 360–414px: no horizontal scroll; tap targets ≥44px; Beacon and Vault wrap cleanly.
+
+Acceptance: Turning flag off reverts visuals to prior look; turning on yields consistent colors/spacing without layout regressions.
+
+Batch 6 — QA script (run after each batch)
+Smoke test all flows on desktop + mobile preview.
+
+Cross‑browser: Chrome, Safari, Firefox (at least once).
+
+Confirm analytics events fire once per action (no duplicates).
+
+Toggle each new feature flag off → app behaves exactly as before.
+

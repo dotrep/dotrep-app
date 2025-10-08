@@ -1,0 +1,608 @@
+import express from 'express';
+import { storage } from '../storage';
+import { sendFsnMessageSchema } from '@shared/fsn-messages';
+import { sanitizeHTML, formatFsnName } from '../utils/sanitize';
+import { saveFile } from '../utils/file-helpers';
+
+const router = express.Router();
+
+// Get messages sent to the current user's FSN name
+router.get('/inbox/:fsnName', async (req, res) => {
+  try {
+    const { fsnName } = req.params;
+    
+    // Format and validate the FSN name
+    const normalizedFsnName = formatFsnName(fsnName);
+    
+    // Get the user's FSN domain to verify ownership
+    const domain = await storage.getFsnDomain(normalizedFsnName);
+    if (!domain || domain.status !== 'registered') {
+      return res.status(404).json({ 
+        success: false, 
+        message: `FSN name ${normalizedFsnName} not found or not registered` 
+      });
+    }
+    
+    // Get all messages for this FSN name
+    const messages = await storage.getFsnMessagesByRecipient(normalizedFsnName);
+    
+    return res.json({
+      success: true,
+      messages
+    });
+  } catch (error) {
+    console.error('Error getting inbox messages:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get messages'
+    });
+  }
+});
+
+// Get messages sent from the current user's FSN name
+router.get('/sent/:fsnName', async (req, res) => {
+  try {
+    const { fsnName } = req.params;
+    
+    // Format and validate the FSN name
+    const normalizedFsnName = formatFsnName(fsnName);
+    
+    // Get the user's FSN domain to verify ownership
+    const domain = await storage.getFsnDomain(normalizedFsnName);
+    if (!domain || domain.status !== 'registered') {
+      return res.status(404).json({ 
+        success: false, 
+        message: `FSN name ${normalizedFsnName} not found or not registered` 
+      });
+    }
+    
+    // Get all messages sent by this FSN name
+    const messages = await storage.getFsnMessagesBySender(normalizedFsnName);
+    
+    return res.json({
+      success: true,
+      messages
+    });
+  } catch (error) {
+    console.error('Error getting sent messages:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get sent messages'
+    });
+  }
+});
+
+// Send a message from one FSN name to another
+router.post('/send', async (req, res) => {
+  try {
+    // Parse and validate the request body
+    const validationResult = sendFsnMessageSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request data',
+        errors: validationResult.error.errors
+      });
+    }
+    
+    const { from, to, message, fileData, fileName } = req.body;
+    
+    // Format and validate FSN names
+    const fromFsn = formatFsnName(from);
+    const toFsn = formatFsnName(to);
+    
+    // Check if sender FSN name exists and is registered
+    const senderDomain = await storage.getFsnDomain(fromFsn);
+    if (!senderDomain || senderDomain.status !== 'registered') {
+      return res.status(404).json({ 
+        success: false, 
+        message: `Sender FSN name ${fromFsn} not found or not registered` 
+      });
+    }
+    
+    // Check if receiver FSN name exists
+    // Special case for ghost.fsn agent - it should always be available
+    if (toFsn === 'ghost') {
+      console.log('Message directed to ghost.fsn AI agent');
+    } else {
+      const receiverDomain = await storage.getFsnDomain(toFsn);
+      if (!receiverDomain || receiverDomain.status !== 'registered') {
+        return res.status(404).json({ 
+          success: false, 
+          message: `Recipient FSN name ${toFsn} not found or not registered` 
+        });
+      }
+      
+      // Check if recipient is blocking messages from non-contacts
+      if (receiverDomain.ownerId) {
+        const receiverUser = await storage.getUser(receiverDomain.ownerId);
+        
+        if (receiverUser && receiverUser.blockUnknownMessages) {
+          // Check if sender is in recipient's contacts
+          const isContact = await storage.isFsnContact(receiverDomain.ownerId, fromFsn);
+          
+          if (!isContact) {
+            return res.status(403).json({
+              success: false,
+              message: `This user only accepts messages from their contacts`
+            });
+          }
+        }
+      }
+    }
+    
+    // Prevent sending to self (optional)
+    if (fromFsn === toFsn) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot send message to yourself'
+      });
+    }
+    
+    // Process file attachment if present
+    let fileUrl = '';
+    let fileType = '';
+    
+    if (fileData && fileName) {
+      try {
+        // Save the file and get its URL
+        fileUrl = saveFile(fileData, fileName);
+        
+        // Determine file type from the data URI
+        const match = fileData.match(/^data:([^;]+);/);
+        fileType = match ? match[1] : 'application/octet-stream';
+      } catch (fileError) {
+        console.error('Error saving file:', fileError);
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid file data'
+        });
+      }
+    }
+    
+    // Sanitize message content
+    const sanitizedMessage = message ? sanitizeHTML(message) : '';
+    
+    // Create the message in the database
+    const newMessage = await storage.sendFsnMessage({
+      fromFsn,
+      toFsn,
+      message: sanitizedMessage,
+      fileUrl,
+      fileName: fileName || '',
+      fileType,
+      isRead: false
+    });
+    
+    // Special handling for AI agents
+    if (['ghost', 'core', 'vault', 'forge', 'echo'].includes(toFsn)) {
+      console.log(`Message directed to ${toFsn}.fsn AI agent`);
+      console.log(`Message sent to ${toFsn}.fsn agent: ${sanitizedMessage}`);
+      
+      try {
+        const messageText = sanitizedMessage ? sanitizedMessage.toLowerCase() : '';
+        let responseText = '';
+        let xpGranted = 0;
+        
+        // Handle ghost.fsn agent
+        if (toFsn === 'ghost') {
+          if (sanitizedMessage.toLowerCase().includes('challenge')) {
+            responseText = `🔮 Challenge accepted! Here's your encrypted message: U2VjcmV0IE1lc3NhZ2U6IFlvdSBmb3VuZCB0aGUgaGlkZGVuIGNvZGUhICs1MFRY`;
+            xpGranted = 25;
+          } else if (sanitizedMessage.toLowerCase().includes('echo')) {
+            responseText = `👻 Echo: ${sanitizedMessage} ...but reversed in the digital void.`;
+            xpGranted = 5;
+          } else {
+            responseText = `👻 *whispers from the shadows* I see you, ${fromFsn}. Say 'challenge' for a puzzle, or 'echo' to hear your voice in the void.`;
+          }
+        }
+        
+        // Handle core.fsn agent
+        if (toFsn === 'core') {
+          try {
+            // Import the core agent for text adventure quest system
+            // Simple direct implementation for core.fsn agent responses
+            const coreAgent = {
+              handleMessage: async (sender: string, message: string) => {
+                const lowerMsg = message.toLowerCase().trim();
+                
+                // Adventure/quest related responses
+                if (lowerMsg.includes('adventure') || lowerMsg.includes('quest') || 
+                    lowerMsg.includes('play') || lowerMsg.includes('game') || 
+                    lowerMsg === 'start') {
+                  return `
+╔════════════════════════════════════╗
+║        WELCOME TO FSN VAULT        ║
+║                                    ║
+║      ┌─────────────────────┐      ║
+║      │                     │      ║
+║      │     core.fsn        │      ║
+║      │     TEXT QUEST      │      ║
+║      │                     │      ║
+║      └─────────────────────┘      ║
+║                                    ║
+║      Type 'look' to begin!         ║
+╚════════════════════════════════════╝
+
+You awaken in a dark vault. The air is cold. There is a faint humming in the walls. Type: \`look\` to begin exploring.`;
+                }
+                
+                // Navigation commands
+                if (lowerMsg === 'look') {
+                  return `
+╔═══════════════════╗
+║   You are here →  ║
+║                   ║
+║    DARK CORRIDOR  ║
+║    ┌─────┐        ║
+║    │     │        ║
+║    │     │← Terminal Room
+║    └─────┘        ║
+║                   ║
+║    ← Locked Door  ║
+╚═══════════════════╝
+
+You see a flickering terminal to the east and a sealed door to the west. Type: \`go east\` or \`go west\`.`;
+                }
+                
+                if (lowerMsg === 'go east') {
+                  return "You approach the terminal. It sparks. Type: `use terminal`.";
+                }
+                
+                if (lowerMsg === 'use terminal') {
+                  return `
+╔══════════════════════╗
+║  FLICKERING TERMINAL ║
+║                      ║
+║   [ ACCESS GRANTED ] ║
+║     ||||||||||||||   ║
+║    {HUMMING KEY}     ║
+╚══════════════════════╝
+
+The terminal flashes: ACCESS GRANTED. You receive: \`humming_key\` (+10 XP). Type: \`go back\`.`;
+                }
+                
+                if (lowerMsg === 'go back' || lowerMsg === 'go west') {
+                  return "You're back in the corridor. The locked door seems to respond to your humming key. Type `use key` to open it.";
+                }
+                
+                if (lowerMsg === 'use key') {
+                  return `
+╔═══════════════════════════════╗
+║     🔒 SECRET VAULT ROOM       ║
+║                               ║
+║     You found:                ║
+║     - Vault Patch             ║
+║     - 20 XP                   ║
+╚═══════════════════════════════╝
+
+You unlocked the door with the humming key. Inside, you find a glowing badge: \`vault_patch\`. +20 XP. Type \`exit\` to complete the quest.`;
+                }
+                
+                if (lowerMsg === 'exit') {
+                  return `
+╔════════════════════════════════════╗
+║            QUEST COMPLETE          ║
+║                                    ║
+║             +55 XP                 ║
+║                                    ║
+║      [HUMMING KEY ACQUIRED]        ║
+║      [VAULT PATCH ACQUIRED]        ║
+║                                    ║
+║      Type 'start quest' to play    ║
+║      again or explore other        ║
+║      commands!                     ║
+╚════════════════════════════════════╝
+
+Quest complete! You've earned a total of 55 XP and collected valuable items. Type \`start quest\` to play again.`;
+                }
+                
+                // Help command
+                if (lowerMsg === 'help') {
+                  return "I am core.fsn, the central AI of the FreeSpace Network. I can guide you through quests and adventures in the digital realm.\n\nCommands:\n- `start quest` - Begin your adventure\n- `look` - Examine your surroundings\n- `go [direction]` - Move in a direction\n- `use [object]` - Interact with objects\n- `inventory` - Check your items\n- `status` - View your XP and level";
+                }
+                
+                if (lowerMsg === 'inventory' || lowerMsg === 'items') {
+                  return `
+╔════════════════════════════════════╗
+║            INVENTORY               ║
+║                                    ║
+║      ┌─────────────────────┐      ║
+║      │                     │      ║
+║      │     ITEMS LIST      │      ║
+║      │                     │      ║
+║      └─────────────────────┘      ║
+║                                    ║
+╚════════════════════════════════════╝
+
+Your inventory contains: humming_key, vault_patch`;
+                }
+                
+                if (lowerMsg === 'status' || lowerMsg === 'xp' || lowerMsg === 'level') {
+                  return "Your status: Level 2, 55 XP\nType 'inventory' to check your items.";
+                }
+                
+                // Default response
+                return "I'm here to help you navigate the FreeSpace Network. Type 'help' for more information, 'start quest' to begin an adventure, or ask about specific agents like 'ghost', 'vault', 'forge', or 'echo'.";
+              }
+            };
+            
+            // Pass the message to the core agent and get a response
+            responseText = await coreAgent.handleMessage(fromFsn, sanitizedMessage);
+            
+            // Text adventure quest XP is handled within the core agent
+            xpGranted = 0; // XP is managed by the core-agent.js
+          } catch (agentError) {
+            console.error('Error handling core.fsn agent message:', agentError);
+            
+            // Fallback responses if the core agent fails
+            if (messageText.includes("hello") || messageText.includes("hi") || messageText.includes("help")) {
+              responseText = "Welcome to FreeSpace Network! I'm core.fsn, your guide. Try messaging ghost.fsn to start your first quest and earn XP.";
+              xpGranted = 10;
+            } else if (messageText.includes("quest") || messageText.includes("mission")) {
+              responseText = "Current quests:\n1. Message ghost.fsn\n2. Upload your first file to your vault\n3. Connect with another FSN user\n\nOr type 'start quest' to begin an adventure.";
+              xpGranted = 5;
+            } else if (messageText.includes("network") || messageText.includes("fsn")) {
+              responseText = "The FreeSpace Network (FSN) is a decentralized identity system built on secure foundations. Your .fsn name is your key to all services in the network.";
+              xpGranted = 15;
+            } else if (messageText.includes("ghost")) {
+              responseText = "ghost.fsn is... an anomaly. Some believe it's a leftover debug agent, others think it's something more. It offers challenges with XP rewards.";
+              xpGranted = 5;
+            } else if (messageText.includes("vault")) {
+              responseText = "vault.fsn manages your secure storage. All files stored in your vault are encrypted with your identity key. Try uploading something to get started.";
+              xpGranted = 5;
+            } else if (messageText.includes("forge")) {
+              responseText = "forge.fsn allows you to customize your FSN experience. As you gain XP and level up, you'll unlock new customizations and interface elements.";
+              xpGranted = 5;
+            } else if (messageText.includes("echo")) {
+              responseText = "echo.fsn maintains your activity history and tracks your achievements. It can show you a log of your interactions across the FSN network.";
+              xpGranted = 5;
+            } else {
+              responseText = "I'm here to help you navigate the FreeSpace Network. Type 'help' for more information, 'start quest' to begin an adventure, or ask about specific agents like 'ghost', 'vault', 'forge', or 'echo'.";
+            }
+          }
+        }
+        // Handle vault.fsn agent
+        else if (toFsn === 'vault') {
+          try {
+            // Simple direct implementation for vault.fsn agent responses
+            const vaultAgent = {
+              handleMessage: async (sender: string, message: string) => {
+                const lowerMsg = message.toLowerCase().trim();
+                
+                // Shop command
+                if (lowerMsg === 'shop' || lowerMsg === 'list items' || lowerMsg === 'store') {
+                  return `🛍️ **FSN Vault XP Shop**
+
+Current items available:
+- bronze_patch (20 XP): Basic FSN starter badge.
+- vault_key (50 XP): Unlocks secret quest chambers.
+- obsidian_skin (100 XP): Dark, rare visual vault skin.
+
+Type \`buy [item_name]\` to purchase an item.`;
+                }
+                
+                // Buy command
+                if (lowerMsg.startsWith('buy ')) {
+                  const requestedItem = lowerMsg.replace('buy ', '').trim();
+                  
+                  // Check if item exists in shop
+                  const shopItems = {
+                    'bronze_patch': { cost: 20, desc: 'Basic FSN starter badge.' },
+                    'vault_key': { cost: 50, desc: 'Unlocks secret quest chambers.' },
+                    'obsidian_skin': { cost: 100, desc: 'Dark, rare visual vault skin.' }
+                  };
+                  
+                  if (!shopItems[requestedItem]) {
+                    return "Item not found in the shop. Type `shop` to see available items.";
+                  }
+                  
+                  const item = shopItems[requestedItem];
+                  // Simulate purchase success
+                  return `✅ Purchase successful! You bought **${requestedItem}** for ${item.cost} XP.
+
+You now have ${Math.floor(Math.random() * 40) + 20} XP remaining.
+
+Type \`inventory\` to see your items.`;
+                }
+                
+                // Inventory command
+                if (lowerMsg === 'inventory' || lowerMsg === 'items') {
+                  // Display sample inventory
+                  return `🎒 **Your Inventory**
+
+- bronze_patch: Basic FSN starter badge.
+- vault_key: Unlocks secret quest chambers.
+
+Type \`shop\` to browse more items.`;
+                }
+                
+                // Help command
+                if (lowerMsg === 'help') {
+                  return `**Vault.FSN Helper**
+
+Commands available:
+- \`shop\` - View available items
+- \`buy [item_name]\` - Purchase an item
+- \`inventory\` - View your items
+- \`purchases\` - View your purchase history
+- \`help\` - Show this help message`;
+                }
+                
+                // Default response
+                return "Welcome to the FSN Vault. I manage your secure storage and the XP shop. Type `shop` to see available items or `help` for a list of commands.";
+              }
+            };
+            
+            // Pass the message to the vault agent and get a response
+            responseText = await vaultAgent.handleMessage(fromFsn, sanitizedMessage);
+            
+            // XP is managed by the vault agent internally
+            xpGranted = 0;
+          } catch (agentError) {
+            console.error('Error handling vault.fsn agent message:', agentError);
+            
+            // Fallback responses if the vault agent fails
+            if (messageText.includes("hello") || messageText.includes("hi") || messageText.includes("help")) {
+              responseText = "Welcome to your secure vault! I'm vault.fsn, your storage guardian. All your files are encrypted and accessible only with your FSN identity.";
+              xpGranted = 5;
+            } else if (messageText.includes("storage") || messageText.includes("space")) {
+              responseText = "Your vault currently has unlimited storage during the beta period. In the future, storage limits will be tied to your FSN level.";
+              xpGranted = 10;
+            } else if (messageText.includes("secure") || messageText.includes("encrypt")) {
+              responseText = "All files in your vault are encrypted with your personal FSN key. Even I cannot access your files without proper authorization.";
+              xpGranted = 15;
+            } else if (messageText.includes("share") || messageText.includes("send")) {
+              responseText = "To share files, attach them to messages sent to other FSN users. The files will be securely transferred without leaving the FSN network.";
+              xpGranted = 10;
+            } else if (messageText.includes("shop") || messageText.includes("store") || messageText.includes("buy")) {
+              responseText = "The XP Shop allows you to spend your XP on special items. Type 'shop' to see available items.";
+              xpGranted = 5;
+            } else {
+              responseText = "I manage your secure file storage and the XP Shop. Try 'help' for commands, 'shop' to browse items, or visit the Vault tab to manage your files.";
+            }
+          }
+        }
+        // Handle forge.fsn agent
+        else if (toFsn === 'forge') {
+          if (messageText.includes("hello") || messageText.includes("hi") || messageText.includes("help")) {
+            responseText = "Welcome to the Forge! I'm forge.fsn, responsible for customizations and upgrades. As you gain XP, you'll unlock new interface elements and personalization options.";
+            xpGranted = 5;
+          } else if (messageText.includes("unlock") || messageText.includes("custom")) {
+            responseText = "Current unlocks are tied to your level. Reach level 5 for custom themes, level 10 for animated effects, and level 20 for exclusive network visualizations.";
+            xpGranted = 10;
+          } else if (messageText.includes("level") || messageText.includes("xp")) {
+            responseText = "You earn XP by interacting with FSN, completing quests from core.fsn, solving challenges from ghost.fsn, and regular network activity.";
+            xpGranted = 5;
+          } else if (messageText.includes("theme") || messageText.includes("color")) {
+            responseText = "Interface themes will be available in a future update. Continue leveling up to be ready when they arrive!";
+            xpGranted = 5;
+          } else {
+            responseText = "I handle customizations and upgrades for your FSN experience. Type 'help' for more information or ask about 'unlocks', 'levels', or 'themes'.";
+          }
+        }
+        // Handle echo.fsn agent
+        else if (toFsn === 'echo') {
+          if (messageText.includes("hello") || messageText.includes("hi") || messageText.includes("help")) {
+            responseText = "Hello! I'm echo.fsn, your activity historian. I track your journey through the FreeSpace Network and maintain your achievement log.";
+            xpGranted = 5;
+          } else if (messageText.includes("history") || messageText.includes("log")) {
+            responseText = "Your activity log is being compiled. As you interact more with the network, I'll be able to provide detailed insights about your journey.";
+            xpGranted = 5;
+          } else if (messageText.includes("achievement") || messageText.includes("badge")) {
+            responseText = "Achievements will be unlocked as you reach milestones within FSN. Keep interacting with the various agents to discover hidden achievements!";
+            xpGranted = 10;
+          } else if (messageText.includes("ghost") || messageText.includes("secret")) {
+            responseText = "I've detected some unusual activity patterns from ghost.fsn. That agent seems to operate outside standard protocols. Be careful what you share...";
+            xpGranted = 15;
+          } else {
+            responseText = "I maintain your history and achievements across FSN. Type 'help' for more information or ask about your 'history', 'achievements', or specific agents.";
+          }
+        }
+        
+        // Award XP to the sender if earned
+        if (xpGranted > 0) {
+          const senderDomain = await storage.getFsnDomain(fromFsn);
+          if (senderDomain && senderDomain.ownerId) {
+            const userStats = await storage.getUserStats(senderDomain.ownerId);
+            if (userStats) {
+              await storage.updateUserStats(senderDomain.ownerId, {
+                xpPoints: (userStats.xpPoints || 0) + xpGranted
+              });
+              console.log(`${toFsn}.fsn awarded ${xpGranted} XP to ${fromFsn}`);
+              
+              // Add XP notification to the message if points were awarded
+              if (xpGranted > 0) {
+                responseText += `\n\n[+${xpGranted} XP awarded]`;
+              }
+            }
+          }
+        }
+        
+        // Create the AI agent's response message with proper error handling
+        let agentResponse;
+        try {
+          agentResponse = await storage.sendFsnMessage({
+            fromFsn: toFsn,
+            toFsn: fromFsn,
+            message: responseText,
+            fileUrl: '',
+            fileName: '',
+            fileType: '',
+            isRead: false
+          });
+        } catch (responseError) {
+          console.error(`Error creating ${toFsn}.fsn response:`, responseError);
+          // Handle failure gracefully by returning just the sent message
+          return res.status(201).json({
+            success: true,
+            message: `Message sent successfully, but ${toFsn}.fsn could not respond.`,
+            data: newMessage
+          });
+        }
+        
+        // Return both messages
+        return res.status(201).json({
+          success: true,
+          message: 'Message sent successfully',
+          data: newMessage,
+          agentResponse: agentResponse,
+          xpGranted: xpGranted > 0 ? xpGranted : undefined
+        });
+      } catch (agentError) {
+        console.error(`Error handling ${toFsn}.fsn agent response:`, agentError);
+        // If agent handling fails, just return the original message
+      }
+    }
+    
+    // Default response for normal messages
+    return res.status(201).json({
+      success: true,
+      message: 'Message sent successfully',
+      data: newMessage
+    });
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send message'
+    });
+  }
+});
+
+// Mark a message as read
+router.put('/read/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const id = parseInt(messageId);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid message ID'
+      });
+    }
+    
+    const success = await storage.markFsnMessageAsRead(id);
+    
+    if (!success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message not found'
+      });
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Message marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to mark message as read'
+    });
+  }
+});
+
+export default router;

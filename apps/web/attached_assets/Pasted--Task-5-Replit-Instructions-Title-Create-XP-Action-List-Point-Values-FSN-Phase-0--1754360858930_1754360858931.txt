@@ -1,0 +1,110 @@
+## ✅ Task #5 – Replit Instructions  
+**Title**: Create XP Action List + Point Values (FSN Phase 0 – Task 5)
+
+---
+
+### 🎯 Objective  
+Define and structure all the XP-earning actions available in Phase 0 of FSN, with their corresponding point values. This list will be used to power the XP engine, rewards system, and future airdrop trust scoring.
+
+---
+
+## 🔧 Cut-and-Paste Instructions
+
+---
+
+### ✅ 1. Create `xpActions.js` inside `/lib` or `/config`
+
+```js
+// lib/xpActions.js
+
+const XP_ACTIONS = {
+  claim_fsn: 50,
+  verify_email: 25,
+  verify_phone: 25,
+  complete_profile: 10,
+  upload_file: 20,
+  upload_first_file: 50,
+  login_streak_1: 5,
+  login_streak_3: 10,
+  login_streak_7: 20,
+  play_game: 5,
+  win_game: 10,
+  chat_ai: 5,
+  share_referral: 15,
+  referral_verified: 50,
+  reach_100_xp: 10,
+  reach_500_xp: 25,
+  reach_1000_xp: 50,
+  set_avatar: 10,
+  post_feed: 10,
+  view_tutorial: 5
+};
+
+export default XP_ACTIONS;
+```
+
+✅ Use this as the single source of truth for XP across the app
+
+---
+
+### ✅ 2. Add XP fetch utility (optional)
+
+```js
+// lib/getXPValue.js
+
+import XP_ACTIONS from './xpActions';
+
+export const getXPValue = (action) => {
+  return XP_ACTIONS[action] || 0;
+};
+```
+
+Use like:
+```js
+const earnedXP = getXPValue("upload_file");
+```
+
+---
+
+### ✅ 3. Add XP constants globally (for Admin Tools / future UI)
+
+Use `XP_ACTIONS` in:
+- Admin dashboard (to manually assign/revoke XP)
+- XP engine backend triggers
+- Gamification prompts (“+20 XP for uploading a file!”)
+
+---
+
+### 📦 Bonus: Add XP metadata to Firestore (for tracking)
+
+For each action a user performs, store:
+
+```js
+await addDoc(collection(db, "xpLogs"), {
+  uid: user.uid,
+  action: "upload_file",
+  xpEarned: getXPValue("upload_file"),
+  timestamp: serverTimestamp()
+});
+```
+
+---
+
+### 🧪 QA Checklist
+
+| Test Case                         | Expected Outcome                 |
+|----------------------------------|----------------------------------|
+| Upload file                      | ✅ Adds 20 XP                     |
+| Upload first file                | ✅ Adds 50 XP + 20 XP             |
+| Play game                        | ✅ Adds 5 XP                      |
+| Share referral + verify friend   | ✅ Adds 15 + 50 XP                |
+| XP doubles tracked in `xpLogs`   | ✅ All actions logged             |
+| Invalid XP action name           | ✅ Returns 0                      |
+
+---
+
+### ✅ Summary
+
+- You now have a structured XP point list for all Phase 0 actions
+- XP is consistently earned, logged, and queryable
+- This powers gamification, trust scoring, and future airdrop logic

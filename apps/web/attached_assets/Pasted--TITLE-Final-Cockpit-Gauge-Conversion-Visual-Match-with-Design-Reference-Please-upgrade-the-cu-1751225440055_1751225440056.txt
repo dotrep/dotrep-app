@@ -1,0 +1,111 @@
+🛠️ TITLE: Final Cockpit Gauge Conversion — Visual Match with Design Reference
+Please upgrade the current Trust Engine layout inside the FSN Home tab to match the attached visual reference image. This is a cockpit-style, glowing UI with circular gauges for PULSE, SIGNAL, and BEACON — each with tick marks and dynamic indicators — plus contextual quests and status tiles below.
+
+✅ 1. GAUGE STRUCTURE (Top Section)
+Replace existing arc/partial bars with full, stylized circular gauges like in the reference:
+
+Label	Gauge	Visual
+🫀 Pulse	Circular meter (left)	Ticks, glowing radial arc
+📡 Signal	Circular meter (center)	Needle shows score, glow based on strength
+🛰️ Beacon	Circular meter (right)	Lock if inactive, rotates if active
+
+Style Notes:
+
+Use glowing neon blue/cyan lines
+
+Each gauge should have:
+
+Dynamic needle position
+
+Tick marks like RPM meters
+
+Glow intensity that increases with score
+
+Optional flicker if low (Pulse < 40, Signal < 20)
+
+Layout:
+
+css
+Copy
+Edit
+[ PULSE ]   [ SIGNAL ]   [ BEACON ]
+Centered under .fsn name and XP display.
+
+✅ 2. ACTION PANELS (Bottom Section)
+Create three tile boxes directly beneath the gauges:
+
+Left	Center	Right
+🫀 Pulse Quests
+• Upload File
+• Verify Email
+• Set Profile Pic	📶 Signal Status
+• [ ON / OFF Toggle ]	🛰️ Beacon Status
+• “Complete all Signal quests to unlock”
+
+Style:
+
+Use rounded boxes with cyan borders
+
+Text in small caps
+
+Add glowing toggle switch in Signal panel
+
+✅ 3. TEXT ELEMENTS
+.fsn name centered above the gauges
+
+XP value below it
+
+Tagline below tiles:
+
+sql
+Copy
+Edit
+IDENTITY INCENTIVIZED
+Use consistent neon typography across all components
+
+✅ 4. INTERACTIONS & STATES
+Status	Visual
+Low Pulse	Flickering ring, “DIM” label
+Signal Capped	Signal meter glows at cap, tooltip: “Capped by Pulse”
+Beacon Locked	Lock icon inside gauge, dimmed
+Beacon Online	Glowing radar sweep
+
+🧪 5. ANIMATION & TRANSITIONS (Optional Phase)
+Animate gauges on load or XP gain
+
+Animate needle movement when score changes
+
+Flash Signal tile briefly when user completes a quest
+
+✅ 6. MOBILE RESPONSIVE
+Stack vertically in this order:
+
+.fsn name
+
+XP
+
+PULSE
+
+SIGNAL
+
+BEACON
+
+Quests/status tiles
+
+“IDENTITY INCENTIVIZED”
+
+Ensure all gauges and panels resize proportionally.
+
+🔐 MUST KEEP (FROM CURRENT BUILD)
+XP system
+
+Pulse/Signal logic & decay
+
+Beacon gating conditions
+
+Nav bar (top, fixed)
+
+User data (do not hardcode .fsn name or XP)
+
+📎 REFERENCE IMAGE FOR VISUAL STYLE:
+[Use the attached image showing 3 round gauges with tick marks, .fsn name, XP, and quest tiles]

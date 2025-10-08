@@ -1,0 +1,80 @@
+Replit Instructions – Phase 0 Onboarding Overlay
+(Integrates into current FSN UI without overwriting existing features)
+
+Goal: Add a first-login onboarding overlay that guides users through key Phase 0 actions, tracks completion, and awards a one-time XP bonus — while leaving all existing UI and logic fully intact.
+
+1. Activation Trigger
+Add a user.onboarded boolean to the user profile object if it doesn’t already exist.
+
+On login, check user.onboarded.
+
+If false: show onboarding overlay on top of existing UI.
+
+If true: skip overlay, load UI as normal.
+
+This check must happen after authentication but before rendering dashboard content.
+
+2. Overlay Structure
+Full-screen modal overlay with semi-transparent dark background and centered panel.
+
+Panel includes:
+
+Welcome message (“Welcome to FreeSpace Network 🚀”)
+
+Progress bar showing % completed.
+
+Checklist of 4 tasks:
+
+Claim your .fsn name.
+
+Recast your Beacon.
+
+Upload your first Vault file.
+
+Update your profile.
+
+A Skip button (bottom-right) that closes the overlay but keeps showing it on next login until completed.
+
+3. Checklist Behavior
+Each checklist item links directly to existing UI actions — do not create new endpoints or override current logic.
+
+.fsn claim → calls existing name-claim modal/function.
+
+Recast → calls current Recast click handler.
+
+Vault upload → uses existing file upload drop zone.
+
+Profile update → opens existing profile settings modal.
+
+Each time a task is completed, mark it as completed=true in user.onboarding_tasks (array or object).
+
+Completion detection must listen to the same events/state changes the current UI already emits (so no duplicate logic).
+
+4. Completion State
+When all tasks are marked complete:
+
+Show a “You’re Done!” panel with animation + text (“Onboarding Complete — +100 XP 🎉”).
+
+Call XP award endpoint with a one-time bonus amount (configurable via env var XP_ONBOARDING_BONUS).
+
+Set user.onboarded=true.
+
+Permanently hide overlay for that user.
+
+5. Persistence & Safety
+Do not remove, modify, or disable any existing UI component, endpoint, or data flow.
+
+All new code must be additive — overlay is purely a wrapper that invokes current features.
+
+Store onboarding progress in the same DB profile record as XP/Signal data, but in a separate property (onboarding_tasks).
+
+6. QA Acceptance
+First-time users see overlay before interacting with dashboard.
+
+Existing users (user.onboarded=true) never see overlay.
+
+Completing a task from overlay instantly updates checklist without reloading page.
+
+XP bonus awarded exactly once on completion.
+
+All current Phase 0 features still work identically with or without overlay present.

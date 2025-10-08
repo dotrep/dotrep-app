@@ -1,0 +1,1156 @@
+/**
+ * FreeSpace Network Homepage Styles
+ * Precisely matched to the final specifications
+ */
+
+/* Base body styles with professional multi-layer gradient background */
+body {
+  /* Primary background - deep space gradient */
+  background: 
+    /* Main radial gradient */
+    radial-gradient(circle at top center, #081220 0%, #050a12 40%, #030509 100%),
+    /* Secondary gradient adds depth */
+    linear-gradient(45deg, rgba(8, 24, 40, 0.3) 0%, rgba(4, 12, 20, 0.3) 100%);
+  
+  background-size: cover;
+  background-repeat: no-repeat;
+  margin: 0;
+  padding: 0;
+  font-family: 'Manrope', sans-serif;
+  color: #00f0ff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Subtle color accent overlays */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    /* Soft cyan glow at top */
+    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.03) 0%, rgba(0, 240, 255, 0) 50%),
+    /* Almost invisible purple accent from bottom right */
+    radial-gradient(circle at 90% 90%, rgba(118, 0, 255, 0.05) 0%, rgba(118, 0, 255, 0) 50%);
+  pointer-events: none;
+}
+
+/* Add subtle noise texture overlay */
+body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Main Hero Layout */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 4rem 6rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 5; /* Ensure content is above the noise texture */
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* Left Content Area */
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  position: relative;
+  z-index: 10;
+  padding-right: 2rem;
+}
+
+/* Add thin accent divider */
+.hero-left::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: linear-gradient(to bottom, rgba(0, 240, 255, 0), rgba(0, 240, 255, 0.3) 50%, rgba(0, 240, 255, 0));
+}
+
+/* Right Content Area */
+.hero-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: 2rem;
+  position: relative;
+}
+
+/* Logo Bar */
+.logo-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.logo-icon {
+  height: 48px;
+  filter: drop-shadow(0 0 5px #00f0ff);
+}
+
+.logo-icon.logo-only {
+  height: 85px; /* Increased size */
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.7));
+  margin-bottom: 1rem; /* Add some space below the logo */
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #00f0ff;
+  font-family: 'Manrope', sans-serif;
+  display: none; /* Hide text when using logo-only class */
+}
+
+/* Headline & Text */
+h1 {
+  font-size: clamp(2.5rem, 5vw, 3.8rem);
+  font-weight: 700;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -0.02em; /* Tighter letter spacing for headlines */
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+  max-width: 600px;
+  margin: 0 0 1.8rem 0;
+}
+
+h1 .highlight {
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  position: relative;
+  display: inline-block;
+}
+
+/* No underline for highlight */
+
+.fsn-subtitle {
+  font-size: 1.1rem;
+  color: #B0B8C1;
+  margin-top: 10px;
+  max-width: 480px;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+}
+
+.fsn-highlight {
+  color: #00FFFF;
+  font-weight: bold;
+}
+
+.subheadline {
+  font-size: 1.3rem;
+  max-width: 450px;
+  line-height: 1.6;
+  margin-bottom: 2.75rem;
+  color: #c0faff;
+  font-weight: 400;
+}
+
+/* Typewriter animation effect with improved animation */
+.typewriter {
+  display: inline-block;
+  color: #00e0ee;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+  white-space: nowrap;
+  font-weight: 500;
+  max-width: 100%;
+  margin-left: 4px;
+}
+
+/* Always have the glow effect from the start */
+.typewriter.always-glowing {
+  animation: heartbeat-glow 6s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes heartbeat-glow {
+  0% { text-shadow: 0 0 5px rgba(0, 240, 255, 0.3); color: #00e0ee; }
+  50% { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); color: #00eaf5; }
+  100% { text-shadow: 0 0 5px rgba(0, 240, 255, 0.3); color: #00e0ee; }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background-color: #00f0ff;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* CTA Button */
+.cta {
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 0.75rem 2.25rem;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  background: rgba(0, 240, 255, 0.1);
+  color: #00f0ff;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  z-index: 20;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  text-shadow: 0 0 3px rgba(0, 240, 255, 0.5);
+  letter-spacing: 0.03em;
+  overflow: hidden;
+}
+
+/* Add glow effect inside button */
+.cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.15), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  z-index: -1;
+}
+
+.cta:hover {
+  background: rgba(0, 240, 255, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.cta:hover::before {
+  opacity: 1;
+}
+
+/* Input Field - Complete Rebuild with separate message container */
+.input-container-wrapper {
+  position: relative;
+  width: 320px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Space for messages */
+}
+
+.input-container {
+  position: relative;
+  width: 100%;
+  height: 58px; /* Fixed height for consistency */
+  z-index: 20;
+  overflow: visible;
+}
+
+/* Safari-specific input container styling */
+.safari-input-container {
+  -webkit-appearance: none;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.message-container {
+  position: relative;
+  width: 100%;
+  height: 22px; /* Fixed height for messages */
+  text-align: center;
+}
+
+/* Fixed position container with borders */
+.input-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  background: rgba(0, 240, 255, 0.05);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3), inset 0 0 8px rgba(0, 240, 255, 0.1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Actual input with no borders */
+.fsn-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  width: 100%;
+  height: 100%;
+  padding: 0 20px;
+  padding-right: 70px; /* Make room for the .fsn suffix */
+  background: transparent; /* Input is transparent */
+  color: #00f0ff;
+  border: none; /* No border on input */
+  outline: none; /* No outline on focus */
+  letter-spacing: 0.03em;
+  z-index: 1; /* Above wrapper but below suffix */
+  text-overflow: ellipsis; /* Add ellipsis for long text */
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  -webkit-appearance: none; /* Remove default iOS styling */
+  border-radius: 30px; /* Match border radius of wrapper */
+  -webkit-text-fill-color: #00f0ff; /* Force text color in iOS */
+}
+
+/* Apply focused styles to the wrapper instead of the input */
+.fsn-input:focus ~ .input-wrapper {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.15);
+  background: rgba(0, 240, 255, 0.07);
+}
+
+/* iOS-specific mobile fixes */
+@supports (-webkit-touch-callout: none) {
+  .mobile-input-wrapper {
+    margin-bottom: 15px;
+  }
+  
+  .safari-input-container {
+    background-color: rgba(0, 240, 255, 0.05);
+  }
+  
+  .mobile-safari-input {
+    position: relative !important;
+    opacity: 1 !important;
+    height: 54px !important;
+    border-radius: 30px !important;
+    background-color: rgba(0, 240, 255, 0.05) !important;
+    display: block !important;
+    color: #00f0ff !important;
+    -webkit-text-fill-color: #00f0ff !important;
+    padding: 0 70px 0 20px !important;
+  }
+  
+  .ios-input-wrapper {
+    opacity: 0.3 !important;
+    border: 1px solid rgba(0, 240, 255, 0.7) !important;
+  }
+  
+  .ios-suffix {
+    position: absolute !important;
+    right: 20px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: auto !important;
+    color: #00f0ff !important;
+    font-weight: bold !important;
+    z-index: 10 !important;
+  }
+}
+
+.fsn-input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.fsn-input:focus::placeholder {
+  opacity: 0.5;
+}
+
+/* .fsn suffix remains in absolute fixed position */
+.fsn-suffix {
+  position: absolute;
+  right: 20px;
+  top: 0;
+  width: 50px; /* Fixed width */
+  height: 100%;
+  color: #00f0ff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  pointer-events: none;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.7);
+  opacity: 0.9;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2; /* Always on top */
+}
+
+/* Enhance suffix when input is focused */
+.fsn-input:focus ~ .fsn-suffix {
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.9);
+  opacity: 1;
+}
+
+/* Hexagon Image with enhanced visual effects - removed square glow */
+.hex-image {
+  max-width: 320px;
+  filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.7)) drop-shadow(0 0 30px rgba(0, 240, 255, 0.3));
+  animation: pulse 5s ease-in-out infinite;
+  position: relative;
+}
+
+/* Enter Hint and Validation Messages - In separate container */
+.enter-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: rgba(192, 250, 255, 0.9);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: opacity 0.3s ease;
+  text-align: center;
+}
+
+.enter-icon {
+  animation: pulse-gentle 2s infinite;
+  filter: drop-shadow(0 0 2px rgba(0, 240, 255, 0.5));
+}
+
+.validation-message {
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.validation-message.available {
+  color: #4dffb4; /* Green for available */
+  text-shadow: 0 0 5px rgba(77, 255, 180, 0.5);
+}
+
+.validation-message.taken {
+  color: #ff6b6b; /* Red for taken */
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+.validation-message.checking {
+  color: #ffd166; /* Yellow for checking */
+  text-shadow: 0 0 5px rgba(255, 209, 102, 0.5);
+}
+
+.validation-message.error {
+  color: #ff4c4c;
+}
+
+.validation-message.success {
+  color: #00f0ff;
+}
+
+.checking-indicator {
+  width: 100%;
+  font-size: 0.875rem;
+  color: #00f0ff;
+  animation: blink 1.5s infinite;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes pulse-gentle {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* Success Message */
+.success-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 10000;
+  animation: fadeIn 0.5s ease-out;
+  backdrop-filter: blur(5px);
+}
+
+.success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background-color: rgba(11, 27, 50, 0.95);
+  color: #00f0ff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  max-width: 90%;
+  width: 400px;
+}
+
+.success-icon {
+  animation: pulse 2s infinite;
+}
+
+.success-text {
+  text-align: center;
+  width: 100%;
+}
+
+.success-text h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.5rem;
+  color: #ffffff;
+}
+
+.claimed-name {
+  color: #00f0ff;
+  font-weight: bold;
+  position: relative;
+}
+
+.claimed-name::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #00f0ff, transparent);
+}
+
+.success-text p {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.redirect-info {
+  margin-top: 20px !important;
+  font-size: 0.9rem !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.92;
+    transform: scale(1);
+    filter: brightness(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    filter: brightness(1.05);
+  }
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+    filter: brightness(0.95);
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Dashboard Styles */
+.dashboard-container {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #04070b;
+  color: white;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Network animation now consistent across all pages */
+.dashboard-container .network-background {
+  /* Removed opacity override to match homepage exactly */
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.logout-button {
+  background-color: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  color: #00f0ff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.logout-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.12), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.logout-button:hover {
+  background-color: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.logout-button:hover::before {
+  opacity: 1;
+}
+
+.logout-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+}
+
+.dashboard-content {
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-panel {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 2.5rem;
+  text-align: center;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.stat-card {
+  background-color: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-width: 150px;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #c0faff;
+  letter-spacing: 1px;
+}
+
+.dashboard-cta {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .stat-card {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Registration Page Styles - exact homepage background match */
+.register-page {
+  min-height: 100vh;
+  width: 100%;
+  /* Use the exact same background as homepage */
+  background: 
+    /* Main radial gradient */
+    radial-gradient(circle at top center, #081220 0%, #050a12 40%, #030509 100%),
+    /* Secondary gradient adds depth */
+    linear-gradient(45deg, rgba(8, 24, 40, 0.3) 0%, rgba(4, 12, 20, 0.3) 100%);
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure the network animation is visible in the registration page */
+.register-page .network-background {
+  opacity: 0.3 !important;
+}
+
+.center-logo {
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.register-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4rem;
+}
+
+.register-left {
+  flex: 1;
+  max-width: 500px;
+}
+
+.register-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.claimed-name-display {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: #c0faff;
+}
+
+.claimed-name-badge {
+  background-color: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: white;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: #c0faff;
+}
+
+.form-group input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.form-group input.error {
+  border-color: #ff4c4c;
+}
+
+.error-message {
+  color: #ff4c4c;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.register-button {
+  margin-top: 1rem;
+}
+
+.register-hex {
+  opacity: 0.9;
+}
+
+.success-step {
+  text-align: center;
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.success-icon-large {
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+.success-step h2 {
+  color: #00f0ff;
+  margin: 0;
+}
+
+.success-step p {
+  margin: 0;
+  color: #c0faff;
+}
+
+.success-step .cta {
+  margin-top: 1.5rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  .hero-left,
+  .hero-right {
+    flex: none;
+    width: 100%;
+  }
+  
+  .logo-bar {
+    justify-content: center;
+  }
+  
+  .subheadline {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .hex-image {
+    margin-top: 2rem;
+    max-width: 250px;
+  }
+  
+  .cta {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 1rem;
+  }
+  
+  .fsn-input {
+    width: 100%;
+  }
+  
+  .input-container {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  /* Registration page mobile styles */
+  .register-content {
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .register-left {
+    max-width: 100%;
+  }
+  
+  .register-right {
+    order: -1;
+  }
+  
+  .claimed-name-display {
+    align-items: center;
+  }
+  
+  .register-hex {
+    max-width: 200px;
+  }
+  
+  .form-group {
+    text-align: left;
+  }
+}
+
+/* Dashboard Enhancement Styles */
+.social-proof {
+  font-size: 1rem;
+  color: #00FFFF;
+  margin-bottom: 20px;
+  text-align: center;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.animated-counter {
+  border: 1px solid #00FFFF;
+  border-radius: 12px;
+  padding: 16px;
+  width: 160px;
+  text-align: center;
+  animation: pulse 2s infinite;
+  background-color: #0a0a0a;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+  margin: 10px;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+}
+
+/* Cross-browser compatible input field */
+.cross-browser-input-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 20px;
+}
+
+.cross-browser-input {
+  width: 100%;
+  height: 58px;
+  background-color: rgba(0, 240, 255, 0.05);
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  color: #00f0ff;
+  font-size: 18px;
+  padding: 0 70px 0 20px;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.cross-browser-input:focus {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+  background-color: rgba(0, 240, 255, 0.07);
+}
+
+.cross-browser-suffix {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #00f0ff;
+  font-size: 18px;
+  font-weight: 600;
+  pointer-events: none;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+}
+
+/* Safari-specific styles */
+.cross-browser-input-container.safari.mobile input {
+  /* Ensure visibility on iOS Safari */
+  opacity: 1 !important;
+  /* Fix for iOS Safari rendering */
+  transform: translateZ(0);
+  /* Force Safari to respect styles */
+  -webkit-appearance: none !important;
+  -webkit-border-radius: 30px !important;
+}
+
+.user-badge {
+  background: #111A20;
+  color: #FFFFFF;
+  border: 1px solid #00FFFF;
+  padding: 10px 18px;
+  margin-top: 25px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1rem;
+  display: inline-block;
+  text-align: center;
+  animation: glow 1.5s ease-in-out infinite alternate;
+  margin-bottom: 25px;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px #00FFFF; }
+  to   { box-shadow: 0 0 20px #00FFFF; }
+}
+
+#signal-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Flip Counter Styles */
+.fsn-global-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.flip-numbers-container {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.7));
+  margin: 5px 0;
+  letter-spacing: 3px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.fsn-counter-label {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #00FFFF;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+/* Badge Icon Styles */
+.user-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border: 1px solid #00FFFF;
+  border-radius: 20px;
+  font-weight: bold;
+  background: #0a0a0a;
+  animation: glow 1.5s ease-in-out infinite alternate;
+  margin-bottom: 25px;
+}
+
+.badge-icon {
+  color: #00FFFF;
+  margin-right: 10px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 4px #00FFFF);
+  animation: glow-planet 2s infinite alternate;
+  opacity: 1;
+  width: 28px;
+  height: 28px;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 16px;
+  border: 1px solid #00FFFF;
+  border-radius: 20px;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.7);
+  animation: glow 1.5s ease-in-out infinite alternate;
+  margin-bottom: 25px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+@keyframes glow-planet {
+  0% { filter: drop-shadow(0 0 2px #00FFFF); }
+  100% { filter: drop-shadow(0 0 5px #00FFFF) drop-shadow(0 0 10px rgba(0, 255, 255, 0.7)); }
+}

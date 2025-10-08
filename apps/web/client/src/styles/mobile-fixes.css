@@ -1,0 +1,188 @@
+/* Mobile Safari Specific Fixes */
+
+/* Viewport fixes for iOS Safari */
+@media screen and (max-width: 480px) {
+  /* Add a viewport meta tag via JS to address Safari iOS issues */
+  html::before {
+    content: "";
+    display: none;
+  }
+  
+  body {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+}
+
+/* Set viewport height properly with fallbacks for Safari */
+.mobile-friendly-hero {
+  min-height: 100vh;
+  /* Safari-specific fallback */
+  min-height: -webkit-fill-available;
+  height: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.mobile-friendly-content {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Force proper rendering on iOS Safari */
+.safari-button-wrapper {
+  width: 100%;
+  margin-top: 20px;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.safari-input-container {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Ensure all interactive elements are properly sized for touch */
+button, .cta, .input-container, input {
+  min-height: 44px; /* Apple's recommended minimum touch target size */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 8px;
+}
+
+/* Fix for typewriter animation on small screens */
+.typewriter, .typewriter-cursor {
+  display: inline-block;
+}
+
+/* Mobile Safari text rendering fixes */
+.mobile-compatible-heading {
+  -webkit-text-size-adjust: 100%;
+  font-size: calc(1.5rem + 1vmin); /* Responsive font size */
+}
+
+.mobile-compatible-text {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Fix button visibility on small screens */
+.cta {
+  padding: 10px 20px;
+  font-size: 1rem;
+  min-width: 120px;
+  border-radius: 8px;
+  margin-top: 10px;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* Mobile input specific fixes */
+.mobile-input-wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 10px;
+}
+
+.mobile-hint,
+.mobile-indicator,
+.mobile-message {
+  font-size: 14px;
+  height: auto;
+  min-height: 20px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Safari-specific media query for iPhone */
+@supports (-webkit-touch-callout: none) {
+  .hero {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix the overflow issues on Safari */
+  .hero-left {
+    max-width: 100%;
+    padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure text is readable on small screens */
+  h1 {
+    font-size: 2rem;
+    margin-top: 10vh;
+  }
+  
+  .fsn-subtitle {
+    font-size: 1rem;
+    max-width: 90%;
+  }
+  
+  .subheadline {
+    font-size: 0.9rem;
+    margin-top: 20px;
+  }
+  
+  /* Make form elements more finger-friendly */
+  input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px;
+  }
+  
+  /* Fix for animations on Safari */
+  .network-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+}
+
+/* iPhone-specific adjustments */
+@media screen and (max-width: 480px) {
+  /* Optimize layout for the smallest screens */
+  .hero-left {
+    padding: 20px 15px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+    margin-top: 8vh;
+    line-height: 1.3;
+  }
+  
+  .fsn-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  /* Ensure claim button and input are visible and usable */
+  .input-container-wrapper {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .input-container {
+    width: 100%;
+  }
+  
+  /* Make the claim button more prominent */
+  .claim-button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+  }
+}

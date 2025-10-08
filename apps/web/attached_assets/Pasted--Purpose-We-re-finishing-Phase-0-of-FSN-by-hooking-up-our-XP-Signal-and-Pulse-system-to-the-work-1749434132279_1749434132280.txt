@@ -1,0 +1,202 @@
+🧠 Purpose
+We’re finishing Phase 0 of FSN by hooking up our XP, Signal, and Pulse system to the working file upload UI inside VaultTab.tsx.
+
+When a user uploads a file, FSN should:
+
+✅ Award XP (if allowed)
+
+✅ Check if their Signal level should increase
+
+✅ Check if they now qualify for Pulse
+
+✅ Give XP to their referrer (if conditions are met)
+
+✅ Show these results in the UI
+
+📁 Files Involved
+VaultTab.tsx (already exists)
+
+client/src/lib/handleVaultUpload.ts ← create this
+
+client/src/lib/xpEngine.ts ← create this
+
+client/src/lib/xpRules.ts ← create this
+
+client/src/lib/referral.ts ← create this
+
+client/src/lib/signal.ts ← create this
+
+client/src/lib/pulse.ts ← create this
+
+🔧 Step-by-Step Instructions
+🧩 1. In VaultTab.tsx:
+✅ At the top:
+
+ts
+Copy
+Edit
+import { handleVaultUpload } from "@/lib/handleVaultUpload";
+✅ Add this state:
+
+ts
+Copy
+Edit
+const [xpFeedback, setXPFeedback] = useState(null);
+✅ After a successful file upload (where setSuccess("Upload complete!") runs), add:
+
+ts
+Copy
+Edit
+const mockUser = {
+  id: userId,
+  email: fsnName + "@fsn.io",
+  xp: 0,
+  signal: "none",
+  pulseQualified: false,
+};
+
+try {
+  const uploadResult = await handleVaultUpload(mockUser);
+  setXPFeedback(uploadResult);
+} catch (err) {
+  console.error("XP sync failed:", err);
+}
+✅ Then below the success UI, show the XP feedback:
+
+tsx
+Copy
+Edit
+{xpFeedback && (
+  <div className="mt-4 p-4 bg-black/50 text-xs rounded-md text-teal-300">
+    <p>✅ XP granted: {xpFeedback.xpGranted ? "Yes" : "No"}</p>
+    <p>🟢 Signal: {xpFeedback.signal}</p>
+    <p>📡 Pulse Qualified: {xpFeedback.pulseQualified ? "Yes" : "No"}</p>
+  </div>
+)}
+📁 2. client/src/lib/handleVaultUpload.ts
+ts
+Copy
+Edit
+import { grantXP, canGrantXP } from "./xpEngine";
+import { checkAndGrantReferralXP } from "./referral";
+import { computeSignalStatus } from "./signal";
+import { isPulseQualified } from "./pulse";
+import { XP_ACTIONS, XP_RULES } from "./xpRules";
+
+export async function handleVaultUpload(user: any) {
+  const updates: Record<string, any> = {};
+  const now = new Date();
+
+  let xpGranted = false;
+  if (canGrantXP(user, XP_ACTIONS.vaultUpload, now)) {
+    const xpAmount = XP_RULES[XP_ACTIONS.vaultUpload].amount;
+    await grantXP(user, XP_ACTIONS.vaultUpload, xpAmount, now);
+    user.xp += xpAmount;
+    user.lastVaultUploadXPAt = now;
+    updates.xp = user.xp;
+    xpGranted = true;
+  }
+
+  const referralXPGranted = await checkAndGrantReferralXP(user);
+
+  const newSignal = computeSignalStatus(user);
+  if (user.signal !== newSignal) {
+    user.signal = newSignal;
+    updates.signal = newSignal;
+  }
+
+  const pulseQualified = isPulseQualified(user);
+  if (user.pulseQualified !== pulseQualified) {
+    user.pulseQualified = pulseQualified;
+    updates.pulseQualified = pulseQualified;
+  }
+
+  return {
+    xpGranted,
+    referralXPGranted,
+    signal: user.signal,
+    pulseQualified: user.pulseQualified,
+    updatedFields: Object.keys(updates),
+  };
+}
+📁 3. client/src/lib/xpRules.ts
+ts
+Copy
+Edit
+export const XP_ACTIONS = {
+  vaultUpload: "vaultUpload",
+};
+
+export const XP_RULES = {
+  vaultUpload: {
+    amount: 10,
+    cooldownSeconds: 3600, // 1 hour
+    maxPerDay: 3,
+  },
+};
+📁 4. client/src/lib/xpEngine.ts
+ts
+Copy
+Edit
+import { XP_RULES } from "./xpRules";
+
+export function canGrantXP(user: any, action: string, now: Date): boolean {
+  const rule = XP_RULES[action];
+  const lastTime = user[`last${capitalize(action)}XPAt`];
+
+  const timeSinceLast = lastTime ? (now.getTime() - new Date(lastTime).getTime()) / 1000 : Infinity;
+  const today = new Date().toISOString().slice(0, 10);
+  const grantedToday = user?.xpLog?.[today]?.[action] || 0;
+
+  return timeSinceLast > rule.cooldownSeconds && grantedToday < rule.maxPerDay;
+}
+
+export async function grantXP(user: any, action: string, amount: number, now: Date) {
+  const today = new Date().toISOString().slice(0, 10);
+  user.xpLog = user.xpLog || {};
+  user.xpLog[today] = user.xpLog[today] || {};
+  user.xpLog[today][action] = (user.xpLog[today][action] || 0) + 1;
+}
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+📁 5. client/src/lib/referral.ts
+ts
+Copy
+Edit
+export async function checkAndGrantReferralXP(user: any): Promise<boolean> {
+  if (!user.referredBy || user.referralBonusGiven) return false;
+
+  // Give referrer 5 XP
+  // (You would fetch referrer from DB and update their XP here)
+  user.referralBonusGiven = true;
+  return true;
+}
+📁 6. client/src/lib/signal.ts
+ts
+Copy
+Edit
+export function computeSignalStatus(user: any): string {
+  if (user.xp > 200) return "sentinel";
+  if (user.xp > 100) return "core";
+  if (user.xp > 50) return "basic";
+  return "none";
+}
+📁 7. client/src/lib/pulse.ts
+ts
+Copy
+Edit
+export function isPulseQualified(user: any): boolean {
+  return user.xp >= 100 && user.signal !== "none";
+}
+✅ Done = Phase 0 Complete
+Once this is wired up:
+
+Uploading a file silently levels up your identity
+
+XP, Signal, and Pulse update automatically
+
+Users see that feedback in real time
+
+Please implement all of this — and confirm success.

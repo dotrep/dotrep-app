@@ -1,0 +1,151 @@
+## ✅ FSN Phase 0 – Replit Instructions (Tasks #12–#25)
+
+---
+
+### ✅ Task #12 – Build Chat UI (textbox, send, thread display)
+
+- Create `ChatBot.jsx`
+- Render input field + Send button + message thread
+- Use `sendChatMessage()` from OpenAI API
+- Store messages in local React state
+- Structure:
+
+```jsx
+<input ... onChange={...} />
+<button onClick={sendMessage}>Send</button>
+<div>
+  {messages.map(m => <div>{m.role}: {m.content}</div>)}
+</div>
+```
+
+---
+
+### ✅ Task #13 – Award XP for Chat Interactions
+
+- Inside `ChatBot.jsx`, after AI reply:
+```js
+await awardXP(uid, "chat_ai");
+```
+
+---
+
+### ✅ Task #14 – Build Upload UI (Vault)
+
+- Create `VaultUploader.jsx`
+- Use file input + upload button
+- On submit:
+  - Upload file to Pinata/web3.storage
+  - Store file metadata in `users/{uid}/vault`
+
+---
+
+### ✅ Task #15 – Connect to Pinata or IPFS Provider
+
+- Use `fetch` or Pinata SDK:
+```js
+POST https://api.pinata.cloud/pinning/pinFileToIPFS
+Headers: Authorization: Bearer <JWT>
+```
+
+---
+
+### ✅ Task #16 – Store Metadata in DB
+
+```js
+await addDoc(collection(db, "users", uid, "vault"), {
+  name: file.name,
+  size: file.size,
+  uploadedAt: serverTimestamp(),
+  ipfsCID: returnedCID
+});
+```
+
+---
+
+### ✅ Task #17 – Award XP for First Upload
+
+```js
+const snap = await getDocs(collection(db, "users", uid, "vault"));
+if (snap.size === 1) {
+  await awardXP(uid, "upload_first_file");
+} else {
+  await awardXP(uid, "upload_file");
+}
+```
+
+---
+
+### ✅ Task #18 – Build Feed UI
+
+- Create `Feed.jsx`
+- Pull from `feed` or build mock array:
+```js
+[{ type: "claim", text: "jason.fsn claimed their name" }]
+```
+- Render in list format
+
+---
+
+### ✅ Task #19 – Style User Entries
+
+- Style `.feed-xp`, `.feed-upload`, `.feed-claim` with CSS
+- Use emojis/icons to distinguish types
+
+---
+
+### ✅ Task #20 – Create Landing Page
+
+- In `/pages/index.jsx`
+- Hero text: “Claim your .fsn identity”
+- Button → `/claim`
+
+---
+
+### ✅ Task #21 – Terms of Use and Privacy Policy
+
+- Add `/pages/terms.jsx` and `/pages/privacy.jsx`
+- Basic copy block with scrollable layout
+
+---
+
+### ✅ Task #22 – XP Admin Dashboard
+
+- Create `/pages/admin/xp.jsx`
+- Require admin UID to access
+- List users and allow manual XP +/– via form
+```js
+await updateDoc(doc(db, "users", uid), { xp: newXP });
+```
+
+---
+
+### ✅ Task #23 – User Search/Edit Interface
+
+- Page: `/pages/admin/users.jsx`
+- Search by UID or `.fsn`
+- View profile, XP, logs
+- Buttons: “Freeze,” “Ban,” “Reset Password”
+
+---
+
+### ✅ Task #24 – Mobile Responsiveness + QA
+
+- Add `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+- Use Tailwind or CSS media queries for mobile layout
+- Test in mobile Chrome/Safari
+
+---
+
+### ✅ Task #25 – Persistent DB + IPFS Integration Test
+
+1. Upload a file from Vault UI  
+2. Confirm:
+   - File metadata is in Firestore
+   - XP awarded
+   - IPFS CID returns valid content
+3. Refresh page — file still visible
+4. Confirm upload visible in Vault preview
+
+---
+
+✅ You now have Tasks #12–#25 fully written, fully testable, and integrated with XP, Vault, Feed, and Admin logic.

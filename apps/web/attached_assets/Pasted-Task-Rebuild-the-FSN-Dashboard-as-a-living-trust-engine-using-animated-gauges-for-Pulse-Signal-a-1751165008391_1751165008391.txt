@@ -1,0 +1,163 @@
+Task: Rebuild the FSN Dashboard as a living trust engine, using animated gauges for Pulse, Signal, and Beacon — but fully preserve the navigation structure of the platform.
+
+🔁 CONTEXT
+You previously replaced the static quest boxes with a basic version of the Pulse/Signal/Beacon scoring system. That was a great first step.
+
+However, the navigation bar was removed, and the layout became detached from the rest of FSN. Please now rebuild the interface so it feels like a powerful upgrade to the Home tab — not a full-page modal or alternate view.
+
+🔧 CORE INSTRUCTIONS
+✅ 1. Restore the Navigation Bar
+The main dashboard must include the existing tabs at the top:
+
+css
+Copy
+Edit
+[ HOME ]  [ VAULT ]  [ SOCIAL ]  [ GAME CENTER ]
+These should be present and functional at all times.
+
+The Home tab should now contain the Trust Engine view, not be replaced by it.
+
+Do not use a full-screen overlay or hide any of the tabs.
+
+✅ 2. Implement the Full Trust Engine (Inside the Home Tab)
+You will be building a live dashboard powered by three interrelated systems:
+
+🫀 PULSE
+Represents identity health and consistency
+Stored as: pulseScore (range: 30–100)
+
+Visual:
+Circular Pulse Ring gauge (Tron-style glow)
+
+Dim or flicker when score < 60
+
+Tooltip:
+
+“Pulse = identity health. Upload to your Vault and stay active to keep your Pulse strong.”
+
+Decay logic:
+Grace period: no decay for 2 days of inactivity
+
+-5 if 3 days inactive
+
+-10 if 4–6 days
+
+-15 per week thereafter (min floor = 30)
+
+📡 SIGNAL
+Represents trust through behavioral activity
+Stored as: signalScore (0–100)
+Final score is capped by Pulse score
+
+Visual:
+Horizontal Signal Strength Bar
+
+Animate fill level dynamically
+
+Show throttle condition:
+
+“Your Signal is capped by Pulse. Boost your Pulse to unlock full broadcast power.”
+
+🛰️ BEACON
+Represents global broadcast readiness
+Stored as: beaconStatus ("locked", "warming_up", "active")
+
+Unlock condition:
+Pulse ≥ 70
+
+Signal ≥ 80
+
+(Optional Trust check in future phase)
+
+Visual:
+Beacon Console panel
+
+Gray when locked, glowing when active
+
+Tooltip:
+
+“Your Beacon will activate once your Pulse and Signal are strong. This unlocks map visibility, token access, and more.”
+
+🧠 LOGIC & STATE
+Store the following variables for each user:
+
+pulseScore
+
+signalScore
+
+rawSignalScore
+
+xpTotal
+
+xpLast7Days
+
+beaconStatus
+
+Pulse must cap the final Signal score like this:
+
+js
+Copy
+Edit
+finalSignalScore = Math.min(rawSignalScore, pulseScore)
+🔄 NEXT ACTION MODULE
+Display a "Next Action" prompt beneath the gauges:
+
+Example:
+
+“Upload a file or log in today to increase your Pulse strength.”
+“Earn 50 more XP this week to improve your Signal.”
+
+This section should change dynamically based on user state.
+
+🧪 XP Section (Keep Existing)
+Display:
+
+Total XP
+
+XP earned in last 7 days
+
+Animated XP bar or counter
+
+Add XP unlock tooltip:
+
+“XP unlocks Vault skins, quests, and token access.”
+
+🔁 LAYOUT (STACKED)
+css
+Copy
+Edit
+[ NAV BAR: HOME | VAULT | SOCIAL | GAME CENTER ]
+
+[ .fsn NAME ]  [ XP COUNTER ]
+
+[ PULSE RING GAUGE ] 
+[ SIGNAL METER ]
+[ BEACON CONSOLE ]
+
+[ NEXT ACTION PROMPT ]
+[ XP STATS + BAR ]
+
+[ IDENTITY INCENTIVIZED ]
+Ensure this layout is responsive and mobile-friendly:
+
+Stack vertically on mobile
+
+Keep nav accessible
+
+Scale gauges proportionally
+
+✅ UX POLISH
+All gauges should animate based on real-time state changes
+
+Add hover tooltips for all scores
+
+Add flicker/glow/dim effects to show status transitions
+
+Never hard-fail — always offer recovery quests when Pulse or Signal are low
+
+🚫 DO NOT:
+Do not hide or remove the main nav bar
+
+Do not use modals or overlays to show gauges
+
+Do not reset scores visually unless the user is flagged or reset manually

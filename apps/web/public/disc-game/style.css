@@ -1,0 +1,24 @@
+
+body {
+  margin: 0;
+  background: #0f0f1a;
+  color: #00ffff;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+}
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #00ffff;
+}
+#exitBtn {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: #00ffff;
+  color: #000;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+}

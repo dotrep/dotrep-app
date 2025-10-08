@@ -1,0 +1,18 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Core Signal shield centered and properly sized -->
+  <g transform="translate(60,60)">
+    <!-- Shield outline -->
+    <path d="M0,-35 L-25,-25 L-25,12 L0,35 L25,12 L25,-25 Z" fill="none" stroke="#cc00ff" stroke-width="3"/>
+    
+    <!-- Inner shield -->
+    <path d="M0,-30 L-20,-20 L-20,10 L0,30 L20,10 L20,-20 Z" fill="rgba(204,0,255,0.2)"/>
+    
+    <!-- Core symbol -->
+    <circle cx="0" cy="0" r="10" fill="#cc00ff"/>
+    <circle cx="0" cy="0" r="5" fill="#ffffff"/>
+    
+    <!-- Signal waves -->
+    <circle cx="0" cy="0" r="15" fill="none" stroke="#cc00ff" stroke-width="2" opacity="0.6"/>
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#cc00ff" stroke-width="2" opacity="0.4"/>
+  </g>
+</svg>

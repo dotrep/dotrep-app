@@ -1,0 +1,220 @@
+✅ FSN Homepage Build: Final Developer Instructions (Ultra-Detailed)
+🧩 GOAL
+Create a full-screen, responsive, professionally styled crypto/Web3 homepage for FreeSpace Network, matching the provided visual reference (like Homepage.png). Key elements include:
+
+Left: Logo, title, subheadline, and interactive button
+
+Right: Glowing .fsn hex graphic
+
+Background: dark Web3-themed with subtle grid or node mesh
+
+Interaction: Button turns into input with placeholder: This will be your Signal
+
+1. 💡 GLOBAL STRUCTURE
+html
+Copy
+Edit
+<body>
+  <main class="hero">
+    <div class="hero-left">
+      <!-- Logo and text block -->
+    </div>
+    <div class="hero-right">
+      <!-- Glowing hex image -->
+    </div>
+  </main>
+</body>
+2. 🖼️ VISUAL DESIGN
+🧱 Layout Rules
+Element	Spec
+Full-screen	Use 100vh height and 100vw width for body & .hero container
+Two columns	Use display: flex, justify-content: space-between, align-items: center
+Breakpoint	Stack left/right vertically under 768px screen width
+
+3. 🎨 CSS STYLE GUIDE
+body
+css
+Copy
+Edit
+body {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  background: radial-gradient(circle at center, #0a0f1c, #04070b);
+  color: #00f0ff;
+  height: 100vh;
+  overflow-x: hidden;
+}
+4. 🔥 LOGO & HEADER
+HTML
+html
+Copy
+Edit
+<div class="logo-row">
+  <img src="fsn-logo.svg" alt="Logo" class="logo" />
+  <span class="logo-text">FreeSpace Network</span>
+</div>
+CSS
+css
+Copy
+Edit
+.logo-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo {
+  width: 48px;
+  filter: drop-shadow(0 0 6px #00f0ff);
+  margin-right: 0.75rem;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #00f0ff;
+}
+5. 🧾 HEADLINE + SUBHEADLINE
+HTML
+html
+Copy
+Edit
+<h1>Crypto starts with your <span class="highlight">.fsn</span> name</h1>
+<p class="subtext">Claim your Web3 identity.<br>Earn XP. Emit your Signal.</p>
+CSS
+css
+Copy
+Edit
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+}
+
+.highlight {
+  font-weight: 700;
+  color: #00f0ff;
+  text-shadow: 0 0 18px rgba(0, 255, 255, 0.6);
+}
+
+.subtext {
+  font-size: 1.1rem;
+  color: #c0faff;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+6. 🔘 CTA BUTTON ➡️ INPUT
+HTML
+html
+Copy
+Edit
+<button class="cta" id="claimBtn">Claim your .fsn name</button>
+CSS
+css
+Copy
+Edit
+.cta, .fsn-input {
+  padding: 0.75em 2em;
+  font-size: 1.05rem;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  color: #00f0ff;
+  background: transparent;
+  cursor: pointer;
+  width: 300px;
+  transition: all 0.25s ease;
+}
+
+.cta:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+}
+
+.fsn-input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.7;
+}
+JS Interaction
+javascript
+Copy
+Edit
+document.getElementById("claimBtn").addEventListener("click", function () {
+  const input = document.createElement("input");
+  input.setAttribute("type", "text");
+  input.setAttribute("placeholder", "This will be your Signal");
+  input.classList.add("fsn-input");
+  this.replaceWith(input);
+});
+7. 🧊 HEXAGON GRAPHIC
+HTML
+html
+Copy
+Edit
+<img src="fsn-hex.png" alt=".fsn Hex" class="fsn-hex" />
+CSS
+css
+Copy
+Edit
+.hero-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fsn-hex {
+  width: 320px;
+  filter: drop-shadow(0 0 14px rgba(0, 255, 255, 0.6));
+}
+8. 📱 MOBILE STYLING (Responsive)
+css
+Copy
+Edit
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    height: auto;
+    padding: 3rem 2rem;
+  }
+
+  .hero-left {
+    align-items: center;
+  }
+
+  .hero-right {
+    margin-top: 2rem;
+  }
+
+  .fsn-hex {
+    width: 240px;
+  }
+
+  .cta, .fsn-input {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+9. 📦 FILE STRUCTURE
+plaintext
+Copy
+Edit
+/
+├── index.html
+├── styles.css
+├── script.js
+├── fsn-logo.svg       <-- logo top-left
+└── fsn-hex.png        <-- glowing .fsn graphic
+✅ VISUAL CHECKLIST (DO NOT LAUNCH UNTIL ALL PASS)
+Feature	Pass?
+Two-column layout on desktop	✅
+Fullscreen hero section	✅
+Logo correctly aligned with text	✅
+Glow matches reference	✅
+Hex is ~300–320px, right aligned	✅
+Button click => input works	✅
+Mobile layout stacks and resizes	✅
+

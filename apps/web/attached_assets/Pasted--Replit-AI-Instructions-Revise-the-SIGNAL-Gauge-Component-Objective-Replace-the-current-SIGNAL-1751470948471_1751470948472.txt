@@ -1,0 +1,93 @@
+🛠️ Replit AI Instructions — Revise the SIGNAL Gauge Component
+Objective:
+Replace the current SIGNAL component on the FreeSpace Network homepage with a high-fidelity, fully legible, retro-futuristic tuning dial interface that precisely mirrors the visual style of the reference image provided (signal_dial_reference.png) while integrating seamlessly into the dark neon sci-fi UI of the site.
+
+🔧 Component Overview
+You are building an interactive SVG-based component that matches the exact design aesthetics of the attached reference gauge (neon-glow, retro-futurism, clear readability) but also meets modern UX expectations:
+
+Purpose: This is a crypto-native "SIGNAL" gauge, used as a symbolic frequency tuner for the user's .fsn identity status. It's part of a 3-dial system: Pulse, Signal, and Beacon.
+
+Platform: This will be deployed on a responsive web interface in a <div id="signal-dial"> container.
+
+Design Match: All design must match the attached reference (signal_dial_reference.png), but with corrected dial numbers and real-time interactivity.
+
+✅ Required Features and Behaviors
+🎯 1. DIAL STRUCTURE & VISUALS
+The dial must be a semi-circular arc spanning from left to right (180 degrees), with:
+
+Outer arc: large frequency numbers from 5 to 16 in whole numbers (5, 6, 7, ..., 16)
+
+Inner arc: finer markings between numbers (e.g. 5.5, 6.5, etc.), labeled numerically with smaller font. Inner arc should mirror the example.
+
+Tick marks: show both minor and major tick marks for realism (like an analog radio).
+
+Use cyan-blue neon glow lines on a black background, like a Tron interface.
+
+All fonts and indicators must glow softly, be readable at small sizes, and not overlap.
+
+🎯 2. DIGITAL FREQUENCY DISPLAY
+In the center of the dial, include a rectangular box (like in the reference) with a glowing blue display that reads the current frequency as a float (e.g., 9.5).
+
+Style the text to be legible and retro-futuristic, but avoid weird scifi fonts. Use a square, readable typeface with fixed-width digits (suggest: Orbitron, Share Tech Mono, or DS-Digital).
+
+🎯 3. RED NEEDLE
+A thin red triangular needle (just like the reference image) should rotate along the arc to point at the current frequency.
+
+Needle origin point should be centered below the arc, from the middle of the knob.
+
+It must animate smoothly when updated.
+
+🎯 4. KNOB INTERACTION
+Below the arc, there should be a rotary-style knob (as per the reference image).
+
+The knob should:
+
+Visually match the design in the reference (chunky, concentric rings, glowing dots).
+
+Emit ambient glow but NOT look overly metallic or polished — keep the old-school sci-fi feel.
+
+Be draggable (desktop) or touch-sensitive (mobile) to rotate.
+
+Synchronize with the needle's rotation and frequency display in real time.
+
+Use a mouse/touch drag event to simulate turning the knob.
+
+📐 Number Calibration Requirements
+Here’s the exact scale and layout you must follow for the dial:
+
+Outer arc: 5 to 16 (whole numbers), with 1.0 unit spacing.
+
+Inner arc: show .5 markers between each main number (e.g., 5.5, 6.5, 7.5...), optionally up to one decimal point.
+
+Markings must follow a real analog arc (angle-calculated, not grid-placed).
+
+Ensure consistent spacing and no overlapping of labels. No truncated digits.
+
+🧩 Integration Notes
+The new dial must fully replace the current SIGNAL component shown in fsn_home.png.
+
+It must scale well with the rest of the UI grid (roughly same size as the Pulse meter).
+
+All components (needle, dial text, knob, display) must be centered and symmetrical.
+
+Embed it using React or raw HTML/CSS/JS, and ensure it can render as a standalone SVG/CSS component.
+
+🧪 Testing and Fallbacks
+Test at viewport widths from 320px to 1440px for responsiveness.
+
+Fallback state: default to frequency 9.5 on load.
+
+Do NOT use canvas for this — use SVG + CSS animations so it's lightweight and CSS-accessible.
+
+🔍 Final Proof of Compliance
+You will know the instructions were followed when:
+
+The SIGNAL dial exactly matches the example in aesthetics.
+
+The arc reads frequencies from 5.0 to 16.0 with inner decimals and visible tick marks.
+
+Turning the knob smoothly updates the needle and the displayed frequency in sync.
+
+The new dial fits seamlessly inside the existing homepage layout without distortion.
+
+✅ Proof: When rendered, the SIGNAL dial must be visually identical in style to the reference image and display a functioning analog-style tuning system with real, sequentially increasing, non-overlapping numbers.

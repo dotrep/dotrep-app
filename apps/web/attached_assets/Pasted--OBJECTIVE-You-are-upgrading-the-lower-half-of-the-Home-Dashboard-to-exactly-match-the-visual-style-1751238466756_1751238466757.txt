@@ -1,0 +1,150 @@
+✅ OBJECTIVE
+You are upgrading the lower half of the Home Dashboard to exactly match the visual style and layout of the attached cockpit-style reference image, while preserving the existing nav bar, XP bar, and username area at the top.
+
+🧩 COMPONENT 1: GAUGES
+General Gauge Requirements (all 3)
+Use concentric glowing rings (white neon + cyan accents)
+
+Radial tick marks (dotted/short segments) at 10-point intervals (0–100)
+
+Needles: Use sharp, solid, centered needles — not soft lines
+
+Glow effects:
+
+Outer ring = soft white neon glow
+
+Inner center = cyan radial pulse
+
+Flickering red outline if score is low
+
+Font inside gauge = Eurostile Bold or similar all-caps, spaced out
+
+Pulse animation when score updates
+
+PULSE Gauge
+Centered left
+
+Needle should animate from 0–100 based on Pulse score
+
+Tick marks styled as white notches, with every 10-point mark emphasized
+
+Label: PULSE (centered under dial, bold, glowing)
+
+Use icon you already implemented next to label
+
+SIGNAL Gauge
+Centered
+
+Needle based on calculated Signal score
+
+Same visual as Pulse gauge, but add animated glow or breathing effect
+
+Add optional flickering red glow if Signal < 20
+
+Label: SIGNAL (same styling)
+
+BEACON Gauge
+Centered right
+
+This gauge starts disabled
+
+Instead of a needle, use a radar-style sweep (rotating arc inside the dial)
+
+If locked: show dimmed lock icon inside
+
+If unlocked: replace lock with rotating scanner arc
+
+Label: BEACON, glows purple with soft radar pulse behind it
+
+Optional: Make the dial perimeter a ring with ringed radar blips
+
+🧩 COMPONENT 2: QUEST PANELS (3 Boxes Below Gauges)
+PULSE QUESTS Panel (left)
+Add glowing neon cyan border
+
+Use glowing green ✅ checkmarks on completed tasks
+
+Bold section header: PULSE QUESTS
+
+Font: all-caps, spaced, glowing cyan
+
+Fix vertical spacing — current layout feels unbalanced
+
+SIGNAL TOGGLE Panel (center)
+Keep the toggle but:
+
+Enlarge the ON/OFF switch
+
+Apply neon glow (ON = cyan, OFF = gray)
+
+When ON, glow around the box softly pulses
+
+Make background panel slightly brighter with glowing border
+
+Font = bolder and spaced, matching PULSE QUESTS
+
+BEACON LOCK Panel (right)
+Update to:
+
+Label: BEACON CONSOLE
+
+Subtext: Complete all Signal quests to unlock
+
+Add dim radar display (visual background element)
+
+Apply subtle purple glow effect
+
+🧩 COMPONENT 3: IDENTITY INCENTIVIZED Footer
+Center this title
+
+Use Eurostile Extended or Space Mono font (or nearest match)
+
+Add a subtle cyan/white horizontal tracer line underneath
+
+Pulse glow behind text every 5 seconds (animated)
+
+Ensure text does not wrap or get pushed off-screen on smaller viewports
+
+✨ COMPONENT 4: BACKGROUND FX (Behind Everything)
+Add floating network node grid
+
+Random twinkling star-like lights
+
+Gentle animated horizontal scan line behind gauges (opacity < 10%)
+
+Light layer of dust particle motion for movement illusion
+
+🔄 COMPONENT 5: STATE-BASED DYNAMICS
+Gauge	State	Animation
+Pulse	Inactive	Needle rests at 30, dim glow
+Pulse	Active	Needle animates with score, glow pulses
+Signal	Low (<20)	Flickering red glow on outer edge
+Signal	Mid (20–70)	Cyan glow stable
+Signal	High (70+)	Cyan glow pulses
+Beacon	Locked	Lock icon visible, dimmed ring
+Beacon	Unlocked	Replace lock with rotating radar arc (SVG or CSS rotate)
+
+⚙️ COMPONENT 6: DATA SOURCING (Hook into Logic)
+Pull values from the following states:
+
+pulseScore = 0–100 → drives Pulse gauge
+
+signalScore = 0–100 → drives Signal gauge
+
+beaconStatus = true/false → locked or unlocked
+
+pulseQuestsCompleted = array → toggle checkmarks
+
+signalQuestsCompleted = boolean → unlocks beacon panel
+
+XP = displayed above, do not duplicate
+
+✅ FINAL CHECKLIST
+✅	Item
+🔳	Gauge visuals match cockpit design (tick marks, neon, labels)
+🔳	Animated needles, radar sweep
+🔳	Glowing toggles and checkmarks
+🔳	Radar visual in Beacon panel
+🔳	Footer text pulsing & centered
+🔳	Background ambient effects
+🔳	No layout issues on mobile viewports

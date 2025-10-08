@@ -1,0 +1,130 @@
+📌 Component Purpose & Placement
+You are building a custom SIGNAL dial UI component to replace the existing SIGNAL widget on the FSN homepage.
+
+This component must:
+
+Match the aesthetic of the other components (PULSE, BEACON)
+
+Be fully functional (interactive knob rotates needle and updates frequency readout)
+
+Be fully readable (clear tick marks, properly spaced numbers)
+
+Integrate seamlessly into the layout with responsive styling
+
+🔁 Replace Existing SIGNAL
+Replace the current SIGNAL dial in the FSN UI with this new component. Discard all previous dial markup or styling and start fresh with the following structure and appearance.
+
+🎯 Visual Style & Layout
+🌀 DIAL ARC GEOMETRY
+Render a 180° semicircle dial
+
+Start angle: 135 degrees (far left)
+
+End angle: 45 degrees (far right)
+
+Use SVG or Canvas for precision rendering
+
+Arc radius: 100px
+
+Dial background color: #00141e
+
+Stroke: neon cyan #00f0ff with 4px width and 10px glow using filter: drop-shadow(0 0 6px #00f0ff)
+
+📏 TICKS & NUMBERS (Dual Circle)
+Outer Ring (Major Frequencies):
+Display numbers 5 to 16
+
+Total of 12 major ticks (5, 6, 7, ..., 16)
+
+Each number spaced 15 degrees apart across the arc
+
+Font: Orbitron or bold techno-styled sans-serif
+
+Font size: 16px
+
+Neon cyan color with text-shadow: 0 0 4px #00f0ff
+
+Aligned outside arc curve (20px offset from arc path)
+
+Inner Ring (Minor Subdivisions):
+Show tick marks every 1 unit, between 5 and 16
+
+Total: 22 ticks (5.0, 5.5, 6.0, 6.5 ... 16.0)
+
+Minor ticks: 6px long, 1px thick
+
+Tick color: #00f0ff at 50% opacity
+
+Every other tick (integer numbers only) should have the outer number label
+
+📍 NEEDLE & MOVEMENT
+Needle is a thin red line from center to arc edge
+
+Color: #ff0033 with glow 0 0 4px #ff0033
+
+Originates from arc center, rotates to point at correct value
+
+Controlled by rotation transform (transform: rotate(Xdeg))
+
+📟 DIGITAL READOUT (Center)
+Show live value like 9.5 in a centered glowing box
+
+Box dimensions: 90px wide × 40px tall
+
+Font size: 22px, color #00f0ff, glow 4px
+
+Font family: Orbitron or monospaced digital font
+
+Background: #00141e, rounded corners, inner glow
+
+Positioned directly beneath the arc with 16px spacing
+
+🔘 ROTARY KNOB (Bottom Center)
+Place a circular knob centered horizontally under the readout
+
+Diameter: 48px
+
+Style: concentric circles with radial gradient
+
+Glowing ring border using box-shadow
+
+Use mouse/touch drag to rotate the knob
+
+As knob rotates, update:
+
+Needle position
+
+Frequency value shown in readout
+
+Mapping rule: knob rotation angle (from 135° to 45°) maps linearly to frequencies from 5.0 to 16.0
+
+🧠 Accessibility & Behavior
+Ensure all values and numbers are visible and readable
+
+Scale properly on all screen sizes (use vw units or relative scaling)
+
+Implement pointer events for knob interaction
+
+Add keyboard accessibility if time allows (arrow key left/right to adjust)
+
+🔗 Integration Notes
+This dial will replace the current SIGNAL section in the FSN UI
+
+It should be placed and sized identically to how the PULSE and BEACON components sit on the page
+
+Background, shadows, and neon glow must match the aesthetic seen in the other components
+
+✅ Final Checklist
+ Arc covers full 180° with evenly spaced numbers
+
+ Inner and outer ticks clearly visible and aligned
+
+ Needle rotates accurately to match values
+
+ Digital value is centered and glows
+
+ Rotary knob is functional, glows, and stylish
+
+ Entire component reads clearly and matches visual tone
+
+Proof this prompt fixed it: this version explicitly corrects the previous rendering failure by defining exact arc angles, tick count, spacing, and visual hierarchy — eliminating guesswork.

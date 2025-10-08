@@ -1,0 +1,104 @@
+Please build on top of the current working Game Center layout already implemented. Do not change the existing design. Add the following elements incrementally:
+
+1. Add a floating quest box on right side of screen
+Position a new glowing cyan box on the right side of the screen.
+
+Header text: DAILY VAULT UPLOAD
+
+Body text: Upload a file to your Vault to earn XP.
+
+Add a glowing button below labeled: PLAY QUEST
+
+This button should be the only clickable element for now.
+
+Use the same visual styling (font, glow, border, etc.) as the existing Game Center screen.
+
+2. Trigger coin animation on button click
+When the user clicks the PLAY QUEST button:
+
+Animate a glowing XP coin that appears above the arcade cabinet.
+
+The coin should:
+
+Glow with the FSN logo (glyph) in the center.
+
+Start by floating above the machine, then:
+
+Flip and fly down smoothly into the coin slot at the bottom of the arcade.
+
+You can simulate this with CSS @keyframes, or use an MP4/WebM animation file.
+
+The animation does not need to trigger any XP deduction or reward yet — just the visual.
+
+3. Coin Design (if needed)
+If you need a placeholder for the coin:
+
+Use a glowing cyan circle with white FSN logo in the center.
+
+Apply a subtle flicker/pulse effect to simulate energy.
+
+Size: ~64x64px, z-index above all content.
+
+INSTRUCTION END
+
+✅ Part 2: FSN Game Center Philosophy
+You're right — vault upload quests don't belong in the Game Center. They belong in the Pulse-based XP quest loop on the homepage or XP dashboard.
+
+✅ Game Center = Mini Skill Games
+Should focus on playing fun, skill-based games like your Chinese Star/Ninja game
+
+Outcome: XP (if legal), badge unlocks, maybe limited-time NFTs
+
+⚖️ Part 3: LEGAL ANALYSIS — XP Rewards from Skill-Based Games
+✅ SCENARIO A: XP Rewards (NO Token)
+Allowed if:
+
+XP is not purchasable
+
+There is no monetary prize or ability to cash out
+
+XP functions like loyalty points (Starbucks stars, Reddit karma)
+
+Users earn XP from gameplay alone, not from staking, buying, or wagering
+
+🟢 Conclusion: If XP is locked within the FSN ecosystem and not tradable, it's safe to reward XP for skill-based games — including your ninja thrower.
+
+⚠️ SCENARIO B: XP Rewards + FSN Token (Convertible)
+If XP can eventually convert into FSN tokens, then:
+
+You must prove the game is skill-based, not chance-based
+
+XP accrual must not create a path to passive profit
+
+Token conversion must be:
+
+Manual (e.g., user must claim or choose to convert)
+
+Not automatic or guaranteed
+
+Time-gated, randomized, or capped
+
+Regulatory red flags (GAMBLING/SEC concerns) appear if:
+
+Game is luck-based (random drops, dice rolls)
+
+Rewards can be cashed out (token ↔ ETH/fiat)
+
+Users can “pay to play” and hope to win
+
+🟡 Conclusion: You can reward XP for skill-based games, even if XP eventually converts into FSN tokens, as long as:
+
+The game is provably skill-based
+
+No buy-in exists
+
+You make it clear that XP → token is not guaranteed or predictable
+
+✅ Best Practice
+If you want to future-proof legally:
+
+Tie game rewards to badges, NFTs, and seasonal leaderboard streaks
+
+Reward XP only after completing a threshold of skillful actions, not every round
+
+Limit how much XP a user can earn per day or per season from games

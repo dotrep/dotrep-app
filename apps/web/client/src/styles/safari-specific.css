@@ -1,0 +1,34 @@
+/**
+ * Simple Safari Mobile fixes for FSN
+ */
+
+/* Basic fixes for mobile Safari */
+@media screen and (max-width: 480px) {
+  /* General fixes */
+  html, body, #root {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Mobile Safari text rendering */
+  h1 {
+    font-size: 24px;
+  }
+  
+  /* Input field fixes */
+  input {
+    font-size: 16px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 8px;
+  }
+}
+
+/* Simple fix for 100vh on iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .hero, .register-page {
+    min-height: -webkit-fill-available;
+  }
+}

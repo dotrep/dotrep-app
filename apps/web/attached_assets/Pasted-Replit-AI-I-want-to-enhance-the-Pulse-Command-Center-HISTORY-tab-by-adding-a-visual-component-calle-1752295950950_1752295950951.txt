@@ -1,0 +1,81 @@
+Replit AI, I want to enhance the Pulse Command Center HISTORY tab by adding a visual component called the “Pulse Chain Constellation.” This will appear directly beneath the "Recent Pulse Activity" heading and function as a **visual activity timeline**, using glowing animated nodes connected by lines.
+
+The layout and colors should exactly match the reference screenshot provided.
+
+Here are the detailed implementation instructions:
+
+---
+
+🎨 1. UI Design
+
+- Create a new container box inside the Pulse Command Center HISTORY tab, titled:
+  **“PULSE CHAIN CONSTELLATION”**
+  Subtitle: **“Visual Activity Timeline”** (aligned right)
+- Match styling to other FSN modals: glowing cyan border, subtle gradient background.
+
+---
+
+🌌 2. Visual Animation Area (Particle Graph)
+
+- Inside the container, create a canvas or SVG-based animation area that displays glowing nodes connected by animated lines.
+- Each **node** represents a Pulse milestone (Vault, Signal, NFT, XP).
+- Use a subtle **ambient animation** where nodes glow and pulse slightly.
+- Node types:
+  - **Vault** = Cyan
+  - **Signal** = Green
+  - **NFT** = Purple
+  - **XP** = White
+
+- Connect nodes with glowing animated lines that **match the style of FSN's homepage background animation** (smooth flowing lines, not rigid).
+
+---
+
+🔍 3. Interactivity (for MVP)
+
+- Each node should be **hoverable**:
+  - Show a floating tooltip with:
+    - Event title (e.g. "Vault Upload")
+    - Date & time
+    - XP earned
+
+- Optional: Allow dragging or simple zoom if the constellation gets too large.
+
+---
+
+📊 4. Legend Display
+
+- At the bottom of the constellation box, add a **color-coded legend** that maps:
+  - 🔵 Vault
+  - 🟢 Signal
+  - 🟣 NFT
+  - ⚪ XP
+
+Use circular color swatches and Orbitron font to match FSN styling.
+
+---
+
+🧪 5. Sample Data (for demo)
+
+- For now, generate 6–8 example nodes using:
+  - Random Pulse types
+  - Sample dates (July 8–10)
+  - Sample XP (40–100)
+  - Example tooltips: “Sent secure message”, “Broadcasted at 9.00 MHz”, “Added NFT #001”
+
+---
+
+📦 6. Font and Theme Requirements
+
+- Use **Orbitron** font throughout
+- Match neon/cyan/gradient theme of all other FSN panels
+- Ensure container padding, corner radius, and glow match Pulse Command Center UI
+
+---
+
+✅ Final Output
+
+The “Pulse Chain Constellation” should appear visually under the HISTORY tab and coexist with the activity filter buttons above. It should feel immersive, alive, and futuristic — like a digital constellation evolving with the user’s reputation.
+
+Do not make it scrollable at this point. Just a contained visual with ambient animation and hover tooltips.
+
+We are not using real data yet, just placeholder examples.

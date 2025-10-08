@@ -1,0 +1,230 @@
+Core Concept: Replace the current static Home layout with a live, narrative-based, gamified identity dashboard that tracks the user’s crypto trust journey through three progressive layers: PULSE → SIGNAL → BEACON.
+
+🧠 FSN PHILOSOPHY
+This is not just a crypto dashboard. It’s a trust engine.
+Every user has a living identity composed of three signals:
+
+Pulse = Identity health & presence
+
+Signal = Behavioral trust over time
+
+Beacon = Global broadcast of that trust
+
+Users don’t “level up” once — they must stay alive, stay active, stay real.
+The system should feel alive, responsive, and forgiving — but meaningful.
+
+🛠️ CORE SYSTEM STRUCTURE
+🫀 1. PULSE
+“Is this user real, active, and stable?”
+
+Score Range: 30–100 (default: 30)
+Score Storage: Store as pulseScore (integer, 30–100)
+
+✅ Pulse Score Increases When:
+Vault is not empty
+
+First Vault upload complete
+
+Email is verified
+
+Profile picture is set
+
+Login streak ≥ 3 days
+
+.fsn name is active
+
+2FA or backup setup complete
+
+No recent flags
+
+❌ Pulse Decays When:
+User misses 3+ days (grace window: 2 days)
+
+Vault is empty
+
+Profile is reset
+
+Negative behavior detected
+
+Decay Curve:
+
+js
+Copy
+Edit
+if (inactivityDays === 3) {
+  pulseScore -= 5;
+} else if (inactivityDays >= 4 && inactivityDays <= 6) {
+  pulseScore -= 10;
+} else if (inactivityDays >= 7) {
+  pulseScore = Math.max(pulseScore - 15, 30);
+}
+✅ UI Requirements:
+Glowing circular gauge: Pulse Ring
+
+Tooltip:
+
+“Your Pulse reflects your crypto presence and identity health. Keep it strong by staying consistent.”
+
+Never drops below 30 (minimum viable signal)
+
+Animate dimming/flickering when dropping
+
+Highlight “Next Fix”:
+
+“Upload 1 file or log in today to regain Pulse stability.”
+
+📡 2. SIGNAL
+“Is this user behaving in a way that builds trust over time?”
+
+Score Range: 0–100
+Score Storage: Store as signalScore
+Key Rule:
+
+Signal is capped by Pulse.
+FinalSignal = min(rawSignalScore, pulseScore)
+
+✅ Signal Score Increases When:
+XP earned in past 7 days
+
+Upload frequency is high
+
+Referrals complete onboarding
+
+Game Center missions are completed
+
+Participates in social interactions (post, follow, like)
+
+Maintains a streak
+
+❌ Signal Decays When:
+Inactive 7+ days
+
+XP activity drops off
+
+Behavior flagged (bot, spam, fraud)
+
+Decay Curve:
+
+js
+Copy
+Edit
+if (inactivityDays >= 7) {
+  signalScore -= 10;
+}
+✅ UI Requirements:
+Horizontal Signal Gauge (like a strength meter)
+
+Dynamic glow based on strength
+
+Tooltip:
+
+“Signal = trust through action. Keep showing up to stay strong.”
+
+Show Signal throttle message:
+
+“Your Signal is being limited by Pulse. Reignite your Pulse to unlock full range.”
+
+🛰️ 3. BEACON
+“Can this user project their reputation globally across FSN?”
+
+Unlocked When:
+
+Pulse ≥ 70
+
+Signal ≥ 80
+
+Optional Trust Phase (later)
+
+Store as: beaconStatus = "locked" | "warming_up" | "active"
+
+✅ Beacon Perks:
+Appears on the FSN Global Map
+
+Airdrop eligibility (soulbound wallets only)
+
+Vault capacity boost
+
+Governance role access
+
+Advanced quests and staking
+
+🧭 UI Design:
+Grayed-out “BEACON CONSOLE” if locked
+
+Tooltip:
+
+“Your Beacon activates once you’ve proven Pulse and Signal strength. Broadcast trust globally.”
+
+Glowing ring + satellite animation once unlocked
+
+📋 XP SYSTEM (Unchanged, but more visible)
+Store as: xpTotal, xpLast7Days
+
+Show daily and weekly XP bars
+
+XP unlocks Vault upgrades, quests, and eventual FSN tokens
+
+Add line:
+
+“You’ve earned 325 XP this week. 75 XP to your next bonus.”
+
+🔄 RECOVERY & GRACE SYSTEM
+Problem	Recovery
+Pulse < 60	Show “Reignite Pulse” quest (login + upload)
+Signal capped	Show tooltip: “Improve Pulse to unlock full Signal”
+Inactive user returns	Trigger recovery animation + bonus quest
+Beacon locked	Show “Warming Up” panel with checklist
+
+Pulse should never feel like punishment.
+Always include the line:
+
+“Trust must be earned — and maintained. But it’s always recoverable.”
+
+🧠 ENGAGEMENT & TRAP AVOIDANCE (ENFORCED BY STRUCTURE)
+Trap	Countermeasure
+Loss Spiral	Pulse never drops below 30; recovery always possible
+Shame Lockout	Friendly prompts, not red flags
+Reward Cliff	Signal-based perks rotate (missions, vault skins, visibility)
+Overchoice	Only show quests based on current tier (Pulse → Signal → Beacon)
+Token Tunnel	Beacon + XP = access, but engagement is core
+Sybil/Gaming	Pulse is friction-heavy; rewards linked to time-weighted Signal
+
+✨ UI LAYOUT (STACKED DESIGN)
+scss
+Copy
+Edit
+[ USERNAME.FSN ] [ XP BAR ]
+[ PULSE RING ] 🫀 — center glowing gauge
+[ SIGNAL GAUGE ] 📡 — dynamic horizontal bar with throttle logic
+[ BEACON PANEL ] 🛰️ — locked or glowing
+[ QUEST PREVIEW ] (next action shown, e.g., “Upload to stabilize Pulse”)
+[ XP STATS ] (daily + weekly)
+[ “IDENTITY INCENTIVIZED” TAGLINE ]
+🧪 TOOLTIP + COPY LIBRARY (UX-LANGUAGE FRIENDLY)
+Pulse (weak):
+
+“Your Pulse is dimming. Log in or upload to your Vault to stabilize your signal.”
+
+Signal (capped):
+
+“Your Signal is strong — but capped by a low Pulse. Boost your identity to broadcast at full range.”
+
+Beacon (locked):
+
+“Your Beacon console is warming up. Reach Pulse 70 and Signal 80 to activate your global trust transmission.”
+
+Re-entry:
+
+“Welcome back, FreeSpacer. Your Pulse flickers — but isn’t gone. Ready to reboot?”
+
+✅ FINAL GOALS FOR REPLIT AI
+Modularize Pulse, Signal, and Beacon into reusable components
+
+All gauges must animate
+
+All scores must persist (localStorage or Firebase)
+
+All decay must trigger based on real time since last event
+
+Build for feel, not just logic — glowing rings, flickers, pulses, gradients
+

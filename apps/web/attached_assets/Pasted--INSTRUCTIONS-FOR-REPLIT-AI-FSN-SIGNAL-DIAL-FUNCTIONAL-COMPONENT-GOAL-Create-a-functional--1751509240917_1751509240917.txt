@@ -1,0 +1,176 @@
+🛠 INSTRUCTIONS FOR REPLIT AI: FSN SIGNAL DIAL (FUNCTIONAL COMPONENT)
+
+🎯 GOAL
+
+Create a functional and stylized Signal Dial Gauge with the following features:
+
+Single outer arc gauge from frequency 1.0 to 16.0
+
+A glowing red compass-style pointer needle (user-controlled)
+
+A neon blue digital readout below the dial (shows selected frequency)
+
+Pointer rotation updates in real-time as the user turns the central knob
+
+Broadcast frequency is set via the red pointer
+
+Signal strength (yellow needle) will fluctuate automatically (future step)
+
+Maintain on-brand neon look: Tron-style glowing cyan on dark background
+
+🔧 TECH STACK
+
+React (functional component)
+
+SVG (for the dial, tick marks, and needles)
+
+CSS Modules or inline styles
+
+Optional: GSAP or Framer Motion (for smooth pointer animation)
+
+Hook: onFrequencyChange(freq: number) to be triggered on update
+
+📁 FILE STRUCTURE
+
+pgsql
+Copy
+Edit
+/src/components/SignalDial/
+│
+├── SignalDial.tsx        # Main functional component
+├── SignalDial.module.css # Neon Tron-like styles
+├── dialConfig.ts         # Helper for angle/frequency conversion
+└── assets/
+    └── dialBG.svg        # Optional static dial image background (based on your locked design)
+⚙️ FUNCTIONAL BEHAVIOR
+
+Red Needle: moves based on user interaction (dragging the dial knob or clicking around the dial)
+
+Digital Display: shows the current frequency (9.5, etc.)
+
+Dial Mapping: frequency from 1.0 to 16.0 maps linearly to angle range (e.g., -130° to +130°)
+
+📐 COMPONENT SPECS
+
+🧠 SignalDial.tsx
+
+tsx
+Copy
+Edit
+import React, { useState, useRef } from 'react';
+import styles from './SignalDial.module.css';
+import { freqToAngle, angleToFreq } from './dialConfig';
+
+export default function SignalDial({ onFrequencyChange }) {
+  const [frequency, setFrequency] = useState(9.5);
+  const dialRef = useRef(null);
+
+  const handlePointerMove = (e) => {
+    const rect = dialRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const x = e.clientX - centerX;
+    const y = e.clientY - centerY;
+    const angle = Math.atan2(y, x) * (180 / Math.PI);
+    const clampedAngle = Math.max(-130, Math.min(130, angle));
+    const newFreq = angleToFreq(clampedAngle);
+    setFrequency(newFreq);
+    onFrequencyChange(newFreq);
+  };
+
+  const pointerAngle = freqToAngle(frequency);
+
+  return (
+    <div className={styles.container}>
+      <svg
+        ref={dialRef}
+        viewBox="0 0 300 200"
+        className={styles.dial}
+        onMouseMove={(e) => {
+          if (e.buttons === 1) handlePointerMove(e);
+        }}
+      >
+        {/* Background Arc */}
+        <circle cx="150" cy="150" r="100" fill="none" stroke="#0ff" strokeWidth="4" strokeDasharray="3,5" />
+
+        {/* Tick Marks */}
+        {[...Array(16)].map((_, i) => {
+          const angle = freqToAngle(i + 1);
+          const rad = (angle * Math.PI) / 180;
+          const x1 = 150 + 90 * Math.cos(rad);
+          const y1 = 150 + 90 * Math.sin(rad);
+          const x2 = 150 + 100 * Math.cos(rad);
+          const y2 = 150 + 100 * Math.sin(rad);
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#0ff" strokeWidth="2" />;
+        })}
+
+        {/* Red Compass Pointer */}
+        <line
+          x1="150"
+          y1="150"
+          x2={150 + 90 * Math.cos((pointerAngle * Math.PI) / 180)}
+          y2={150 + 90 * Math.sin((pointerAngle * Math.PI) / 180)}
+          stroke="red"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+
+        {/* Optional: dial center or glowing ring */}
+        <circle cx="150" cy="150" r="6" fill="#222" stroke="#0ff" strokeWidth="2" />
+      </svg>
+
+      {/* Frequency Display */}
+      <div className={styles.frequencyReadout}>
+        {frequency.toFixed(1)}
+      </div>
+    </div>
+  );
+}
+🧮 dialConfig.ts
+
+ts
+Copy
+Edit
+export const MIN_FREQ = 1.0;
+export const MAX_FREQ = 16.0;
+const MIN_ANGLE = -130;
+const MAX_ANGLE = 130;
+
+export function freqToAngle(freq: number): number {
+  const clamped = Math.max(MIN_FREQ, Math.min(MAX_FREQ, freq));
+  const percent = (clamped - MIN_FREQ) / (MAX_FREQ - MIN_FREQ);
+  return MIN_ANGLE + percent * (MAX_ANGLE - MIN_ANGLE);
+}
+
+export function angleToFreq(angle: number): number {
+  const clamped = Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, angle));
+  const percent = (clamped - MIN_ANGLE) / (MAX_ANGLE - MIN_ANGLE);
+  return MIN_FREQ + percent * (MAX_FREQ - MIN_FREQ);
+}
+🎨 SignalDial.module.css
+
+css
+Copy
+Edit
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #010a10;
+  padding: 2rem;
+}
+
+.dial {
+  width: 300px;
+  height: 200px;
+  filter: drop-shadow(0 0 6px #0ff);
+  cursor: grab;
+}
+
+.frequencyReadout {
+  margin-top: 1rem;
+  font-size: 2rem;
+  color: #0ff;
+  font-family: 'Orbitron', monospace;
+  text-shadow: 0 0 4px #0ff;
+}

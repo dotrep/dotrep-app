@@ -1,0 +1,79 @@
+🧠 REPLIT AI INSTRUCTION SET: XP & LEVELING SYSTEM (PHASE 0)
+Objective:
+Enhance the Pulse Command Center by implementing a visual leveling system powered by XP, with animated level indicators and progressive XP thresholds.
+
+🔧 Implementation Tasks
+1. Level Calculation Logic
+Create a leveling function that takes current XP and returns a level number.
+
+Use a basic exponential progression:
+
+plaintext
+Copy
+Edit
+Level 1 = 0–999 XP  
+Level 2 = 1000–1999 XP  
+Level 3 = 2000–3499 XP  
+Level 4 = 3500–5499 XP  
+Level 5 = 5500–7999 XP  
+Level 6 = 8000–10999 XP  
+...continue scaling as needed
+Store the user’s level as a computed property (not static), based on total XP.
+
+2. XP Ring UI Element
+On the Pulse Command Center panel (next to "Current Pulse" and "Status"), add a circular XP progress ring:
+
+Outer glow ring fills proportionally to XP progress in current level.
+
+Center shows:
+
+plaintext
+Copy
+Edit
+LEVEL  
+3
+Use Orbitron font and FSN neon styles (cyan glow, bold font).
+
+Animate the ring on XP gain (use a subtle charge-up effect).
+
+3. Microanimations + Feedback
+When XP is gained (e.g. “+50 XP”), trigger:
+
+XP number floats up and fades from the action (already partially working)
+
+Pulse ring flashes briefly with neon ripple effect
+
+If level is increased:
+
+Show “Level Up!” animation overlay near ring
+
+Add optional 🎉 emoji burst or pulse shockwave glow
+
+4. Top Right XP Display Enhancement
+Modify the existing XP indicator in the top-right nav:
+
+Change 865 XP to:
+
+plaintext
+Copy
+Edit
+Lvl 3 • 865 XP
+Hover tooltip: “Next level at 1000 XP”
+
+5. Pulse History Integration (Optional)
+In the Pulse Activity History modal, next to each XP gain, display a level badge (if level changed after that event)
+
+E.g.
++60 XP → Lvl 2
+
+🖼️ Visual Style & Branding Notes
+Font: Orbitron (or consistent FSN font used site-wide)
+
+Color:
+
+XP numbers: Electric Cyan (#00FFFF)
+
+Level Up Glow: Neon Purple or Gradient Blue Glow
+
+All animations should follow existing FSN visual language (e.g. glow trails, sci-fi gradients, minimal but fluid).
+

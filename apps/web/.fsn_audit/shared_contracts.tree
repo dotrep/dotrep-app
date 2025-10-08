@@ -1,0 +1,16 @@
+shared/
+
+contracts/
+├── contracts/
+├── scripts/
+└── deployments/
+
+public/
+├── client/
+│   └── src/
+├── games/
+│   ├── disc/
+│   └── ninja/
+├── disc-game/
+├── sounds/
+└── badges/

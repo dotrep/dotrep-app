@@ -1,0 +1,167 @@
+🔧 OBJECTIVE:
+Build the Vault homepage and a corresponding Data Manager modal system that handles file and NFT storage for the user. This is for Phase 0, so KEYS are not included.
+
+✅ VAULT PAGE (Main View) – /vault
+LAYOUT & STYLE:
+Central layout with the FSN logo inside a glowing ring at the top (reuse from Signal page).
+
+Subheader:
+SECURE VAULT
+Subtitle text below:
+Decentralized storage YOU control
+
+“YOU” should be highlighted in cyan.
+
+DATA SECTION:
+Large centered label: DATA
+
+Two category icons below:
+
+FILES (with an upload arrow icon)
+
+NFT (with an NFT wallet icon)
+
+Align both categories horizontally and evenly spaced.
+
+Clicking on either opens the Data Manager modal with the appropriate tab preselected.
+
+DESIGN SYSTEM:
+Font: Orbitron for all labels and headers.
+
+Use consistent color system: cyan glow on black with neon highlights.
+
+Background and nav bar same as rest of FSN (dark with connected starfield/lines).
+
+All icons should use SVGs that match the FSN brand style (glowing, minimalist).
+
+🔐 DATA MANAGER MODAL (Files + NFTs)
+GENERAL MODAL LAYOUT:
+Title:
+📁 Data Manager
+Subtitle:
+Secure decentralized storage view
+
+Modal should animate in (fade + slight scale-in) and have a cyan border + dark glassy background.
+
+Top-right close (X) button with glow hover effect.
+
+Modal must close:
+
+On clicking the close button
+
+On pressing Esc
+
+On clicking outside the modal
+
+🔹 TAB SYSTEM:
+Two tabs:
+
+FILES (default open)
+
+NFTS
+
+Each tab header glows on hover, and the active tab should be fully highlighted.
+
+Underline or background color for selected tab is subtle cyan glow.
+
+🗂 FILES TAB
+Table Columns:
+FILENAME	SIZE	DATE UPLOADED	ACTIONS
+
+FILENAME:
+
+Show the actual file name (truncate with ellipsis if too long).
+
+SIZE:
+
+Dynamically adjust units (KB, MB, GB).
+
+DATE UPLOADED:
+
+Format: MM/DD/YYYY
+
+Replace placeholder "Invalid Date" with working date logic.
+
+ACTIONS:
+
+Download icon (down arrow)
+
+Delete icon (trash can)
+
+Align icons horizontally within same row
+
+Hover states:
+
+Download: brighten icon
+
+Delete: icon glows red
+
+Clicking delete should trigger:
+
+Confirmation popup:
+⚠️ Are you sure you want to delete this file?
+
+EMPTY STATE:
+If no files are uploaded, show:
+
+📂 No files uploaded yet. Your Vault is empty.
+
+🖼 NFTS TAB
+For Phase 0, this is read-only display
+Show up to 12 NFTs in a 3-column grid
+
+Each NFT card shows:
+
+NFT Image (use default if unavailable)
+
+Token Name
+
+Token ID
+
+Contract Name (truncated if long)
+
+No buttons yet; display only.
+
+Add a placeholder message at bottom:
+
+🧪 NFT management coming in a future update.
+
+✨ ADDITIONAL POLISH:
+All fonts must use Orbitron
+
+Text color: FSN-branded cyan with subtle glow
+
+Modal corners: rounded (8px)
+
+Table: scrollable with fixed header row
+
+Row hover effect: low-opacity glow or slight highlight
+
+Ensure column widths are consistent and responsive
+
+🧪 TEST CONDITIONS:
+Ensure the following are tested:
+
+Files can be uploaded and listed with real metadata.
+
+File rows display correct name, size, date.
+
+Delete confirmation works and removes file.
+
+NFTs tab displays mock/test NFTs in grid format.
+
+Modal closes and opens as expected.
+
+Proper alignment of icons and headers across screen sizes.
+
+FUTURE (DO NOT BUILD YET):
+File renaming
+
+NFT click-to-view
+
+File categorization
+
+NFT sending
+
+Folder structure
+

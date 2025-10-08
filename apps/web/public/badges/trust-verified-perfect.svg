@@ -1,0 +1,37 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Perfect Trust Verified network - matches reference -->
+  <g transform="translate(100,100)">
+    <!-- Central hub node -->
+    <circle cx="0" cy="0" r="18" fill="#00f0ff" stroke="#ffffff" stroke-width="4"/>
+    <circle cx="0" cy="0" r="12" fill="#66ddff" opacity="0.7"/>
+    <circle cx="0" cy="0" r="6" fill="#ffffff"/>
+    
+    <!-- Outer network nodes -->
+    <circle cx="-45" cy="-35" r="10" fill="#00ccdd" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="45" cy="-35" r="10" fill="#00ccdd" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="-55" cy="25" r="10" fill="#00ccdd" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="55" cy="25" r="10" fill="#00ccdd" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="0" cy="50" r="10" fill="#00ccdd" stroke="#ffffff" stroke-width="2"/>
+    
+    <!-- Connection lines with data flow -->
+    <line x1="0" y1="0" x2="-45" y2="-35" stroke="#00f0ff" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="0" x2="45" y2="-35" stroke="#00f0ff" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="0" x2="-55" y2="25" stroke="#00f0ff" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="0" x2="55" y2="25" stroke="#00f0ff" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="0" x2="0" y2="50" stroke="#00f0ff" stroke-width="3" opacity="0.8"/>
+    
+    <!-- Data packets moving along lines -->
+    <circle cx="-22" cy="-17" r="2" fill="#ffffff" opacity="0.9"/>
+    <circle cx="22" cy="-17" r="2" fill="#ffffff" opacity="0.9"/>
+    <circle cx="-27" cy="12" r="2" fill="#ffffff" opacity="0.9"/>
+    <circle cx="27" cy="12" r="2" fill="#ffffff" opacity="0.9"/>
+    <circle cx="0" cy="25" r="2" fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Trust verification checkmarks -->
+    <path d="M-45,-30 L-42,-27 L-38,-33" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M45,-30 L48,-27 L52,-33" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M-55,30 L-52,33 L-48,27" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M55,30 L58,33 L62,27" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M0,55 L3,58 L7,52" stroke="#ffffff" stroke-width="2" fill="none"/>
+  </g>
+</svg>

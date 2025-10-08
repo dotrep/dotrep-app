@@ -1,0 +1,169 @@
+🔥 FSN Task #1 — Final Implementation Instructions (10,000X Version)
+🧠 PURPOSE
+Build the .fsn claim UI in your existing FSN interface. Users will:
+
+Enter a .fsn name using a frontend input
+
+Have it validated client-side against strict policy rules
+
+Submit it to the backend if it’s valid and available
+
+Automatically bind it to their identity (no wallet yet — Phase 0 soulbind via session/IP/fingerprint)
+
+Get real-time feedback on success/failure
+
+Be prevented from ever editing, reusing, or claiming a second name
+
+🔧 FILES YOU WILL MODIFY / CREATE
+File	Purpose
+/components/ClaimName.jsx	Core input and validation logic
+/firebase/initFirebase.js	Your Firebase setup file (assumed already present)
+/lib/checkReservedNames.js	New util for reserved name logic
+/pages/api/getUserIP.js	Cloud Function or API route to return IP (optional)
+Firestore rules	Enforce immutability, no updates, global uniqueness
+
+🧱 FRONTEND: THE CLAIM COMPONENT (ClaimName.jsx)
+✅ 1. Input Field (strict format with real-time enforcement)
+jsx
+Copy
+Edit
+const [fsnInput, setFsnInput] = useState('');
+const [error, setError] = useState('');
+const [success, setSuccess] = useState('');
+
+const handleInput = (e) => {
+  const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  setFsnInput(sanitized);
+};
+JSX:
+jsx
+Copy
+Edit
+<label htmlFor="fsnName">Choose your .fsn name:</label>
+<div className="fsn-claim-input">
+  <input
+    id="fsnName"
+    type="text"
+    value={fsnInput}
+    onChange={handleInput}
+    placeholder="e.g. shadowhunter"
+    minLength={3}
+    maxLength={20}
+    required
+  />
+  <span>.fsn</span>
+</div>
+{error && <p className="error">{error}</p>}
+{success && <p className="success">{success}</p>}
+<button onClick={handleClaim}>Claim Now</button>
+✅ 2. Validation Logic (use constants + shared utils)
+js
+Copy
+Edit
+const reservedNames = ['admin', 'coinbase', 'fsn', 'nazi', 'root', 'support'];
+
+const isValidFsnName = (name) => {
+  const regex = /^[a-z0-9-]{3,20}$/;
+  return regex.test(name) && !reservedNames.includes(name);
+};
+🔐 BACKEND: CLAIM PROCESSING LOGIC
+Assume Firebase is already initialized. In handleClaim():
+
+js
+Copy
+Edit
+const handleClaim = async () => {
+  const name = fsnInput.toLowerCase();
+  const fullName = `${name}.fsn`;
+
+  if (!isValidFsnName(name)) {
+    setError("Invalid name. Use 3–20 lowercase letters, numbers, or hyphens only.");
+    return;
+  }
+
+  const fsnDoc = doc(db, 'fsnNames', fullName);
+  const docSnap = await getDoc(fsnDoc);
+  if (docSnap.exists()) {
+    setError("This name is already claimed.");
+    return;
+  }
+
+  const user = auth.currentUser;
+  const uid = user?.uid;
+  if (!uid) {
+    setError("You must be logged in to claim.");
+    return;
+  }
+
+  // Optional: get IP address via Cloud Function
+  const ipRes = await fetch('/api/getUserIP');
+  const { ip } = await ipRes.json();
+
+  const fingerprint = await generateDeviceFingerprint();
+
+  await setDoc(fsnDoc, {
+    owner: uid,
+    ip,
+    fingerprint,
+    claimedAt: serverTimestamp(),
+    xpAtClaim: await fetchUserXP(uid),
+    email: user.email || null,
+  });
+
+  await updateDoc(doc(db, 'users', uid), {
+    fsnName: fullName,
+  });
+
+  setSuccess(`You’ve successfully claimed ${fullName}`);
+};
+🧬 IDENTITY BINDING STRATEGY (NO WALLET YET)
+Until Phase 1, each .fsn name must be soulbound to a non-wallet ID set:
+
+Firebase UID (primary)
+
+IP address at claim
+
+Device fingerprint (via client lib like fingerprintjs2)
+
+Email (optional)
+
+XP level at claim (for audit trail)
+
+⚠️ FIRESTORE SECURITY RULES
+In firestore.rules, enforce soulbound immutability:
+
+js
+Copy
+Edit
+match /fsnNames/{name} {
+  allow create: if request.auth != null && !exists(/databases/$(database)/documents/fsnNames/$(name));
+  allow update: if false;  // No edits allowed
+  allow delete: if false;
+}
+Also prevent .fsn collisions:
+
+js
+Copy
+Edit
+function isUniqueName(name) {
+  return !exists(/databases/$(database)/documents/fsnNames/$(name));
+}
+♻️ PHASE 0: NO REUSE OR DELETION
+All names once claimed are permanent.
+
+No reclaim
+
+No release button
+
+No second name field in any profile settings
+
+Locked in database
+
+🔒 ADMIN OVERRIDE (OPTIONAL)
+If you want an admin override panel:
+
+Create a separate admin.fsnReview page (auth protected)
+
+Allow override of inappropriate names
+
+Log manual removals to auditLogs collection

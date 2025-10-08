@@ -1,0 +1,11 @@
+# This is a placeholder text file for the signal unlock sound effect
+# To complete the implementation, replace this text file with an actual .mp3 audio file
+# The audio should be a short (1-3 second) futuristic/sci-fi notification sound
+# Some suggested sounds:
+# - Rising electronic tone with reverb
+# - Sci-fi computer beep/chirp
+# - Soft synthesizer pulse
+# - Metallic "unlock" chime
+
+# For testing purposes, the SignalUnlockModal will attempt to play this file
+# but will gracefully handle the error if no audio file is present

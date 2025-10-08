@@ -1,0 +1,97 @@
+✅ XP POPUP SYSTEM — FULL IMPLEMENTATION GUIDE (DESCRIPTIVE)
+👀 WHAT WE’RE BUILDING
+We want to let users click the XP counter on the top-right of the Home page, which will open a glowing modal popup that displays:
+
+Their total XP
+
+Their current level
+
+A glowing XP progress bar
+
+Their XP boost based on Pulse Hz
+
+A short log of recent XP events
+
+A close button to dismiss the modal
+
+🔧 HIGH-LEVEL BEHAVIOR
+This modal only appears on the Home page
+
+Clicking the XP counter (e.g., “325 XP” in the top-right) should trigger it
+
+The modal should overlay the full screen, be dark-glass styled, and centered
+
+XP boost and level logic are calculated from props/state (not hardcoded)
+
+🧠 WHAT FILES TO CREATE OR MODIFY
+1. 📁 Create: src/components/XPModal.jsx
+This is a React modal component
+
+It should accept the following props:
+
+xp (total XP, e.g., 2350)
+
+level (e.g., 4)
+
+xpToNext (XP needed for next level, e.g., 3050)
+
+xpBoost (percentage, e.g., 15)
+
+recentLogs (array of XP events)
+
+onClose (function to close modal)
+
+2. 📁 Create: src/components/XPModal.css
+This CSS file styles the XP modal
+
+Key elements:
+
+A dark glass overlay
+
+A glowing, Tron-style popup card
+
+An XP progress bar
+
+A styled close button
+
+3. ✏️ Modify: src/pages/Home.jsx (or wherever Pulse/Signal/Beacon are rendered)
+In this file:
+
+Locate the XP counter element (top-right of page — shows 325 XP)
+
+Wrap this element in a <div> or <button> and add an onClick handler to show the modal
+
+Add a React useState variable:
+
+showXPModal — true/false toggle for displaying the modal
+
+When the modal is visible:
+
+Render the <XPModal /> component and pass mock XP values (or real ones if available)
+
+4. 📁 (Optional) Modify: XPContext.jsx or XPProvider (if you're using a global XP system)
+If you're storing user XP in context or Firebase:
+
+Pull that value into Home.jsx so the modal displays live XP
+
+Same for XP logs and pulse-based XP boost
+
+🧪 TESTING INSTRUCTIONS
+After implementation:
+
+Run the app and go to the Home page
+
+Click the “325 XP” in the top-right
+
+A modal should fade in and show XP stats
+
+Click “×” to close the modal
+
+🎨 BONUS UI BEHAVIOR
+XP bar animates from 0% → progress (use width: ${xpPercentage}%)
+
+Hovering over XP boost should show:
+
+“Pulse: 82Hz → +15% XP earned”
+
+Modal glows in neon blue (or cyan) with soft shadow

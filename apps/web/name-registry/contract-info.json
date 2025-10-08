@@ -1,0 +1,17 @@
+{
+  "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "note": "Mock address for development - replace with actual deployed contract",
+  "chainId": 84532,
+  "network": "base-sepolia",
+  "rpcUrl": "https://sepolia.base.org",
+  "abi": [
+    "function registerName(string memory name) external",
+    "function getOwner(string memory name) external view returns (address)",
+    "function getName(address owner) external view returns (string memory)",
+    "function isNameAvailable(string memory name) external view returns (bool)",
+    "function nameExistsInRegistry(string memory name) external view returns (bool)",
+    "function transferName(string memory name, address to) external",
+    "event NameRegistered(string indexed name, address indexed owner)",
+    "event NameTransferred(string indexed name, address indexed from, address indexed to)"
+  ]
+}

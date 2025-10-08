@@ -1,0 +1,67 @@
+🧠 REPLIT AI INSTRUCTION SET: VAULT UPGRADE SYSTEM (PHASE 0)
+Objective:
+Create a system that limits user storage in the Vault (both Files and NFTs) based on their XP and incentivizes progression by unlocking more storage tiers.
+
+🔧 Backend Logic
+1. Vault Tier Structure Based on XP
+Define storage tiers as follows:
+
+json
+Copy
+Edit
+[
+  { "tier": 1, "max_files": 5, "max_nfts": 1, "required_xp": 0 },
+  { "tier": 2, "max_files": 10, "max_nfts": 3, "required_xp": 250 },
+  { "tier": 3, "max_files": 25, "max_nfts": 10, "required_xp": 750 },
+  { "tier": 4, "max_files": 50, "max_nfts": 25, "required_xp": 2000 },
+  { "tier": 5, "max_files": 100, "max_nfts": 50, "required_xp": 5000 }
+]
+Use user XP total to determine current tier
+
+Vault upload buttons should check tier limits before allowing upload
+
+📦 File Upload Check Logic
+On file or NFT upload attempt:
+
+✅ If below max: proceed
+
+❌ If limit reached:
+
+Show modal: “Upgrade your Vault by earning more XP”
+
+Include a glowing XP progress bar: “XP 415 / 750” (for next tier)
+
+🎮 UI Update: Vault Page
+Update the main Vault landing page:
+
+Display user’s Current Vault Tier (e.g. “Tier 2 — Explorer”)
+
+Show XP progress bar toward next tier
+
+Below each button (Upload File, Add NFT), show current count:
+
+e.g. “6 / 10 Files”, “2 / 3 NFTs”
+
+Optional: Add tier nickname (e.g. "Explorer", "Sentinel", "Archivist") under the tier label.
+
+🎨 UI Design Details
+Match style of Pulse modal: neon blue rings, cyan XP bar, clean labels
+
+Tier badge or label should glow slightly
+
+XP progress bar should animate when XP increases
+
+🔐 Data Handling
+Store current tier + upload counts in state (or local storage for demo)
+
+XP is assumed to be already tracked globally; reuse this state
+
+NFT upload logic should also check against current NFT cap
+
+🧲 Bonus Hook (Optional Prep)
+Prepare an upgrade modal or animation for future token-gated premium tier:
+
+Add placeholder button or trigger: “Boost with FSN Token (Coming Soon)”
+
+This will let us later add paid tiers without rebuilding the system
+

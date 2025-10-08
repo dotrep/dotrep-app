@@ -1,0 +1,83 @@
+Webpage Design Description
+Overall Layout and Background
+The webpage has a futuristic, tech-centric aesthetic with a dark, cosmic theme. The background is a deep navy blue (hex code approximately #0A1A2F) with a subtle grid-like pattern of faint cyan lines (hex code approximately #1E4A6F) forming a network of interconnected nodes. These nodes are small, glowing cyan dots (hex code #00D4FF) at the intersections of the grid lines, giving a sense of a decentralized network. The grid lines are semi-transparent (opacity around 0.3) and spaced evenly, roughly 50px apart, creating a subtle, non-intrusive backdrop that evokes a blockchain or Web3 theme.
+The content is centered both vertically and horizontally on the page, ensuring a clean and balanced layout. The design is responsive, meaning it should scale appropriately for desktop, tablet, and mobile devices, maintaining the centered alignment and spacing.
+Logo and Header Section
+At the top-left of the centered content block, place the FreeSpace Network logo. The logo consists of two parts:
+Icon: A circular emblem with a diameter of 60px. The circle has a 2px thick border in a bright cyan (hex code #00D4FF). Inside the circle, there is a stylized "S" shape, also in cyan, with a futuristic, angular design. The "S" has a slight gradient, transitioning from a lighter cyan (#00D4FF) at the top to a darker cyan (#00A4D4) at the bottom.
+
+Text: To the right of the circle, the words "FreeSpace Network" in a bold, uppercase, sans-serif font (e.g., "Montserrat" or "Poppins" in bold). The font size is 36px, and the color is the same bright cyan (#00D4FF). The letter spacing is slightly increased (around 2px) to give a modern, open look. The text is vertically aligned with the center of the circular emblem, with a 20px gap between the circle and the text.
+Main Headline
+Below the logo, with a 40px vertical gap, place the main headline: "Crypto starts with your .fsn name". This text is the focal point of the page and should be styled as follows:
+Font: Use a bold, uppercase, sans-serif font (e.g., "Montserrat" or "Poppins" in extra-bold). The font size is 72px for desktop, scaling down to 48px on mobile.
+
+Color: The entire text is in the same bright cyan (#00D4FF) as the logo, with a subtle glow effect. Apply a CSS text-shadow with the following properties: 0 0 10px #00D4FF, 0 0 20px #00D4FF, 0 0 30px #00D4FF. This gives the text a neon-like, futuristic glow.
+
+Line Break: The text is split into two lines: "Crypto starts with" on the first line, and "your .fsn name" on the second. The ".fsn" portion of the second line should be slightly bolder and larger (font size 80px on desktop, 56px on mobile) to emphasize the domain extension.
+
+Alignment: The text is centered horizontally within the content block.
+Subtext Section
+Below the headline, with a 30px vertical gap, add the subtext: "Claim your Web3 ident'ty. Earn XP. Emit your signal." This section is styled as follows:
+Font: Use a lighter, sans-serif font (e.g., "Montserrat" or "Poppins" in regular weight). The font size is 24px for desktop, scaling to 18px on mobile.
+
+Color: The text is in the same bright cyan (#00D4FF), but without the glow effect applied to the headline.
+
+Layout: The subtext is broken into three short sentences, each on its own line. Use a line height of 1.5 (approximately 36px on desktop) to space the lines. The text is centered horizontally.
+
+Special Character Note: The word "ident'ty" has an intentional apostrophe between "t" and "y". Ensure this is preserved exactly as shown.
+Hexagon and .fsn Element
+To the right of the subtext, with a 40px horizontal gap, place a hexagonal element containing the text ".fsn". This element should be visually striking and dynamic:
+Hexagon Shape: Create a hexagonal container with a width and height of 120px. The hexagon should have a 3px thick border in bright cyan (#00D4FF). The background inside the hexagon is transparent, allowing the grid-like background to show through.
+
+Text Inside Hexagon: The text ".fsn" is centered within the hexagon. Use a bold, uppercase, sans-serif font (e.g., "Montserrat" or "Poppins" in bold). The font size is 36px, and the color is bright cyan (#00D4FF). Add a subtle glow effect to the text with a text-shadow of 0 0 5px #00D4FF.
+
+Glowing Pulse Animation: The hexagon border should have a subtle, pulsing glow effect. Use CSS animations to achieve this:
+Animation Name: pulseGlow
+
+Duration: 2 seconds
+
+Timing: ease-in-out
+
+Iteration: Infinite
+
+Keyframes:
+At 0% and 100%, the box-shadow is 0 0 5px #00D4FF.
+
+At 50%, the box-shadow is 0 0 15px #00D4FF, 0 0 25px #00D4FF.
+This creates a smooth, subtle pulsing effect that makes the hexagon appear to glow rhythmically.
+Claim Button
+Below the subtext and hexagon (with a 50px vertical gap), place a call-to-action button with the text "Claim your .fsn name". The button should be styled and function as follows:
+Appearance:
+Shape and Size: The button is a rounded rectangle with a border radius of 25px. The width is 300px, and the height is 60px.
+
+Border: The button has a 2px thick border in bright cyan (#00D4FF).
+
+Background: The background is transparent, showing the grid-like background through it.
+
+Text: The text "Claim your .fsn name" is centered inside the button. Use a bold, uppercase, sans-serif font (e.g., "Montserrat" or "Poppins" in bold). The font size is 20px, and the color is bright cyan (#00D4FF). Add a subtle glow effect with a text-shadow of 0 0 5px #00D4FF.
+
+Hover Effect: On hover, the button should fill with a semi-transparent cyan background (hex code #00D4FF with opacity 0.2), and the glow effect on the text should intensify (text-shadow: 0 0 10px #00D4FF, 0 0 20px #00D4FF).
+Functionality:
+When the user clicks the button, it should trigger a modal popup (not a page redirect). The modal should be centered on the screen and have the following properties:
+Modal Background: A semi-transparent dark overlay (hex code #0A1A2F with opacity 0.8) that covers the entire screen.
+
+Modal Content: A white rectangular box with rounded corners (border radius 10px), 500px wide and 300px tall. The background is pure white (#FFFFFF), and the text inside is black (#000000).
+
+Modal Text: Inside the modal, display a simple message: "Enter your desired .fsn name". Below this, include a text input field (width 400px, height 40px, border 1px solid #000000) and a "Submit" button (styled similarly to the "Claim" button but smaller: 150px wide, 40px tall, with black text and a 1px black border).
+
+Modal Close: Add a small "X" button in the top-right corner of the modal (20px from the top, 20px from the right). The "X" is black and turns red (#FF0000) on hover. Clicking it closes the modal.
+
+Submit Behavior: When the user enters a name and clicks "Submit", the modal should close, and a success message should appear on the main page below the "Claim" button (e.g., "Success! Your .fsn name has been claimed."). This message should be in cyan (#00D4FF), 18px, and fade in over 0.5 seconds.
+Responsiveness
+Desktop: As described above.
+
+Tablet (768px - 1024px): Reduce font sizes by 20% (e.g., headline from 72px to 58px). Reduce the hexagon size to 100px and the button width to 250px. Adjust vertical gaps by 10px less (e.g., 40px becomes 30px).
+
+Mobile (below 768px): Stack all elements vertically (logo, headline, subtext, hexagon, button). Reduce font sizes by 40% (e.g., headline to 48px). Hexagon size becomes 80px, and button width becomes 200px. Vertical gaps are reduced to 20px.
+Additional Notes
+Ensure all cyan elements (#00D4FF) are consistent across the page for a cohesive look.
+
+The pulsing glow on the hexagon should be subtle and not distract from the main content.
+
+The modal popup should be accessible, with proper ARIA labels and keyboard navigation support (e.g., pressing "Esc" to close the modal).
+

@@ -1,0 +1,131 @@
+✅ FINAL INSTRUCTIONS FOR REPLIT AI (WITH fsnvault.com)
+DO THIS EXACTLY. NO IMPROVISATION. NO SKIPPING STEPS.
+
+🧱 STEP 1 — Define the .fsn Identity Layer
+Create a users.json or users table in your DB with:
+json
+Copy
+Edit
+{
+  "user_id": "u_001",
+  "fsn_name": "jason.fsn",               // required
+  "email_alias": "jason.fsn@fsnvault.com", // optional but now valid
+  "vault_id": "vault_jason",
+  "messages": [],
+  "files": []
+}
+✅ The field fsn_name is the user’s official handle
+✅ Must be globally unique — only one jason.fsn allowed
+
+📤 STEP 2 — Send a File or Message Using .fsn Handles (No Email Involved)
+In the dashboard, create a form for logged-in users:
+Fields:
+
+📍 Input: Send to .fsn → user types jason.fsn
+
+📝 Message textarea (optional)
+
+📁 File upload (optional)
+
+🔘 Send button
+
+When user clicks "Send":
+✅ Look up the recipient’s fsn_name in the DB
+
+✅ If match found, store the message + file in the recipient’s vault inbox
+
+❌ If not found, show error: "No such user"
+
+📥 STEP 3 — Store Message and File in the Recipient's Vault
+Save the message like this:
+
+json
+Copy
+Edit
+{
+  "from": "sendername.fsn",
+  "to": "jason.fsn",
+  "timestamp": "2025-05-19T20:12:00Z",
+  "message": "Here's your file",
+  "file_url": "/uploads/filename.pdf"
+}
+Append to:
+
+js
+Copy
+Edit
+recipient_user.messages.push(the_message)
+✅ This must live inside your FSN system — no external email used yet
+
+🧠 STEP 4 — Build Inbox View for Each User
+On the dashboard:
+
+Show a list of messages where:
+
+js
+Copy
+Edit
+to === loggedInUser.fsn_name
+Display:
+
+Sender
+
+Message
+
+File link (if any)
+
+Timestamp
+
+🔐 STEP 5 — Validate + Sanitize Everything
+✅ Reject .fsn sends to self (optional)
+
+✅ Sanitize message content (no <script>, no raw HTML)
+
+✅ Strip filename of special characters
+
+✅ Save files to a safe uploads/ folder or mock S3 bucket
+
+📧 STEP 6 — ENABLE EMAIL COMPATIBILITY WITH fsnvault.com (OPTIONAL)
+You now own fsnvault.com, so future emails to jason.fsn@fsnvault.com can be routed to your app.
+
+DO NOT set this up yet — just reserve it in the user data:
+
+json
+Copy
+Edit
+"email_alias": "jason.fsn@fsnvault.com"
+This will let you later:
+
+Accept external file drops via SendGrid
+
+Notify users via branded email
+
+Allow inbound emails to land in vaults
+
+🧪 STEP 7 — Test Scenarios
+From	To	Expected Result
+alice.fsn	bob.fsn	Message and file show in bob's vault inbox
+alice.fsn	nonexistent.fsn	❌ Error: no such user
+External Email → bob.fsn@fsnvault.com	✅ Works later via SendGrid inbound (not now)	
+
+✅ SUCCESS CHECKLIST
+ fsn_name is the user's official identity
+
+ Users can message/send files to other .fsn users
+
+ Vault inbox shows correct messages
+
+ File uploads are clean and secure
+
+ No external email is used (yet)
+
+ fsnvault.com is reserved and ready for later email features
+
+ System is private, scoped, branded, and tight
+
+🧠 BONUS (IF USER WANTS TO ADD):
+Auto-suggest .fsn names from known users as you type
+
+Show profile previews or badges for fsn_name
+
+Allow nickname lookup (e.g., send to "Jason" resolves to jason.fsn

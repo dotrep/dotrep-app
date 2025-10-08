@@ -1,0 +1,79 @@
+✅ Replit Instructions: Final Signal + Beacon Polish
+1. 🔧 Fix Beacon Label Overlap
+Problem: “Total Broadcasts: 13” overlaps the BEACON label
+Fix Instructions:
+
+Move the Total Broadcasts text upward by 20–30px from its current Y position.
+
+Reduce its font size to 80% of the BEACON label font (if BEACON is 24px, use ~18px).
+
+Set the font color to a less bright cyan (e.g. #4fffe2) to create hierarchy beneath the main label.
+
+Use Orbitron font, weight 400 or 500.
+
+Ensure responsive alignment on smaller screens — anchor to top of Beacon panel container.
+
+2. ⚡️ Add Interactivity to Beacon Bars
+Goal: Make each beacon bar clickable, showing info about that broadcast.
+
+Instructions:
+
+Wrap each beacon bar div in a button or <div class="beacon-bar" data-frequency="XX" data-timestamp="XX">.
+
+On hover, slightly brighten the bar (opacity: 1.0, transform: scaleY(1.1)).
+
+On click, open a glowing tooltip modal (styled like XP or Pulse modals) that displays:
+
+yaml
+Copy
+Edit
+📡 Frequency: 9.00 MHz  
+🕒 Last Cast: 07/10/25 @ 09:17  
+💠 XP Gained: +40 XP
+Tooltip Modal Design:
+
+Dark blue glassy background with #0ff glow.
+
+Same style as “Pulse Boost” popup, with rounded corners and a slight drop shadow.
+
+Close button in top-right with × icon using Orbitron font.
+
+3. 🌊 Signal Interaction Feedback (CAST Mode)
+When the user hits CAST, give immediate broadcast feedback:
+
+Flash a white-blue pulse ring outward from the Signal console.
+
+Style: circular div (border: 2px solid #0ff; border-radius: 50%)
+
+Animate via CSS @keyframes to expand from center (scale 1 → 3) and fade (opacity 1 → 0) over 0.5s.
+
+Simultaneously, trigger a Beacon bar rise animation:
+
+Bar grows upward with transform: scaleY(0 → 1) and opacity: 0 → 1 over 0.3s.
+
+Sync with a sound (if using audio, optional low-volume “broadcast ping” fx).
+
+4. 🎚 Update XP on Broadcast
+When the CAST is successful:
+
+Add +25 XP (or whatever your rate is) to the XP counter.
+
+Animate the XP counter in the top-right:
+
+Flash glow for 0.5s on the number.
+
+Animate +25 XP in small Orbitron font floating upward briefly beside the counter before fading.
+
+5. 🛠 Add Lock + Unlock Logic for Frequencies
+Ensure the LOCK function disables keypad interaction:
+
+When in LOCKED mode, disable input buttons (pointer-events: none, opacity: 0.4)
+
+Show “🔒 Locked at: 13.0, 9.0 MHz” in the top panel in purple text (#d35fff)
+
+When clicking UNLOCK:
+
+Re-enable inputs
+
+Animate lock button to fade and disappear (or toggle into a “LOCK” button)
+

@@ -1,0 +1,231 @@
+1. 🧭 Build a Rank + Badge XP System UI Component
+⛏️ Task:
+Create a UI module on the Dashboard that shows:
+
+Current XP
+
+Progress bar
+
+Current Rank (e.g., Explorer, Pathfinder, etc.)
+
+List of unlockables (XP rewards, vault cosmetics, etc.)
+
+🛠️ Implementation:
+Create a file:
+
+Copy
+Edit
+components/XPProgressCard.js
+Paste this in:
+
+jsx
+Copy
+Edit
+import { Progress } from "@/components/ui/progress";
+
+export default function XPProgressCard({ xp = 420, level = "Explorer" }) {
+  const nextLevelXP = 1000; // example threshold
+  const percent = (xp / nextLevelXP) * 100;
+
+  return (
+    <div className="bg-gray-900 text-white p-4 rounded-2xl shadow-md w-full max-w-md mx-auto">
+      <h2 className="text-xl font-bold mb-2">XP Progress</h2>
+      <p className="text-sm mb-1">Current Rank: <span className="font-semibold">{level}</span></p>
+      <Progress value={percent} />
+      <p className="text-sm mt-2">{xp} XP / {nextLevelXP} XP to next level</p>
+
+      <div className="mt-4">
+        <h3 className="font-semibold mb-1">Upcoming Unlocks</h3>
+        <ul className="list-disc list-inside text-sm space-y-1">
+          <li>Vault Skin: Holo Gradient</li>
+          <li>New Rank: Pathfinder</li>
+          <li>Badge: “Signal Rookie”</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+Then render it inside your Dashboard.js:
+
+jsx
+Copy
+Edit
+import XPProgressCard from "@/components/XPProgressCard";
+
+// Inside your Dashboard component
+<XPProgressCard />
+2. 🔥 Create a Placeholder Forge Page
+⛏️ Task:
+Make a new page called Forge with the text:
+
+“Lock XP or NFTs here to transform them. Coming soon.”
+
+🛠️ Implementation:
+Create the page:
+
+bash
+Copy
+Edit
+pages/forge.js
+Paste this:
+
+jsx
+Copy
+Edit
+export default function Forge() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center p-8 max-w-lg">
+        <h1 className="text-3xl font-bold mb-4">The Forge</h1>
+        <p className="text-lg mb-2">
+          Lock XP or NFTs here to transform them.
+        </p>
+        <p className="text-gray-400">Coming soon.</p>
+      </div>
+    </div>
+  );
+}
+Optional: Add this to your top nav or sidebar:
+
+jsx
+Copy
+Edit
+<Link href="/forge" className="hover:underline">Forge</Link>
+3. 📬 Add Early Access Waitlist CTA (if not already)
+⛏️ Task:
+Create a basic CTA to capture:
+
+Email address
+
+First + Last name
+
+Bonus: Add subtext:
+
+“Join the waitlist for a chance to win part of the $100,000 FSN giveaway.”
+
+🛠️ Implementation:
+Create a file:
+
+Copy
+Edit
+components/WaitlistForm.js
+Paste this:
+
+jsx
+Copy
+Edit
+export default function WaitlistForm() {
+  return (
+    <div className="bg-gray-800 text-white p-6 rounded-2xl w-full max-w-md mx-auto">
+      <h2 className="text-xl font-bold mb-3">Join the FSN Waitlist</h2>
+      <p className="text-sm text-gray-300 mb-4">Enter for early access + chance to win from the $100,000 FSN giveaway.</p>
+      <form className="space-y-3">
+        <input type="text" placeholder="First Name" className="w-full p-2 rounded bg-gray-700" />
+        <input type="text" placeholder="Last Name" className="w-full p-2 rounded bg-gray-700" />
+        <input type="email" placeholder="Email Address" className="w-full p-2 rounded bg-gray-700" />
+        <button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl font-bold">
+          Join Now
+        </button>
+      </form>
+    </div>
+  );
+}
+Then render it in homepage.js or /index.js:
+
+jsx
+Copy
+Edit
+import WaitlistForm from "@/components/WaitlistForm";
+<WaitlistForm />
+4. 🧳 Create “My Passport” Section
+⛏️ Task:
+A dashboard tab showing XP milestones organized by category:
+
+Save / Build / Store / Transact
+
+Show earned stamps
+
+🛠️ Implementation:
+Create a file:
+
+Copy
+Edit
+components/MyPassport.js
+Paste this:
+
+jsx
+Copy
+Edit
+export default function MyPassport() {
+  const categories = {
+    Save: ["Staked BTC", "Completed savings goal"],
+    Build: ["Joined mining quest"],
+    Store: ["Uploaded 1st file", "Secured vault"],
+    Transact: ["Made 1st crypto deposit"],
+  };
+
+  return (
+    <div className="bg-gray-900 text-white p-6 rounded-2xl max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">My Passport</h2>
+      {Object.entries(categories).map(([section, items]) => (
+        <div key={section} className="mb-4">
+          <h3 className="text-xl mb-2 underline">{section}</h3>
+          <ul className="list-disc list-inside space-y-1">
+            {items.map((item, idx) => (
+              <li key={idx}>{item} ✅</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+Render it inside your dashboard or under /passport.js:
+
+jsx
+Copy
+Edit
+<MyPassport />
+5. 🪙 Clarify Early Tokenomics in UI (Soft Opt-In)
+⛏️ Task:
+Display small banner to remind users:
+
+“You’re earning XP that may become FSN tokens. Airdrop claim coming soon.”
+
+🛠️ Implementation:
+Create a file:
+
+Copy
+Edit
+components/TokenomicsBanner.js
+Paste this:
+
+jsx
+Copy
+Edit
+export default function TokenomicsBanner() {
+  return (
+    <div className="bg-yellow-500 text-black text-sm p-3 text-center font-semibold rounded-xl shadow">
+      🚀 You’re earning XP that may become FSN tokens. Airdrop claim coming soon!
+    </div>
+  );
+}
+Place it at top of dashboard:
+
+jsx
+Copy
+Edit
+<TokenomicsBanner />
+✅ Done
+This gives you:
+
+✔ XP rank system with unlockable preview
+
+✔ Forge page with future-proofing
+
+✔ Early access form tied to giveaway
+
+✔ Passport section grouped by function
+
+✔ Tokenomics teaser for future drops
+

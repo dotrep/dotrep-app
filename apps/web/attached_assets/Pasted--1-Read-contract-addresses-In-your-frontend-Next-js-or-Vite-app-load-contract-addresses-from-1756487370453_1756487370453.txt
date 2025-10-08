@@ -1,0 +1,71 @@
+	1.	Read contract addresses
+
+	•	In your frontend (Next.js or Vite app), load contract addresses from the JSON written in /contracts/deployments/local.json.
+	•	Structure of JSON:
+{ “Registry”: “0x…”, “Points”: “0x…”, “Files”: “0x…” }
+	•	Use an env variable to choose which JSON: local.json for APP_MODE=STEALTH, base-sepolia.json for PUBLIC.
+
+	2.	Wire wagmi/viem clients
+
+	•	Create a viem config that reads the RPC URL from env:
+	•	LOCAL_RPC_URL when APP_MODE=STEALTH (http://127.0.0.1:8545).
+	•	BASE_SEPOLIA_RPC_URL or BASE_MAINNET_RPC_URL when APP_MODE=PUBLIC.
+	•	Supported connectors:
+	•	STEALTH: only MetaMask + WalletConnect.
+	•	PUBLIC: add Coinbase Wallet too.
+
+	3.	Claim flow
+
+	•	Replace /api/fsn/checkAvailability with a direct contract read: call Registry.ownerOf(name).
+	•	If the return is 0x000…0, show “available.”
+	•	On claim: call Registry.register(name) with the connected wallet.
+	•	After tx confirms, mirror the claim to your Postgres/Supabase table (fsnDomains) so your leaderboard/XP logic stays fast.
+
+	4.	XP + streaks
+
+	•	Your backend already increments streaks. Extend it so once/day (cron or edge function), it also calls Points.award(user, amount, actionId).
+	•	On the frontend, swap /api/user/stats polling for a contract read: Points.totalOf(address).
+	•	Keep your DB for streaks and history, but display contract total XP for credibility.
+
+	5.	Vault uploads
+
+	•	After encrypt + pin to IPFS, call Files.pin(bytes32 cid) from the connected wallet.
+	•	Mirror the CID into your DB table vaultItems.
+	•	In STEALTH, skip the on-chain pin and just store in DB. In PUBLIC, enable the contract call.
+
+	6.	Kill the 5-second poll
+
+	•	Delete the /api/user/stats interval refresh.
+	•	Replace with:
+	•	Refresh stats when wallet connects.
+	•	Listen for events:
+	•	Registry: Registered → refetch name state.
+	•	Points: Awarded → refetch XP.
+	•	Files: Pinned → refetch vault items.
+	•	Wagmi/viem can subscribe to logs so you only fetch on new events.
+
+	7.	Leaderboards
+
+	•	Keep rendering from DB (fast queries).
+	•	Add a “verify” button for power users that cross-checks XP and ownership on chain.
+
+	8.	Error handling
+
+	•	Claim flow: show friendly error if name taken or wallet already registered.
+	•	XP award: ignore duplicate actionIds (contract will revert if reused).
+	•	Vault: reject invalid CIDs before sending tx.
+
+	9.	Test in STEALTH
+
+	•	Run local node (npm run node), deploy contracts (npm run deploy:local).
+	•	Connect MetaMask to 127.0.0.1:8545 with the Hardhat test accounts.
+	•	Claim a test name, award XP via backend cron, pin a fake CID.
+	•	Verify that your frontend reacts instantly to events and no background polling is running.
+
+	10.	Ready to flip PUBLIC
+
+	•	Change APP_MODE=PUBLIC, point to Base Sepolia RPC.
+	•	Re-deploy contracts with npm run deploy:sepolia.
+	•	Swap the deployments file to base-sepolia.json.
+	•	Enable Coinbase Wallet connector and explorer links.
+	•	Now your app talks directly to Base, but only when you’re ready.

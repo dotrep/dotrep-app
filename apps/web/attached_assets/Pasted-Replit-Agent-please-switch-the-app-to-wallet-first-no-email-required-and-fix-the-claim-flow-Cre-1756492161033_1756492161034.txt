@@ -1,0 +1,89 @@
+Replit Agent, please switch the app to wallet-first (no email required) and fix the claim flow.
+
+Create env flags
+
+In project Secrets, set:
+APP_MODE=STEALTH
+EMAIL_ENABLED=false
+EMAIL_REQUIRED_FOR_CLAIM=false
+
+Remove email gate in backend
+
+Search the backend (server/api folders) for any middleware or checks named like:
+requireEmailVerified, emailVerified, isEmailVerified, EMAIL_REQUIRED_FOR_CLAIM
+
+For every claim- or user-create route (paths likely containing “claim”, “fsn”, “user”, “createAccount”):
+• Delete or bypass the email verification requirement.
+• Ensure a user row can be created with only wallet address (email nullable).
+
+If there is a route that creates a user only after email is verified, change it so a user row is created on first wallet connect or on first successful claim.
+
+Make email optional in DB
+
+Locate DB schema/migrations where users table is defined.
+
+Ensure users.email is nullable and NOT used in any unique constraint required for claiming a name.
+
+Keep users.address UNIQUE. Keep fsnDomains.name UNIQUE.
+
+Wallet = source of truth
+
+Ensure the claim API reads the connected wallet address from auth/headers/session.
+
+If there is a SIWE/signMessage check, keep it. If not, add a lightweight signature check if already present in codebase. If no signing path exists, proceed with current wallet session method.
+
+Frontend claim page changes
+
+Search the frontend for UI elements containing:
+“Email Verification Required”, “Email Not Verified (Click to Verify)”, or similar banners.
+
+Hide or remove those components entirely when EMAIL_ENABLED=false.
+
+Claim page should show:
+• “Connect wallet to claim your handle”
+• Handle input with live validation (3–20 chars, [a–z0–9-], lowercase)
+• Availability check via Registry.ownerOf(name)
+• “Claim” button that calls Registry.register(name)
+
+Availability + claim wiring
+
+Ensure availability check uses on-chain read (Registry.ownerOf) not a server email gate.
+
+On successful tx, mirror to DB:
+• Insert/Upsert users(address) if absent
+• Insert fsnDomains(address, name)
+
+Navbar / header cleanup
+
+Remove any top-right email verification pill/badge when EMAIL_ENABLED=false.
+
+After successful claim, show name.fsn (or TLD_LABEL) in the navbar.
+
+Disable email routes when flag is off
+
+Find routes like /api/email/* or /api/verify-email.
+
+Add a guard: if EMAIL_ENABLED=false, return 404 or a disabled response.
+
+Remove any automatic redirects to email verification from the claim journey.
+
+Light copy updates
+
+Replace any copy that says “Verify your email to continue” with wallet-first copy:
+“Your handle is soulbound to your wallet. One handle per wallet.”
+
+Quick test
+
+Restart the app.
+
+Connect a wallet.
+
+Go to the claim page, enter a valid handle (lowercase, 3–20, [a–z0–9-]).
+
+Confirm:
+• No email UI appears anywhere.
+• Availability check hits Registry.ownerOf.
+• Claim triggers Registry.register and, after confirmation, DB mirrors fsnDomains.
+• Navbar updates to show the new handle.
+
+Return a brief summary of files changed and lines touched.

@@ -1,0 +1,14 @@
+client/
+├── src/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── pages/
+│   ├── styles/
+│   ├── utils/
+│   ├── context/
+│   ├── components_backup_1749783585/
+│   ├── games/
+│   ├── api/
+│   └── config/
+└── public/

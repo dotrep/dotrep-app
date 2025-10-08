@@ -1,0 +1,168 @@
+PART 1: XP SHOP via vault.fsn
+Let users spend XP to buy gear, badges, cosmetics, and vault upgrades by messaging vault.fsn.
+
+🛠 STEP 1: Add an XP Shop Inventory
+Create a file called xp-shop.json with this structure:
+
+json
+Copy
+Edit
+[
+  { "item": "bronze_patch", "cost": 20, "description": "Basic FSN starter badge." },
+  { "item": "vault_key", "cost": 50, "description": "Unlocks secret quest chambers." },
+  { "item": "obsidian_skin", "cost": 100, "description": "Dark, rare visual vault skin." }
+]
+📦 STEP 2: Update User Schema to Track Purchases
+Make sure each user has:
+
+json
+Copy
+Edit
+"xp": 100,
+"inventory": [],
+"purchases": []
+🧠 STEP 3: Create vault-agent.js
+Create a file called vault-agent.js with this logic:
+
+js
+Copy
+Edit
+const shop = require('../xp-shop.json');
+const users = require('../users.json'); // or your actual DB
+
+function getUser(fsn_name) {
+  return users.find(u => u.fsn_name === fsn_name);
+}
+
+module.exports = {
+  handleMessage: function(sender, message) {
+    const user = getUser(sender);
+    const m = message.toLowerCase().trim();
+
+    if (m === "shop" || m === "list items") {
+      return shop.map(item => `- ${item.item} (${item.cost} XP): ${item.description}`).join('\n');
+    }
+
+    if (m.startsWith("buy ")) {
+      const requested = m.replace("buy ", "").trim();
+      const item = shop.find(i => i.item === requested);
+
+      if (!item) return "Item not found. Type `shop` to see available items.";
+      if (user.xp < item.cost) return `Insufficient XP. You have ${user.xp}, but need ${item.cost}.`;
+
+      if (user.inventory.includes(item.item)) return "You already own this item.";
+
+      user.xp -= item.cost;
+      user.inventory.push(item.item);
+      user.purchases.push({ item: item.item, time: new Date().toISOString() });
+
+      return `✅ Purchased: ${item.item} for ${item.cost} XP. You now have ${user.xp} XP left.`;
+    }
+
+    return "Welcome to the Vault XP Shop. Type `shop` to see available items or `buy [item_name]` to purchase.";
+  }
+};
+🔄 STEP 4: Connect vault.fsn to the message system
+In your main handler:
+
+js
+Copy
+Edit
+const vaultAgent = require('./agents/vault-agent.js');
+
+if (recipient.fsn_name === "vault.fsn" && recipient.user_type === "ai_agent") {
+  const reply = vaultAgent.handleMessage(sender.fsn_name, message);
+  const responseMessage = {
+    from: "vault.fsn",
+    to: sender.fsn_name,
+    message: reply,
+    timestamp: new Date().toISOString()
+  };
+
+  sender.messages.push(responseMessage);
+  return responseMessage.message;
+}
+✅ PART 2: ASCII ART MAPS + IMAGES FOR QUEST GAME
+Let users visualize their quest progress using text-based ASCII art. These can show:
+
+Locations (vault, corridor, terminal)
+
+Items (keys, gear)
+
+Maps (region layouts)
+
+🌍 STEP 1: Create ASCII ART STRINGS
+Add this file: ascii-art.js
+
+js
+Copy
+Edit
+module.exports = {
+  corridor: `
+╔═══════════════════╗
+║   You are here →  ║
+║                   ║
+║    DARK CORRIDOR  ║
+║    ┌─────┐        ║
+║    │     │        ║
+║    │     │← Terminal Room
+║    └─────┘        ║
+║                   ║
+║    ← Locked Door  ║
+╚═══════════════════╝
+`,
+
+  terminal: `
+╔══════════════════════╗
+║    FLICKERING TERMINAL║
+║                      ║
+║   [ ACCESS GRANTED ] ║
+║     ||||||||||||||   ║
+║    {HUMMING KEY}     ║
+╚══════════════════════╝
+`,
+
+  secret_room: `
+╔═══════════════════════════╗
+║     🔒 SECRET VAULT ROOM   ║
+║                           ║
+║     You found:            ║
+║     - Vault Patch         ║
+║     - 20 XP               ║
+╚═══════════════════════════╝
+`
+};
+🎯 STEP 2: Display ASCII Maps in core-agent.js
+Update continueQuest() in core-agent.js to return ASCII from ascii-art.js:
+
+js
+Copy
+Edit
+const art = require('../ascii-art.js');
+Example usage:
+
+js
+Copy
+Edit
+if (input === "look") {
+  return art.corridor + "\nYou see a terminal to the east and a locked door to the west.";
+}
+
+if (input === "use terminal") {
+  return art.terminal + "\nYou retrieve the humming_key.";
+}
+✅ FINAL TEST CASES (DUMMY CHECKLIST)
+XP SHOP:
+ User types: vault.fsn → shop → sees list
+
+ User types: buy bronze_patch → gets confirmation
+
+ XP is deducted, item added
+
+ASCII QUEST:
+ User types: start quest → begins game
+
+ User types: look → sees corridor ASCII map
+
+ User types: use terminal → gets key + XP
+

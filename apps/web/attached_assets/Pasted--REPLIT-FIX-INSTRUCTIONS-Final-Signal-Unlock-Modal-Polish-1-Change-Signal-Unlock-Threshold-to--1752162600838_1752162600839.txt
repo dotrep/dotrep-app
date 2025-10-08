@@ -1,0 +1,148 @@
+✅ REPLIT FIX INSTRUCTIONS: Final Signal Unlock Modal Polish
+1. 🔁 Change Signal Unlock Threshold to 70Hz
+File(s): Likely Home.jsx, AppContext.js, or wherever pulseHz and signalUnlocked logic is stored.
+
+Replace this logic:
+
+js
+Copy
+Edit
+if (pulseHz >= 80 && !signalUnlocked) {
+  setShowSignalModal(true);
+}
+With this:
+
+js
+Copy
+Edit
+if (pulseHz >= 70 && !signalUnlocked) {
+  setShowSignalModal(true);
+}
+Also adjust XP reward trigger (if not done already):
+
+js
+Copy
+Edit
+if (pulseHz >= 70 && !signalUnlocked) {
+  addXP(100);
+  logXP("+100 XP – Signal Unlocked");
+  setSignalUnlocked(true);
+  setShowSignalModal(true);
+  localStorage.setItem("signalUnlocked", true);
+}
+2. ❌ Remove “Maybe Later” Button
+File: SignalUnlockModal.jsx (or wherever the modal is rendered)
+
+Find and delete:
+
+jsx
+Copy
+Edit
+<button className="maybe-later-btn">Maybe Later</button>
+Or if logic-controlled:
+
+jsx
+Copy
+Edit
+{!signalActive && <button>Maybe Later</button>}
+➡️ Just keep the "Activate Signal" button and the corner "X" close button.
+
+3. 🎨 Update Design Colors and Font to Match FSN Brand
+A. Use Orbitron Font Consistently
+Step 1: In index.html or App.css, make sure you’ve added:
+
+html
+Copy
+Edit
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+Step 2: Apply font to modal:
+
+css
+Copy
+Edit
+.signal-unlock-modal {
+  font-family: 'Orbitron', sans-serif;
+}
+B. Apply FSN Cyan Brand Colors
+Update modal container background and border:
+
+css
+Copy
+Edit
+.signal-unlock-modal {
+  background: rgba(5, 15, 25, 0.95);
+  border: 1px solid #00ffff;
+  box-shadow: 0 0 12px #00ffff;
+  border-radius: 16px;
+  color: #c0eaff;
+  padding: 32px;
+}
+Update “Activate Signal” button:
+
+css
+Copy
+Edit
+.activate-signal-btn {
+  background: linear-gradient(to right, #00ffff, #00aaff);
+  color: #000;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 16px 32px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 20px #00ffff;
+}
+
+.activate-signal-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 32px #00ffff;
+}
+Adjust text highlights (e.g. Hz count, title):
+
+css
+Copy
+Edit
+.signal-unlock-title {
+  font-size: 32px;
+  color: #00ffff;
+  text-shadow: 0 0 12px #00ffff;
+}
+
+.signal-description {
+  color: #c0eaff;
+  font-size: 16px;
+}
+4. ✨ Optional: Animate Glyph
+Wrap icon in:
+
+html
+Copy
+Edit
+<div className="glyph-glow">[icon here]</div>
+Then in CSS:
+
+css
+Copy
+Edit
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px #00ffff; }
+  50% { transform: scale(1.08); box-shadow: 0 0 18px #00ffff; }
+}
+
+.glyph-glow {
+  animation: glowPulse 3s ease-in-out infinite;
+  border-radius: 50%;
+  padding: 10px;
+  background-color: #002233;
+}
+✅ Summary of What to Check
+Feature	Done?
+Unlocks at 70Hz	✅
+“Maybe Later” removed	✅
+Orbitron font applied	✅
+FSN-style glow and neon blue	✅
+Animate glyph icon (optional)	✅
+Activate Signal sets state	✅
+

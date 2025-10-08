@@ -1,0 +1,266 @@
+/* Pulse Recovery Modal Styles */
+.pulse-recovery-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(8px);
+}
+
+.pulse-recovery-modal {
+  position: relative;
+  background: linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%);
+  border: 2px solid #ff4444;
+  border-radius: 20px;
+  padding: 40px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 
+    0 0 40px rgba(255, 68, 68, 0.6),
+    0 0 80px rgba(255, 68, 68, 0.3),
+    inset 0 0 30px rgba(255, 68, 68, 0.1);
+  animation: recoverySlideIn 0.6s ease-out;
+}
+
+@keyframes recoverySlideIn {
+  from {
+    transform: translateY(-100px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.recovery-header {
+  margin-bottom: 30px;
+}
+
+.pulse-icon-dead {
+  font-size: 60px;
+  margin-bottom: 15px;
+  animation: deadPulse 2s ease-in-out infinite;
+}
+
+@keyframes deadPulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.recovery-header h1 {
+  font-family: 'Audiowide', 'Montserrat', sans-serif;
+  font-size: 32px;
+  color: #ff4444;
+  margin: 0 0 10px 0;
+  text-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.8),
+    0 0 40px rgba(255, 68, 68, 0.5);
+  animation: warningFlicker 3s ease-in-out infinite;
+}
+
+@keyframes warningFlicker {
+  0%, 100% { 
+    text-shadow: 
+      0 0 20px rgba(255, 68, 68, 0.8),
+      0 0 40px rgba(255, 68, 68, 0.5);
+  }
+  50% { 
+    text-shadow: 
+      0 0 30px rgba(255, 68, 68, 1),
+      0 0 60px rgba(255, 68, 68, 0.7);
+  }
+}
+
+.recovery-header p {
+  font-family: 'Montserrat', sans-serif;
+  color: #ffaaaa;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Content */
+.recovery-content h2 {
+  font-family: 'Montserrat', sans-serif;
+  color: #ffffff;
+  font-size: 18px;
+  margin-bottom: 25px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Recovery Tasks */
+.recovery-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.recovery-task {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.recovery-task:hover {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.5);
+  transform: translateY(-2px);
+}
+
+.recovery-task.completed {
+  background: rgba(0, 255, 0, 0.1);
+  border-color: rgba(0, 255, 0, 0.4);
+  cursor: default;
+}
+
+.recovery-task.completed:hover {
+  transform: none;
+}
+
+.task-icon {
+  font-size: 24px;
+  margin-right: 15px;
+  min-width: 30px;
+}
+
+.task-label {
+  flex: 1;
+  text-align: left;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.task-status {
+  font-size: 20px;
+  margin-left: 15px;
+}
+
+/* Success State */
+.recovery-success {
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid rgba(0, 255, 0, 0.4);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+@keyframes successPulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.6);
+  }
+}
+
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  animation: successBounce 1s ease-in-out infinite;
+}
+
+@keyframes successBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.recovery-success h3 {
+  font-family: 'Audiowide', sans-serif;
+  color: #00ff00;
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  text-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+}
+
+.recovery-success p {
+  color: #aaffaa;
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+/* Reward Info */
+.recovery-reward {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.recovery-reward p {
+  color: #ffff88;
+  margin: 0;
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(255, 255, 136, 0.5);
+}
+
+/* Close Button */
+.recovery-close {
+  font-family: 'Audiowide', 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #ff4444, #aa0000);
+  color: #ffffff;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  margin-top: 20px;
+}
+
+.recovery-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 30px rgba(255, 68, 68, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.recovery-close:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pulse-recovery-modal {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .recovery-header h1 {
+    font-size: 24px;
+  }
+  
+  .recovery-task {
+    padding: 12px 15px;
+  }
+  
+  .task-label {
+    font-size: 14px;
+  }
+}

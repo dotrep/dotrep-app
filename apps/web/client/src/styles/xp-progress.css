@@ -1,0 +1,91 @@
+/* XP LOGIC MODULE - Progress bar styles */
+
+.xp-progress-container {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 30, 60, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+}
+
+.xp-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.xp-label {
+  color: #00f0ff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+.xp-level {
+  color: rgba(0, 240, 255, 0.8);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.xp-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  position: relative;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00a0ff, #00f0ff);
+  border-radius: 6px;
+  position: relative;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.xp-progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: xp-shimmer 2s infinite;
+}
+
+@keyframes xp-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .xp-progress-container {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+  }
+  
+  .xp-info {
+    margin-bottom: 0.5rem;
+  }
+  
+  .xp-label {
+    font-size: 0.8rem;
+  }
+  
+  .xp-level {
+    font-size: 0.75rem;
+  }
+  
+  .xp-progress-bar {
+    height: 10px;
+  }
+}

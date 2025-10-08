@@ -1,0 +1,143 @@
+0) Goal
+Introduce a consistent theme (colors, type, spacing) and responsive behavior across pages without undoing existing functionality or layouts. All changes must be opt‑in and progressively applied.
+
+1) Feature flags (env)
+FEATURE_THEME_UNIFIED=on
+
+THEME_DEFAULT=dark (supported: dark, light)
+
+THEME_ALLOW_SWITCH=true
+
+UI reads these; if FEATURE_THEME_UNIFIED=off, the app renders exactly as today.
+
+2) Design tokens (CSS variables) — additive
+Create a tokens layer (e.g., styles/tokens.css) and import once at the app root. Do not delete existing styles.
+
+Define base tokens in :root (names only; values are neutral).
+
+Define value maps per theme using attribute selectors:
+
+[data-theme="dark"] → Tron/future palette (ink, neon accent, surfaces).
+
+[data-theme="light"] → accessible light variant.
+
+Token categories to include:
+
+Color: --bg, --bg-2, --text, --muted, --accent, --accent-2, --success, --warning, --danger, --border, --ring.
+
+Typography: --font-sans, --font-mono, --font-size-xs…2xl, --line-height-body, --letter-spacing-wide.
+
+Spacing: --space-2…24 (8‑pt base).
+
+Radius: --radius-sm,md,lg,2xl.
+
+Shadow: --shadow-sm,md,lg,glow.
+
+Z‑index: --z-nav,modal,toast.
+
+Apply theme by setting data-theme on <html> at runtime from THEME_DEFAULT.
+
+3) Theme switcher (optional, non-destructive)
+Add a small theme toggle that sets data-theme on <html> only if THEME_ALLOW_SWITCH=true.
+This must not modify any existing style files; it only toggles the attribute.
+
+4) Breakpoints & container system — additive
+Add a responsive container class (e.g., .fsn-container) and a single breakpoint map (do not remove existing utility classes).
+
+Breakpoints: sm 360, md 768, lg 1024, xl 1280, 2xl 1536 (px).
+
+.fsn-container sets max-width per breakpoint and horizontal padding using tokens.
+
+Wrap top‑level page content with .fsn-container without changing existing internal layout components.
+
+5) Type scale & hierarchy — additive
+Introduce a typography helper (e.g., .fsn-h1…h6, .fsn-body, .fsn-caption) that maps to tokens; do not replace current classes—apply these gradually to visible headings.
+
+Ensure contrast ≥ 4.5:1 for body and ≥ 3:1 for large headings in both themes.
+
+6) Color application pass — non-destructive
+Create theme utility classes (e.g., .bg-surface, .bg-surface-2, .text-primary, .text-muted, .border-default, .ring-accent) that only reference tokens.
+
+Apply these classes incrementally to visible shells (nav, footer, cards, modals) to unify look.
+
+Do not remove existing class names; stack new classes last to allow easy rollback.
+
+7) Components pass (priority targets)
+Style only the shells; do not change component logic:
+
+Nav/Header: unify background (.bg-surface), border, and active link state (ring/underline).
+
+Buttons: introduce .btn-primary, .btn-ghost, .btn-muted wrappers mapping to tokens and radius/shadow; apply to primary CTAs first.
+
+Cards/Panels: apply .bg-surface-2, --radius-2xl, --shadow-lg consistently.
+
+Inputs: standardize focus state with --ring token; ensure 44px min height.
+
+Toasts/Modals: use --shadow-glow and --accent for subtle Tron glow.
+
+8) Motion & accessibility
+Respect prefers-reduced-motion: disable non-essential animations automatically.
+
+Focus state: visible outline using --ring on all interactive elements.
+
+Hit targets: ensure min 44×44px for tap; add cursor:pointer where appropriate.
+
+No audio by default; if any exists, default muted and user-triggered.
+
+9) Iconography & imagery
+Replace only stock mismatched icons on primary screens with a minimal FSN glyph set; keep existing sizes to avoid layout shifts.
+
+Ensure SVGs inherit currentColor to adapt to theme.
+
+10) Responsive checks (page-level)
+Without restructuring content:
+
+Home/Dashboard: collapse secondary side-panels below main content at md.
+
+Beacon area: maintain minimum 320px width; wrap stats to 2 columns on sm.
+
+Vault grid: switch to 2‑column on sm, 3‑column on md, 4‑column on lg.
+
+Modals: width 90vw on sm, clamped to 560–720px on md+.
+
+11) Performance guardrails
+Do not import additional UI libraries; add only one tokens file and one helpers file.
+
+Avoid heavy box‑shadow blur on mobile; reduce to --shadow-sm below md.
+
+Use CSS variables (runtime) to avoid re-builds when switching themes.
+
+12) Analytics (to validate impact)
+When FEATURE_THEME_UNIFIED=on, fire non‑PII events:
+
+theme_applied { theme }
+
+breakpoint_rendered { bp }
+
+a11y_reduced_motion { enabled:boolean }
+
+13) QA acceptance (must pass before ship)
+Toggle FEATURE_THEME_UNIFIED off → app looks exactly as before.
+
+With it on:
+
+Color, type, spacing consistent across header, primary cards, modals.
+
+All primary flows (onboarding overlay, Beacon recast, vault upload) unchanged functionally.
+
+Mobile (360–414px): no overflow, legible text, tap targets ≥ 44px.
+
+Contrast meets WCAG; focus states visible on keyboard tab.
+
+Theme toggle (if enabled) switches instantly without layout shift.
+
+No new console errors; Core Web Vitals unchanged or improved.
+
+14) Documentation
+Add docs/theme.md:
+
+List tokens and where defined.
+
+Breakpoints and container rules.
+
+“Additive-only” policy and rollback note: delete .fsn-* helper classes or set FEATURE_THEME_UNIFIED=off to revert.

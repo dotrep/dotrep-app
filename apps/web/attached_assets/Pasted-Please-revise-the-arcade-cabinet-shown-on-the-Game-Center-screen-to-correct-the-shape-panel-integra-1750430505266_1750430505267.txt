@@ -1,0 +1,31 @@
+Please revise the arcade cabinet shown on the Game Center screen to correct the shape, panel integration, and composition so it matches the original glowing Tron-style reference with unified structure and smoother geometry.
+
+🎮 Cabinet Structure Fix:
+- Unify the cabinet into a **single smooth form** — it should not be stacked boxes or disconnected segments.
+- Remove the appearance of the bottom box as a separate object.
+- Keep a **full-height rectangular silhouette**, no tapering, but more compact like the original glowing cabinet mockup.
+
+📐 Control Panel Integration:
+- The control panel must be **built into the cabinet body**, not floating.
+- Rebuild the panel so it:
+   • **Protrudes naturally** from the front
+   • **Slopes downward** slightly
+   • Aligns seamlessly with the main body
+- Keep 1 joystick on the left, 2 buttons on the right — **embed them into the panel** with proper spacing.
+
+🎨 Styling & Perspective:
+- Keep the **15° inward rotation** so the cabinet faces toward the FSN logo — that part is correct.
+- Maintain the **neon Tron glow aesthetic** — but ensure the glow **blends consistently** with the FSN page (same softness and radius as FSN logo and stat row).
+- The cabinet should feel like a **single glowing shape**, not a physical object with stacked layers.
+
+🧱 Structural Geometry:
+- Below the control panel, the cabinet should continue smoothly downward — no horizontal break or gap.
+- Do not use boxy “floater” panels.
+- The bottom “DAILY QUEST” label should be part of the continuous cabinet face — not placed on a separate floating slab.
+
+🌌 Layout Anchoring:
+- Align the cabinet vertically between the “Compete • Earn • Dominate” text and the bottom stat row.
+- Add a subtle glow or ripple below the cabinet to ground it into the FSN world — match the FSN glow palette.
+
+✅ Summary:
+This should now look like your original glowing cabinet mockup — with a real arcade layout (screen → angled controls → base), all fused into a single glowing structure with proper alignment, soft glows, and FSN cohesion.

@@ -1,0 +1,20 @@
+client/src/components/MagicWalletIntegration.tsx:import { BrowserProvider } from 'ethers';
+client/src/components/MagicWalletIntegration.tsx:      // Get wallet address using Ethers
+client/src/components/WalletTab.tsx:  blockchain: string;
+client/src/components/WalletTab.tsx:  const [selectedBlockchain, setSelectedBlockchain] = useState<string>('bitcoin');
+client/src/components/WalletTab.tsx:  const [newAddressBlockchain, setNewAddressBlockchain] = useState<string>('bitcoin');
+client/src/components/WalletTab.tsx:    if (!sendAmount || !recipientFsn || !selectedBlockchain) {
+client/src/components/WalletTab.tsx:      cryptoType: selectedBlockchain,
+client/src/components/WalletTab.tsx:      networkFee: getNetworkFee(selectedBlockchain),
+client/src/components/WalletTab.tsx:      totalAmount: (parseFloat(sendAmount) + parseFloat(getNetworkFee(selectedBlockchain))).toFixed(8)
+client/src/components/WalletTab.tsx:  // Get network fee based on blockchain
+client/src/components/WalletTab.tsx:  const getNetworkFee = (blockchain: string): string => {
+client/src/components/WalletTab.tsx:    return fees[blockchain] || '0.001';
+client/src/components/WalletTab.tsx:    if (!newAddressBlockchain || !newAddressLabel) {
+client/src/components/WalletTab.tsx:          cryptoType: newAddressBlockchain,
+client/src/components/WalletTab.tsx:  // Format blockchain name for display
+client/src/components/WalletTab.tsx:  const formatBlockchainName = (name: string): string => {
+client/src/components/WalletTab.tsx:  // Format amount with blockchain symbol
+client/src/components/WalletTab.tsx:  const formatAmountWithSymbol = (amount: string, blockchain: string): string => {
+client/src/components/WalletTab.tsx:    return `${amount} ${symbols[blockchain] || blockchain.toUpperCase()}`;
+client/src/components/WalletTab.tsx:                    setSelectedBlockchain('bitcoin');

@@ -1,0 +1,156 @@
+
+✅ index.html
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreeSpace Network</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <section class="hero">
+    <div class="hero-content">
+      <img src="fsn-logo.svg" alt="FreeSpace Network Logo" class="logo" />
+      <h1>Crypto starts with your <span class="highlight">.fsn</span> name</h1>
+      <p class="subtext">Claim your Web3 identity.<br>Earn XP. Emit your Signal.</p>
+      <button class="cta" id="claimBtn">Claim your .fsn name</button>
+    </div>
+    <div class="hero-graphic">
+      <img src="fsn-hex.png" alt=".fsn Hex Graphic" class="fsn-hex" />
+    </div>
+  </section>
+  <script src="script.js"></script>
+</body>
+</html>
+✅ styles.css
+css
+Copy
+Edit
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  height: 100%;
+  font-family: 'Manrope', sans-serif;
+  background: radial-gradient(circle at center, #0a0f1c, #04070b);
+  overflow-x: hidden;
+  color: #00f0ff;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: 0 6vw;
+  gap: 5vw;
+}
+
+.logo {
+  width: 60px;
+  filter: drop-shadow(0 0 8px #00f0ff);
+  margin-bottom: 1.5rem;
+}
+
+.hero-content {
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+  margin-bottom: 1rem;
+}
+
+.highlight {
+  font-weight: 700;
+  color: #00f0ff;
+  text-shadow: 0 0 18px rgba(0, 255, 255, 0.6);
+}
+
+.subtext {
+  font-size: 1.2rem;
+  color: #c0faff;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+.cta, .fsn-input {
+  padding: 0.75em 2em;
+  font-size: 1.1rem;
+  border: 2px solid #00f0ff;
+  border-radius: 30px;
+  color: #00f0ff;
+  background: transparent;
+  cursor: pointer;
+  width: 300px;
+  transition: all 0.3s ease;
+}
+
+.cta:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
+.fsn-input::placeholder {
+  color: #00f0ff;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.hero-graphic {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fsn-hex {
+  width: 320px;
+  filter: drop-shadow(0 0 14px rgba(0, 255, 255, 0.5));
+}
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+
+  .hero-graphic {
+    margin-top: 2rem;
+  }
+
+  .cta, .fsn-input {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .fsn-hex {
+    width: 240px;
+  }
+}
+✅ script.js
+javascript
+Copy
+Edit
+document.getElementById("claimBtn").addEventListener("click", function () {
+  const input = document.createElement("input");
+  input.setAttribute("type", "text");
+  input.setAttribute("placeholder", "This will be your Signal");
+  input.classList.add("fsn-input");
+  this.replaceWith(input);
+});

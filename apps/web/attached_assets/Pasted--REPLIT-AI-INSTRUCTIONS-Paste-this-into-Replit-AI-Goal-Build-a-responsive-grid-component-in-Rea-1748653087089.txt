@@ -1,0 +1,104 @@
+🧠 REPLIT AI INSTRUCTIONS (Paste this into Replit AI)
+Goal: Build a responsive grid component in React that displays FSN user badges using consistent icons, text, and styling.
+
+🔧 STEP 1: Create a BadgeCard.jsx component
+jsx
+Copy
+Edit
+// components/BadgeCard.jsx
+import React from "react";
+
+const BadgeCard = ({ icon, title, description }) => {
+  return (
+    <div className="flex flex-col items-center justify-center bg-black text-teal-300 border border-teal-300 rounded-2xl w-48 h-48 p-4 shadow-lg hover:scale-105 transition-transform">
+      <div className="text-5xl mb-3">{icon}</div>
+      <h2 className="text-lg font-bold">{title}</h2>
+      <p className="text-sm text-center mt-1">{description}</p>
+    </div>
+  );
+};
+
+export default BadgeCard;
+🧩 STEP 2: Create a BadgeGrid.jsx component
+jsx
+Copy
+Edit
+// components/BadgeGrid.jsx
+import React from "react";
+import BadgeCard from "./BadgeCard";
+import {
+  FaHammer,
+  FaUserCheck,
+  FaFire,
+  FaMoon,
+  FaHeart,
+  FaUserAlt,
+  FaWifi,
+  FaLink,
+} from "react-icons/fa";
+
+const badges = [
+  { icon: <FaHammer />, title: "Creator", description: "Designs and builds" },
+  { icon: <FaLink />, title: "Connector", description: "Builds a network" },
+  { icon: <FaFire />, title: "Forgewalker", description: "Deeply engaged" },
+  { icon: <FaWifi />, title: "Echo", description: "Deeply engaged" },
+  { icon: <FaMoon />, title: "Night Owl", description: "Active late at night" },
+  { icon: <FaUserAlt />, title: "Newcomer", description: "Recently joined" },
+  { icon: <FaHeart />, title: "Favored", description: "Active engaged" },
+  { icon: <FaUserCheck />, title: "Verified", description: "Account confirmed" },
+];
+
+const BadgeGrid = () => {
+  return (
+    <div className="bg-black min-h-screen flex flex-col items-center justify-center py-10">
+      <h1 className="text-3xl font-bold text-teal-300 mb-6">FSN Badges</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {badges.map((badge, index) => (
+          <BadgeCard key={index} {...badge} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default BadgeGrid;
+🛠️ STEP 3: Display the badges in App.jsx
+jsx
+Copy
+Edit
+// App.jsx
+import React from "react";
+import BadgeGrid from "./components/BadgeGrid";
+
+function App() {
+  return <BadgeGrid />;
+}
+
+export default App;
+🎨 STEP 4: Tailwind Setup (if needed)
+Ensure your tailwind.config.js is set up like this:
+
+js
+Copy
+Edit
+module.exports = {
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+Make sure Tailwind CSS is installed and your index.css includes:
+
+css
+Copy
+Edit
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+✅ BONUS (Optional Enhancements)
+Add hover tooltip on each badge using title or a tooltip lib.
+
+Add badge categories (e.g. "Behavioral", "Engagement") as tab filters.
+
+Add XP unlock thresholds for each badge.
