@@ -190,11 +190,11 @@ html.motion-on .ring-path {
 .chameleon-panel {
   position: absolute;
   right: 50px;
-  bottom: -300px;
+  bottom: 50px;
   width: var(--cham-w);
   height: var(--cham-h);
   pointer-events: none;
-  z-index: 3;
+  z-index: 1;
   background: transparent;
 }
 
@@ -328,6 +328,13 @@ html.motion-on .chameleon-img {
     width: 280px;
     height: 280px;
   }
+
+  .chameleon-panel {
+    right: 30px;
+    bottom: 50px;
+    width: 480px;
+    height: 680px;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -349,9 +356,10 @@ html.motion-on .chameleon-img {
   }
 
   .chameleon-panel {
-    width: 380px;
-    height: 570px;
+    width: 400px;
+    height: 600px;
     right: 20px;
+    bottom: 50px;
   }
 }
 
