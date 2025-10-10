@@ -188,12 +188,13 @@ html.motion-on .ring-path {
 
 .chameleon-panel {
   position: absolute;
-  right: -100px;
-  bottom: -150px;
+  right: 0;
+  bottom: -100px;
   width: var(--cham-w);
   height: var(--cham-h);
   pointer-events: none;
   z-index: 3;
+  background: transparent;
 }
 
 .chameleon-glow {
@@ -212,14 +213,12 @@ html.motion-on .ring-path {
   object-fit: contain;
   object-position: center bottom;
   filter: 
-    brightness(1.1)
-    contrast(1.15)
-    drop-shadow(0 30px 60px rgba(0, 0, 0, 0.8)) 
-    drop-shadow(0 0 50px rgba(0, 212, 170, 0.3))
-    drop-shadow(0 0 80px rgba(0, 82, 255, 0.2));
+    brightness(1.2)
+    contrast(1.2)
+    drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6)) 
+    drop-shadow(0 0 60px rgba(0, 212, 170, 0.4));
   animation: chameleonFloat 6s ease-in-out infinite;
   mix-blend-mode: screen;
-  opacity: 0.95;
 }
 
 html.motion-on .chameleon-img {
