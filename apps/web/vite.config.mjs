@@ -7,6 +7,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5000,
     strictPort: false,
+    allowedHosts: ['.replit.dev', 'localhost'],
     hmr: {
       protocol: "wss",
       clientPort: 443,
@@ -15,5 +16,6 @@ export default defineConfig({
   preview: {
     host: "0.0.0.0",
     port: 5000,
+    allowedHosts: ['.replit.dev', 'localhost'],
   },
 });
