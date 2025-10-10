@@ -31,15 +31,25 @@ Preferred communication style: Simple, everyday language.
 - Responsive design with mobile-first approach
 
 **Key Pages:**
-- Homepage (`Home.tsx`) - Hero section with `.rep` emblem, headline, CTAs, and feature sections
+- Homepage (`Home.tsx`) - Hero section with `.rep` emblem, headline, CTAs, and prominent chameleon mascot
 - Reserve page (`Reserve.tsx`) - Name reservation placeholder
 - Discover page (`Discover.tsx`) - Discovery placeholder
+
+**Hero Section Design:**
+- Absolute positioning layout for seamless composition
+- `.rep` emblem with gradient ring (blue→teal→orange) and glow effects
+- Large transparent chameleon mascot (550x750px) with drop shadows and float animation
+- "Alive on Base" headline in teal with text shadow
+- Dual CTAs: "Reserve your.rep" (primary) and "Discover.rep" (secondary)
+- Constellation star field background with twinkling animation
+- Assets: `chameleon_transparent.png` (RGBA transparent PNG)
 
 **Component Pattern:**
 - Functional React components with hooks
 - Inline SVG for graphics and animations
 - CSS keyframes for animations (no external animation libraries)
 - Simple client-side state management
+- Motion preferences toggle respecting `prefers-reduced-motion`
 
 ### Backend Architecture (apps/api)
 

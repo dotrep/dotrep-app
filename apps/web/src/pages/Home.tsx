@@ -126,7 +126,7 @@ export default function Home() {
             <div className="chameleon-panel">
               <div className="chameleon-glow" aria-hidden="true"></div>
               <img 
-                src="/chameleon.png" 
+                src="/chameleon_transparent.png" 
                 alt="Chameleon mascot representing adaptive onchain identity" 
                 className="chameleon-img"
               />
