@@ -1,0 +1,175 @@
+Context
+
+Monorepo: we’re using the apps/web React+Vite app that already builds to static.
+
+My locked visual comp PNG is at: apps/web/public/comp-hero.png. Treat this as the visual source of truth for the hero only (colors, proportions, placements, glow look, chameleon art, constellation vibe).
+
+Do not add or switch frameworks. Use the existing React + Vite stack and vanilla CSS. No Tailwind, no PostCSS plugins, no third-party animation libs. Inline SVG and CSS keyframes only.
+
+Goal
+
+Build a full production homepage (not just hero) that matches the attached comp for the hero and extends it into a complete, responsive, crypto-native landing page with clean code, a small design system, and upgrade-ready animation hooks.
+
+Top-level requirements
+
+Hero (pixel-faithful to comp-hero.png):
+
+Left: .rep circular emblem with blue/orange ring, soft inner vignettes, and light scatter/“constellation” dots.
+
+Right: headline block (“Your onchain reputation. Alive on Base.”), two CTAs, chameleon panel with subtle outer glow.
+
+Match color hues, weights, spacing, and relative scale within ±3–5px at a desktop baseline of 1440×900.
+
+The ring must be a vector/SVG so we can animate its seam later. Use CSS variables for all key colors, sizes, and transforms.
+
+Below the hero: complete homepage sections
+
+“Cred” section (the “Identity isn’t minted. It’s earned.” block from the comp) with the four people chips; keep the sci-fi “constellation” dots as a background canvas or SVG layer.
+
+How it works (3 concise steps with small icon circles).
+
+Features (3–6 cards, hoverable; brief copy).
+
+Ecosystem/Logos row (placeholder logos with alt text).
+
+CTA band (“Reserve your .rep”).
+
+Footer with links (Privacy, Terms, X/Twitter, Docs).
+
+All sections must carry the same art direction: deep navy background, soft vignettes, glows, crisp typography.
+
+Design system / tokens (vanilla CSS)
+
+Create apps/web/src/styles/tokens.css with CSS vars for:
+
+colors: --bg-900, --bg-800, --text, --text-dim, --blue, --teal, --orange, --glow-blue, --glow-orange
+
+spacing scale: --space-2 … --space-16
+
+radii, shadows, blur strengths, container widths.
+
+Global styles in apps/web/src/styles/global.css (normalize-ish, base text, containers).
+
+Component styles in co-located .css files or one home.css. Keep it tidy.
+
+Accessibility & performance
+
+Semantic HTML, proper heading order, descriptive alt text, focus states on CTAs, prefers-reduced-motion respected.
+
+Ship one hero image (the chameleon is fine as a PNG from the comp). Everything else should be vector/CSS wherever possible.
+
+No layout shift, no HMR/reload loops, no console errors.
+
+Animation hooks (initially subtle)
+
+Ring: keyframe pulse of a light sweep around the ring (opacity/blur only); gated by .motion-on on <html>.
+
+Chameleon eye: slow, subtle pan of a masked ellipse to mimic eye drift; gated by .motion-on.
+
+Constellation: very faint twinkle via opacity keyframes on scattered dots.
+
+Add a global motion switcher (top-left tiny pill) toggling .motion-on / .motion-off on <html>.
+
+Also respect @media (prefers-reduced-motion: reduce) to disable.
+
+Routing & links
+
+Reserve → /reserve route (create a simple placeholder page in apps/web/src/pages/Reserve.tsx).
+
+Discover → /discover route (placeholder page Discover.tsx).
+
+Keep hero CTAs as <Link> (react-router-dom) or simple anchors if router not present — but do not add new deps; if router isn’t present, just use anchors.
+
+Responsive behavior
+
+Desktop baseline: 1440×900. Use CSS clamp for type sizes.
+
+Container max width around 1200–1280px, centered, with generous padding.
+
+Tablet (≥768px): Stack hero two-column into 1.5/1 ratio; chameleon scales down and tucks under the headline with preserved glow.
+
+Mobile (≤480px): Single column; emblem scales down, headline above CTAs, chameleon below; spacing scales via clamp. Nothing should overflow.
+
+Code boundaries
+
+Only touch files under apps/web. Do not change pnpm workspace or other apps.
+
+Do not add dependencies. Vanilla CSS, inline SVG, and React only.
+
+File plan (create/modify exactly these)
+
+apps/web/src/styles/tokens.css ← new (design tokens)
+
+apps/web/src/styles/global.css ← new (reset/base/containers)
+
+apps/web/src/pages/Home.tsx ← new (full homepage)
+
+apps/web/src/pages/home.css ← new (homepage styles)
+
+apps/web/src/pages/Reserve.tsx ← new (placeholder)
+
+apps/web/src/pages/Discover.tsx ← new (placeholder)
+
+apps/web/src/App.tsx ← update routes to Home/Reserve/Discover
+
+apps/web/public/comp-hero.png ← already present (the comp)
+
+apps/web/public/chameleon.png ← (if needed) export the chameleon from comp; otherwise reuse comp-hero segment via CSS object-position tricks.
+
+Important: Keep build entry the same. No Tailwind. No postcss plugins. No HMR configuration changes.
+
+Implementation notes
+
+Hero ring: make it an inline <svg> with:
+
+a “base” conic ring (blue → orange), a soft inner radial vignette, and two wedge shadow masks to match the comp’s darker slices.
+
+Store seam rotation in --ring-rotate (deg) so we can tweak easily.
+
+Constellation: 15–30 small circles absolutely positioned within a position:relative layer; random but symmetric; twinkle via @keyframes twinkle.
+
+Chameleon panel: container with a faint outer vignette, the chameleon PNG inside (fit=contain), subtle inner drop glow (box-shadow).
+
+Typography: heavy headline weight; supporting copy medium; colors from tokens. Use clamp e.g. clamp(36px, 6vw, 72px) for headline lines.
+
+CTAs: add glow rings using pseudo elements; hover elevates brightness + glow; pressed state reduces blur.
+
+Acceptance criteria
+
+At 1440×900, the hero matches the comp within ±3–5px in relative scale and alignment.
+
+Page validates in Lighthouse (Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95).
+
+Animations are subtle by default, can be toggled via .motion-on/.motion-off, and are disabled under prefers-reduced-motion.
+
+Navigating to /reserve and /discover works (placeholder content OK).
+
+Only the files listed above are added/modified; no new packages.
+
+After you finish, also give me:
+
+A token reference table (CSS vars) and where they are used.
+
+A “nudges” section in your output listing the 5–10 CSS variables I should tweak to micro-align without code changes (--ring-rotate, --hero-grid-gap, --cham-w, --cham-x, --cham-y, etc.).
+
+The exact build/run commands you verified with:
+
+pkill -f node || true; pkill -f vite || true
+pnpm --dir apps/web install
+pnpm --dir apps/web run build
+python3 -m http.server 3000 --directory apps/web/dist
+
+
+A QA checklist you followed (viewport sizes, link targets, contrast check, motion toggle, no console errors).
+
+Non-negotiables
+
+No Tailwind/PostCSS plugins/GSAP/etc.
+
+No changes outside apps/web.
+
+No HMR fiddling. Must build and serve as static without errors.
+
+Keep code small, readable, and production-ready.
+
+That’s it — please implement now.
