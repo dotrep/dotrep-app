@@ -1,0 +1,14 @@
+:root {
+  --brand-bg: #0b0f12;
+  --brand-fg: #e6f1ff;
+  --brand-accent: #00f0ff;
+}
+
+body {
+  background: var(--brand-bg);
+  color: var(--brand-fg);
+  font-family: 'Inter', sans-serif;
+}
+h1 {
+  color: var(--brand-accent);
+}

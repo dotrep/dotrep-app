@@ -1,15 +1,12 @@
 {
-  "name": "dotrep",
+  "name": "rep-unified",
   "private": true,
-  "packageManager": "pnpm@8.15.4",
-  "workspaces": ["apps/*"],
+  "version": "0.0.0",
   "scripts": {
-    "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
-    "lint": "turbo run lint"
+    "start": "node server/server.js"
   },
-  "devDependencies": {
-    "turbo": "^2.5.8",
-    "typescript": "^5.9.3"
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }

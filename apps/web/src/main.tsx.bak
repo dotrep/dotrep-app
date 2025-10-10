@@ -1,0 +1,74 @@
+import React, { useMemo } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+
+function App(){
+  const defs = useMemo(() => (
+    <svg aria-hidden="true" width="0" height="0" style={{position:'absolute'}}>
+      <defs>
+        <linearGradient id="repGrad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stopColor="#4cc3ff" />
+          <stop offset="100%" stopColor="#19d6a9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  ), []);
+
+  return (
+    <main className="page">
+      {defs}
+      <section className="hero">
+        <div className="bg-stars" />
+
+        {/* LEFT: Orb */}
+        <div className="orb">
+          <div className="orb-glow" />
+          <div className="orb-ring" />
+          <div className="orb-center" />
+          <div className="wedge" /><div className="wedge w2" />
+          <div className="wordmark">
+            <svg viewBox="0 0 300 120">
+              <g transform="translate(150,60)">
+                <text textAnchor="middle" dominantBaseline="middle"
+                      fontFamily="ui-sans-serif, system-ui, Inter, Segoe UI, Roboto"
+                      fontWeight="900" fontSize="86" fill="url(#repGrad)" letterSpacing="-0.02em">.rep</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {/* RIGHT: copy */}
+        <div className="copy">
+          <h1 className="h1">
+            Your onchain<br/>reputation.<br/>
+            <span className="alive">Alive on Base.</span>
+          </h1>
+
+          <div className="ctas">
+            <a className="btn btn-primary" href="/reserve">Reserve your.rep</a>
+            <a className="btn btn-outline" href="/discover">Discover.rep</a>
+          </div>
+
+          <div className="sub">
+            <h2>Identity isn’t minted.<br/>It’s earned.</h2>
+            <div className="chips">
+              <div className="chip"><span className="dot" /><div>Olivia</div></div>
+              <div className="chip"><span className="dot" /><div>Dani</div></div>
+              <div className="chip ghost"><div>Ryan</div></div>
+              <div className="chip ghost"><div>Daniel</div></div>
+            </div>
+            <p className="meta">Composed <span className="base">on Base</span>,<br/>verified by <span className="rep">.rep</span></p>
+            <p className="foot"><span className="bullet" />Built on Base. Defined by you.</p>
+          </div>
+        </div>
+
+        {/* RIGHT: chameleon inside vignette panel (uses /chameleon.png) */}
+        <div className="cham-panel">
+          <img src="/chameleon.png" alt="" className="cham" draggable={false}/>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<App />);

@@ -1,0 +1,31 @@
+:root {
+  --rep-blue: #1A9FFF;
+  --rep-orange: #FF6A00;
+  --rep-bg: #06080A;
+  --rep-surface: #0E1216;
+  --rep-text: #E6F1FF;
+  --rep-subtext: #94A2B8;
+}
+
+body {
+  background: var(--rep-bg);
+  color: var(--rep-text);
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  background: linear-gradient(90deg, var(--rep-orange), var(--rep-blue));
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.3s;
+}
+
+button:hover {
+  opacity: 0.85;
+}

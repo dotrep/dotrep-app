@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>.rep — Pixel Hero</title>
+  <link rel="stylesheet" href="/rep-hero.css">
+</head>
+<body>
+  <!--
+    Pixel canvas: everything is laid out in a 1440x900 design space and
+    scaled uniformly to fit the viewport without shifting relative positions.
+  -->
+  <div id="stage" class="stage" data-w="1440" data-h="900" role="img" aria-label=".rep hero">
+    <!-- Left: ring + inner disc + wordmark -->
+    <div class="orb">
+      <div class="orb-ring" aria-hidden="true"></div>
+      <div class="orb-core" aria-hidden="true"></div>
+      <div class="rep-dot">.rep</div>
+    </div>
+
+    <!-- Right: headline block -->
+    <div class="copy">
+      <h1 class="h1">
+        <span>Your onchain</span><br/>
+        <span>reputation.</span><br/>
+        <span class="alive">Alive on Base.</span>
+      </h1>
+
+      <div class="ctas">
+        <a class="btn btn-primary" href="/reserve">Reserve your.rep</a>
+        <a class="btn btn-outline" href="/discover">Discover.rep</a>
+      </div>
+
+      <p class="subhead">
+        <strong>Identity isn’t minted.</strong><br/>It’s earned.
+      </p>
+
+      <div class="pills">
+        <span class="pill"><i></i> Olivia</span>
+        <span class="pill pill-off"><i></i> Dani</span>
+        <span class="pill pill-off"><i></i> Ryan</span>
+        <span class="pill pill-off"><i></i> Daniel</span>
+      </div>
+
+      <p class="meta">
+        Composed <span class="accent">on Base</span>,<br/>
+        verified by <span class="accent">.rep</span>
+      </p>
+
+      <p class="foot"><i></i> Built on Base. Defined by you.</p>
+    </div>
+
+    <!-- Chameleon panel (use transparent if you prefer) -->
+    <figure class="cham-panel" aria-label="Chameleon">
+      <img class="cham" src="/chameleon.png" alt="Chameleon"/>
+    </figure>
+
+    <!-- Decorative constellation dots (tiny, cheap) -->
+    <div class="stars" aria-hidden="true"></div>
+  </div>
+
+  <script src="/rep-hero.js"></script>
+</body>
+</html>

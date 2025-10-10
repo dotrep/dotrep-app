@@ -1,0 +1,189 @@
+:root{
+  --bg: #0a0e14;             /* stage background */
+  --text: #e9ecef;
+  --muted: #b6c0cc;
+  --alive: #36d887;          /* “Alive on Base” green */
+  --btn-blue: #4a88ff;
+  --btn-blue-edge: #2a64e0;
+  --btn-ring: rgba(118,175,255,.4);
+  --panel-glow: rgba(36,92,170,.24);
+  --gold: #e59a56;
+  --blue: #66bfff;
+}
+
+/* page */
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.35 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";}
+
+/* pixel canvas */
+.stage{
+  position:relative;
+  width:100vw;height:100vh;
+  overflow:hidden;
+  display:grid;place-items:center;
+}
+.stage::before{
+  /* subtle corner vignette like comp */
+  content:"";
+  position:absolute; inset:-20vmax;
+  background:
+    radial-gradient(1200px 800px at -10% 10%, rgba(18,24,32,.6), transparent 50%),
+    radial-gradient(1200px 900px at 110% -10%, rgba(18,24,32,.5), transparent 52%);
+  pointer-events:none;
+}
+
+/* The actual 1440x900 design surface (scaled via JS) */
+#stage > * { transform-origin: 0 0; } /* ensure crisp scaling of child blocks */
+#stage::after{ content:""; }
+
+/* layout blocks positioned in design space (absolute) */
+.orb, .copy, .cham-panel, .stars { position:absolute; }
+
+/* ORB — sizes/positions match the comp proportions */
+.orb{
+  left: 60px;   /* x in the 1440x900 space */
+  top:  110px;  /* y */
+  width: 640px; height: 640px;
+}
+.orb-ring{
+  position:absolute; inset:-4px;
+  border-radius:50%;
+  /* ring color sweep with soft banding and a dark seam wedge */
+  background:
+    conic-gradient(from -12deg,
+      var(--blue) 0deg, var(--blue) 110deg,
+      #1a2630 132deg 142deg,
+      var(--gold) 146deg 300deg,
+      #1a2630 315deg 324deg,
+      var(--blue) 330deg 360deg);
+  filter: drop-shadow(0 18px 46px rgba(60,140,220,.25))
+          drop-shadow(0 8px 18px rgba(0,0,0,.55));
+}
+.orb-core{
+  position:absolute; inset:54px;
+  border-radius:50%;
+  background:
+    radial-gradient(60% 60% at 50% 45%, rgba(0,0,0,.45), transparent 60%),
+    radial-gradient(60% 60% at 50% 55%, rgba(0,0,0,.45), transparent 60%),
+    radial-gradient(100% 100% at 50% 50%, #0f131a 0%, #0c1016 60%, #0a0e14 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.02),
+    inset 0 24px 90px rgba(0,0,0,.45);
+}
+
+/* wordmark inside orb */
+.rep-dot{
+  position:absolute; left: 255px; top: 280px;
+  font-weight: 800;
+  font-size: 72px;
+  letter-spacing:-.02em;
+  color: #84f0b2;            /* minty gradient look approximated */
+  text-shadow: 0 6px 18px rgba(0,0,0,.55);
+}
+
+/* HEADLINE block (right side) */
+.copy{
+  left: 830px; top: 110px; width: 520px;
+}
+.h1{
+  margin:0 0 20px 0;
+  font-weight: 800;
+  font-size: 72px;           /* tuned for 1440 base */
+  line-height: .95;
+  letter-spacing:-.02em;
+  text-shadow: 0 10px 32px rgba(0,0,0,.55);
+}
+.h1 .alive{ color: var(--alive); }
+
+/* CTAs */
+.ctas{ margin: 16px 0 22px; display:flex; gap:16px; flex-wrap:wrap; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:46px; padding:0 18px 1px;
+  border-radius:999px; text-decoration:none; font-weight:700;
+  letter-spacing:.01em; white-space:nowrap;
+  box-shadow: 0 12px 28px rgba(0,0,0,.35), 0 0 0 6px transparent;
+  transition: transform .06s ease, box-shadow .12s ease, background .12s ease;
+}
+.btn-primary{
+  background: radial-gradient(240% 160% at 30% 20%, #79a8ff 0%, #4a88ff 40%, #2c5de5 100%);
+  color:white;
+  border:1px solid var(--btn-blue-edge);
+}
+.btn-primary:hover{ transform: translateY(-1px); box-shadow:0 16px 36px rgba(42,100,224,.32), 0 0 0 6px var(--btn-ring); }
+
+.btn-outline{
+  background: rgba(16,24,32,.55);
+  border:1px solid rgba(110,170,160,.4);
+  color: #c9fce0;
+}
+.btn-outline:hover{ transform: translateY(-1px); box-shadow:0 16px 36px rgba(40,150,120,.26), 0 0 0 6px rgba(60,220,160,.18); }
+
+/* subhead + pills + meta */
+.subhead{
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 26px; line-height:1.1;
+}
+.subhead strong{ color: var(--text); }
+
+.pills{ display:flex; gap:10px; margin: 10px 0 12px; flex-wrap:wrap; }
+.pill{
+  display:inline-flex; align-items:center; gap:8px;
+  height:28px; padding:0 12px;
+  border-radius:999px; background:rgba(30,40,50,.5);
+  border:1px solid rgba(120,200,255,.25);
+  font-size:14px; color:#d9efff;
+}
+.pill i{ width:12px; height:12px; border-radius:50%; background:#67b8ff; box-shadow:0 0 12px #67b8ff88 inset; }
+.pill-off{ opacity:.6; }
+.pill-off i{ background:#4e5a66; box-shadow:none; }
+
+.meta{ margin: 6px 0 10px; color:#d5dde6; }
+.meta .accent{ color: var(--alive); }
+
+.foot{
+  margin: 6px 0 0; color:#98a6b6; font-size:14px;
+}
+.foot i{
+  display:inline-block; width:12px; height:12px; border-radius:50%;
+  background: radial-gradient(circle at 35% 35%, #ffe7a3 0%, #e2b868 42%, #8b6a2d 100%);
+  box-shadow: 0 0 10px rgba(255,214,120,.35);
+  margin-right:8px; vertical-align:-2px;
+}
+
+/* Chameleon panel */
+.cham-panel{
+  left: 1080px; top: 105px; width: 300px; height: 460px;
+  border-radius: 18px;
+  background: rgba(10,14,20,.8);
+  box-shadow: 0 40px 140px rgba(0,0,0,.55), 0 0 80px var(--panel-glow);
+  overflow:hidden;
+}
+.cham{
+  position:absolute; left: 12%; bottom: 6%;
+  width: 84%; height: auto; display:block;
+  filter: drop-shadow(0 18px 60px rgba(30,140,200,.25))
+          drop-shadow(0 10px 24px rgba(0,0,0,.65));
+}
+
+/* Constellation dots (tiny sparkles) */
+.stars{
+  left: 760px; top: 520px; width: 260px; height: 140px;
+  background:
+    radial-gradient(2px 2px at 20% 30%, rgba(146,200,255,.9), transparent 60%),
+    radial-gradient(2px 2px at 50% 60%, rgba(255,180,90,.95), transparent 60%),
+    radial-gradient(2px 2px at 68% 22%, rgba(150,210,255,.9), transparent 60%),
+    radial-gradient(2px 2px at 80% 78%, rgba(160,230,255,.9), transparent 60%),
+    radial-gradient(1.6px 1.6px at 36% 82%, rgba(255,210,140,.95), transparent 60%);
+  filter: blur(.15px);
+}
+
+/* RESPONSIVE: scale the 1440x900 surface uniformly */
+@media (max-aspect-ratio: 16/10){
+  /* taller screens: fit to width (default) */
+}
+@media (min-aspect-ratio: 16/9){
+  /* wider screens: still OK, we scale via JS to letterbox as needed */
+}

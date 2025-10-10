@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>.rep — Hero</title>
+<style>
+  /* === Design space (update these if your comp was exported at a different size) === */
+  :root{ --w: 1440; --h: 900; }  /* comp canvas width/height in px */
+
+  html,body{height:100%;margin:0;background:#0b0f14;color:#e8ecf3;font:16px/1.4 system-ui, Segoe UI, Inter, Roboto, Helvetica, Arial, sans-serif;}
+  .stage{
+    position:relative;
+    width:100vw;
+    height:calc(100vw * (var(--h) / var(--w)));
+    max-height:100vh;
+    max-width:calc(100vh * (var(--w) / var(--h)));
+    margin:0 auto;
+    background:#0b0f14;
+    overflow:hidden;
+  }
+  /* fill with your comp, pixel for pixel */
+  .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:auto;}
+
+  /* Invsible, accessible hit-areas placed as percentages of the comp */
+  .hit{
+    position:absolute; display:block; border-radius:9999px; outline:none;
+  }
+  .hit:focus-visible{ box-shadow:0 0 0 3px rgba(56,189,248,.7); }
+
+  /* ---- CTA zones (percentages tuned for a 1440x900 comp) ---- */
+  /* Tweak left/top/width/height if your comp was exported at another size */
+  #reserve  { left:59.0%; top:40.7%; width:18.2%; height:7.0%; }
+  #discover { left:59.6%; top:49.4%; width:17.8%; height:7.0%; }
+
+  /* Optional: make the whole chameleon card clickable (to /discover) */
+  #cham { left:71.5%; top:13.0%; width:19.8%; height:60.0%; border-radius:24px; }
+
+  /* Keep aspect on ultra-tall viewports (mobile rotated, small laptops) */
+  @media (max-aspect-ratio: calc(var(--w) / var(--h))) {
+    .stage{
+      width:calc(100vh * (var(--w) / var(--h)));
+      height:100vh;
+    }
+  }
+
+  /* DEBUG: set to 1 to see the hit areas while you verify */
+  :root{ --debug: 0; }
+  .hit{ background:rgba(0,240,180,calc(var(--debug) * .08)); border:calc(var(--debug) * 1px) dashed rgba(0,240,180,.5); }
+</style>
+
+<div class="stage" aria-label=".rep hero">
+  <img class="bg" src="/comp.png" alt="" />
+  <!-- Accessible, keyboard-focusable hit-areas -->
+  <a id="reserve"  class="hit" href="/reserve"  aria-label="Reserve your .rep"></a>
+  <a id="discover" class="hit" href="/discover" aria-label="Discover .rep"></a>
+  <a id="cham"     class="hit" href="/discover" aria-label="Discover .rep"></a>
+</div>
+</html>

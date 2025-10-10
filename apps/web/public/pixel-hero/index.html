@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>.rep — Pixel Hero</title>
+    <link rel="preload" as="image" href="/assets/comp-hero.png">
+    <link rel="stylesheet" href="./styles.css"/>
+  </head>
+  <body>
+    <!-- Off-screen accessible/SEO text that matches the comp -->
+    <h1 class="sr-only">Your onchain reputation. Alive on Base.</h1>
+    <p class="sr-only">Identity isn’t minted. It’s earned. Composed on Base, verified by .rep.</p>
+
+    <div class="stage" id="stage">
+      <!-- overlay for lining up (toggle with O) -->
+      <div class="overlay" id="overlay"></div>
+
+      <!-- Live clickable areas that sit over the comp’s buttons -->
+      <a class="cta cta-reserve" href="/reserve" aria-label="Reserve your .rep">
+        <span>Reserve your.rep</span>
+      </a>
+      <a class="cta cta-discover" href="/discover" aria-label="Discover .rep">
+        <span>Discover.rep</span>
+      </a>
+    </div>
+
+    <div class="tools">
+      <button id="toggleOverlay" title="Toggle comp overlay (O)">Overlay: off</button>
+      <button id="toggleDebug" title="Outline click areas">Outlines</button>
+    </div>
+
+    <script>
+      const overlay = document.getElementById('overlay');
+      const stage   = document.getElementById('stage');
+      const btnO    = document.getElementById('toggleOverlay');
+      const btnD    = document.getElementById('toggleDebug');
+
+      function setOverlay(on){
+        overlay.classList.toggle('on', on);
+        btnO.textContent = 'Overlay: ' + (on ? 'on' : 'off');
+      }
+      function setDebug(on){
+        document.body.classList.toggle('debug', on);
+        btnD.textContent = on ? 'Outlines ✓' : 'Outlines';
+      }
+      btnO.addEventListener('click', ()=> setOverlay(!overlay.classList.contains('on')) );
+      btnD.addEventListener('click', ()=> setDebug(!document.body.classList.contains('debug')) );
+      window.addEventListener('keydown', (e)=>{
+        if(e.key.toLowerCase()==='o') setOverlay(!overlay.classList.contains('on'));
+        if(e.key.toLowerCase()==='d') setDebug(!document.body.classList.contains('debug'));
+      });
+
+      // Ensure stage keeps the comp aspect and uses the largest dimension that fits the viewport
+      function fit(){
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const W = 1440, H = 900; // match styles.css root variables
+        const a = W/H;
+        const winA = vw/vh;
+        // we want letterbox behavior: fit within viewport while preserving aspect
+        if (winA > a){
+          // window is wider: limit by height
+          stage.style.height = vh + 'px';
+          stage.style.width  = (vh * a) + 'px';
+        } else {
+          // window is taller: limit by width
+          stage.style.width  = vw + 'px';
+          stage.style.height = (vw / a) + 'px';
+        }
+      }
+      fit();
+      addEventListener('resize', fit);
+    </script>
+  </body>
+</html>

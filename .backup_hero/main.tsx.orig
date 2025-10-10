@@ -1,0 +1,497 @@
+import React, { useMemo } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+
+function App(){
+  const defs = useMemo(() => (
+    <svg aria-hidden="true" width="0" height="0" style={{position:'absolute'}}>
+      <defs>
+        <linearGradient id="repGrad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stopColor="#4cc3ff" />
+          <stop offset="100%" stopColor="#19d6a9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  ), []);
+
+  return (
+    <main className="page">
+      {defs}
+      <section className="hero">
+        <div className="bg-stars" />
+
+        {/* LEFT: Orb */}
+        <div className="orb">
+          <div className="orb-glow" />
+          <div className="orb-ring" />
+          <div className="orb-center" />
+          <div className="wedge" /><div className="wedge w2" />
+          <div className="wordmark">
+            <svg viewBox="0 0 300 120">
+              <g transform="translate(150,60)">
+                <text textAnchor="middle" dominantBaseline="middle"
+                      fontFamily="ui-sans-serif, system-ui, Inter, Segoe UI, Roboto"
+                      fontWeight="900" fontSize="86" fill="url(#repGrad)" letterSpacing="-0.02em">.rep</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {/* RIGHT: copy */}
+        <div className="copy">
+          <h1 className="h1">
+            Your onchain<br/>reputation.<br/>
+            <span className="alive">Alive on Base.</span>
+          </h1>
+
+          <div className="ctas">
+            <a className="btn btn-primary" href="/reserve">Reserve your.rep</a>
+            <a className="btn btn-outline" href="/discover">Discover.rep</a>
+          </div>
+
+          <div className="sub">
+            <h2>Identity isn’t minted.<br/>It’s earned.</h2>
+            <div className="chips">
+              <div className="chip"><span className="dot" /><div>Olivia</div></div>
+              <div className="chip"><span className="dot" /><div>Dani</div></div>
+              <div className="chip ghost"><div>Ryan</div></div>
+              <div className="chip ghost"><div>Daniel</div></div>
+            </div>
+            <p className="meta">Composed <span className="base">on Base</span>,<br/>verified by <span className="rep">.rep</span></p>
+            <p className="foot"><span className="bullet" />Built on Base. Defined by you.</p>
+          </div>
+        </div>
+
+        {/* RIGHT: chameleon inside vignette panel (uses /chameleon.png) */}
+        <div className="cham-panel">
+          <img src="/chameleon.png" alt="" className="cham" draggable={false}/>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<App />);
+
+// ---- Comp overlay auto-loader + "O" toggle ----
+async function __probe(url: string) {
+  try { const r = await fetch(url, { method: "HEAD", cache: "no-store" }); return r.ok; }
+  catch { return false; }
+}
+(async () => {
+  if (await __probe("/comp-overlay.png")) {
+    const el = document.createElement("div");
+    el.id = "comp-overlay";
+    document.body.appendChild(el);
+    window.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "o") {
+        document.body.classList.toggle("show-overlay");
+      }
+    });
+    console.log('🖼  Comp overlay available — press "O" to toggle.');
+  }
+})();
+
+// === Robust ABS controls (keyboard + button + URL + persisted) ===
+(function absControls(){
+  function onReady(fn:()=>void){
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+  onReady(() => {
+    // Ensure .canvas wrapper exists (in case earlier step didn't run yet)
+    (function ensureCanvas(){
+      const hero = document.querySelector<HTMLElement>('.hero');
+      if (!hero) return;
+      if (!hero.querySelector('.canvas')) {
+        const canvas = document.createElement('div');
+        canvas.className = 'canvas';
+        while (hero.firstChild) canvas.appendChild(hero.firstChild);
+        hero.appendChild(canvas);
+      }
+    })();
+
+    const key = 'canvasAbs';
+    const hasParam = /(?:[?#&])abs=1\b/i.test(location.href);
+    const stored = localStorage.getItem(key) === '1';
+    const initial = hasParam || stored;
+
+    const apply = (on:boolean) => {
+      document.body.classList.toggle('canvas-abs', on);
+      localStorage.setItem(key, on ? '1' : '0');
+      console.log(`🎯 Canvas ABS mode: ${on ? 'ON' : 'OFF'}`);
+    };
+    apply(initial);
+
+    // Keyboard: A toggles (and Shift+A also works)
+    window.addEventListener('keydown', (e) => {
+      const k = e.key?.toLowerCase?.();
+      if (k === 'a') {
+        apply(!document.body.classList.contains('canvas-abs'));
+      }
+    });
+
+    // Floating dev button (bottom-left)
+    const btn = document.createElement('button');
+    btn.textContent = 'ABS';
+    Object.assign(btn.style, {
+      position: 'fixed', left: '10px', bottom: '10px', zIndex: '10001',
+      padding: '6px 10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,.25)',
+      background: 'rgba(0,0,0,.55)', color: '#fff', font: '12px ui-monospace,monospace',
+      cursor: 'pointer', opacity: '0.85'
+    });
+    btn.title = 'Toggle absolute comp layout (A)';
+    btn.onclick = () => apply(!document.body.classList.contains('canvas-abs'));
+    document.body.appendChild(btn);
+
+    // Console helpers
+    (window as any).__absOn  = () => apply(true);
+    (window as any).__absOff = () => apply(false);
+  });
+})();
+
+// === MIN ABS: guaranteed button + keyboard + wrapper ===
+(function(){
+  const ready=(fn)=>document.readyState==='loading'
+    ? document.addEventListener('DOMContentLoaded',fn)
+    : fn();
+
+  ready(()=>{
+    // ensure hero has .canvas wrapper (once)
+    const hero = document.querySelector('.hero');
+    if (hero && !hero.querySelector('.canvas')) {
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      while (hero.firstChild) canvas.appendChild(hero.firstChild);
+      hero.appendChild(canvas);
+    }
+
+    const apply = (on)=> {
+      document.body.classList.toggle('canvas-abs', !!on);
+      console.log('🎯 Canvas ABS mode:', on ? 'ON' : 'OFF');
+    };
+
+    // Keyboard: A toggles ABS
+    window.addEventListener('keydown', (e)=>{
+      if ((e.key||'').toLowerCase()==='a') {
+        apply(!document.body.classList.contains('canvas-abs'));
+      }
+    });
+
+    // Floating ABS button (bottom-left)
+    if (!document.getElementById('abs-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'abs-btn';
+      btn.textContent = 'ABS';
+      Object.assign(btn.style, {
+        position:'fixed', left:'10px', bottom:'10px', zIndex:10001,
+        padding:'6px 10px', borderRadius:'10px',
+        border:'1px solid rgba(255,255,255,.25)',
+        background:'rgba(0,0,0,.55)', color:'#fff',
+        font:'12px ui-monospace,monospace', cursor:'pointer', opacity:'0.85'
+      });
+      btn.title = 'Toggle absolute comp layout (A)';
+      btn.onclick = ()=>apply(!document.body.classList.contains('canvas-abs'));
+      document.body.appendChild(btn);
+    }
+  });
+})();
+
+// ===== ABS SUPER-TOGGLER (button + keyboard + wrapper + logs) =====
+(function(){
+  const onReady = (fn:()=>void) =>
+    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
+
+  function ensureCanvasWrapper(){
+    const hero = document.querySelector<HTMLElement>('.hero');
+    if (!hero) return false;
+    if (!hero.querySelector('.canvas')) {
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      while (hero.firstChild) canvas.appendChild(hero.firstChild);
+      hero.appendChild(canvas);
+      console.log('🧩 Inserted .canvas wrapper');
+    }
+    return true;
+  }
+
+  function applyAbs(on:boolean){
+    document.body.classList.toggle('canvas-abs', on);
+    console.log(`🎯 Canvas ABS mode: ${on ? 'ON' : 'OFF'}`);
+  }
+
+  onReady(() => {
+    ensureCanvasWrapper();
+
+    // Keyboard: A toggles
+    window.addEventListener('keydown', (e) => {
+      if ((e.key||'').toLowerCase() === 'a') {
+        applyAbs(!document.body.classList.contains('canvas-abs'));
+      }
+    });
+
+    // Floating ABS button (bottom-left)
+    if (!document.getElementById('abs-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'abs-btn';
+      btn.textContent = 'ABS';
+      Object.assign(btn.style, {
+        position:'fixed', left:'10px', bottom:'10px', zIndex:'10001',
+        padding:'6px 10px', borderRadius:'10px',
+        border:'1px solid rgba(255,255,255,.25)',
+        background:'rgba(0,0,0,.55)', color:'#fff',
+        font:'12px ui-monospace,monospace', cursor:'pointer', opacity:'0.85'
+      });
+      btn.title = 'Toggle absolute comp layout (A)';
+      btn.onclick = () => applyAbs(!document.body.classList.contains('canvas-abs'));
+      document.body.appendChild(btn);
+    }
+
+    // Console helpers
+    (window as any).__absOn  = () => applyAbs(true);
+    (window as any).__absOff = () => applyAbs(false);
+
+    // URL flag (?abs=1) + persist
+    const KEY = 'canvasAbs';
+    const hasParam = /(?:[?#&])abs=1\b/i.test(location.href);
+    const stored = localStorage.getItem(KEY) === '1';
+    const initial = hasParam || stored;
+    applyAbs(initial);
+    new MutationObserver(() => {
+      localStorage.setItem(KEY, document.body.classList.contains('canvas-abs') ? '1' : '0');
+    }).observe(document.body, { attributes:true, attributeFilter:['class'] });
+  });
+})();
+
+// === ABS Mapper: click-to-assign the 4 target elements ===
+(function(){
+  const READY = (fn:()=>void)=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn();
+
+  function addBtn(id:string, label:string, left:string, bottom:string, onClick:()=>void){
+    if (document.getElementById(id)) return;
+    const b=document.createElement('button');
+    b.id=id; b.textContent=label;
+    Object.assign(b.style,{position:'fixed',left,bottom,zIndex:'10001',padding:'6px 10px',borderRadius:'10px',
+      border:'1px solid rgba(255,255,255,.25)',background:'rgba(0,0,0,.55)',color:'#fff',
+      font:'12px ui-monospace,monospace',cursor:'pointer',opacity:'0.85'});
+    b.onclick=onClick; document.body.appendChild(b);
+  }
+
+  function ensureIdsFromStorage(){
+    const ids = ['abs-orb','abs-copy','abs-ctas','abs-cham'];
+    const sel = JSON.parse(localStorage.getItem('__absMap__')||'{}');
+    let changed=false;
+    ids.forEach((id)=>{
+      if (document.getElementById(id)) return;
+      const s = sel[id];
+      if (s){
+        try{
+          const el = document.querySelector(s) as HTMLElement|null;
+          if (el){ el.id=id; changed=true; }
+        }catch{}
+      }
+    });
+    if(changed) console.log('🔖 Restored ABS ids from mapping');
+  }
+
+  function startMapping(){
+    const order = [
+      {id:'abs-orb',  label:'Click the ORB'},
+      {id:'abs-copy', label:'Click the COPY block (headlines)' },
+      {id:'abs-ctas', label:'Click the CTAs container' },
+      {id:'abs-cham', label:'Click the CHAMELEON panel' },
+    ];
+    let i = 0;
+    const hint = document.createElement('div');
+    hint.className='abs-pick-hint';
+    document.body.appendChild(hint);
+
+    const selMap:Record<string,string> = JSON.parse(localStorage.getItem('__absMap__')||'{}');
+
+    function cssPath(el:Element){
+      // simple robust selector path (tag + nth-child chain)
+      const parts:string[]=[];
+      let n:Element|null=el;
+      while(n && n!==document.body){
+        const parent=n.parentElement;
+        if(!parent) break;
+        const idx = 1+Array.from(parent.children).indexOf(n);
+        parts.unshift(`${n.tagName.toLowerCase()}:nth-child(${idx})`);
+        n=parent;
+      }
+      return parts.length?parts.join('>'):'';
+    }
+
+    function step(){
+      if (i>=order.length){
+        hint.remove();
+        localStorage.setItem('__absMap__', JSON.stringify(selMap));
+        console.log('✅ ABS map saved:', selMap);
+        ensureIdsFromStorage();  // assign ids immediately
+        return;
+      }
+      const {id,label}=order[i];
+      hint.textContent = `ABS mapping: ${label} (${i+1}/4) — Press ESC to cancel`;
+      document.body.classList.add('abs-picking');
+      const over=(e:Event)=> (e.target as HTMLElement).classList.add('abs-pick-target');
+      const out =(e:Event)=> (e.target as HTMLElement).classList.remove('abs-pick-target');
+      const up  =(e:MouseEvent)=>{
+        e.preventDefault(); e.stopPropagation();
+        const el = e.target as HTMLElement;
+        document.querySelectorAll('.abs-pick-target').forEach(x=>x.classList.remove('abs-pick-target'));
+        document.removeEventListener('mouseover',over,true);
+        document.removeEventListener('mouseout',out,true);
+        document.removeEventListener('click',up,true);
+        const selector = cssPath(el);
+        if (selector){
+          selMap[id]=selector; el.id=id;
+          console.log(`🔗 Mapped ${id} -> ${selector}`);
+        }
+        i++; step();
+      };
+      const esc=(e:KeyboardEvent)=>{ if(e.key==='Escape'){ cleanup(); hint.remove(); } };
+      function cleanup(){
+        document.removeEventListener('mouseover',over,true);
+        document.removeEventListener('mouseout',out,true);
+        document.removeEventListener('click',up,true);
+        document.removeEventListener('keydown',esc,true);
+        document.body.classList.remove('abs-picking');
+      }
+      document.addEventListener('mouseover',over,true);
+      document.addEventListener('mouseout',out,true);
+      document.addEventListener('click',up,true);
+      document.addEventListener('keydown',esc,true);
+    }
+    step();
+  }
+
+  READY(()=>{
+    ensureIdsFromStorage();
+    // Map ABS button next to ABS
+    addBtn('abs-map-btn','Map ABS','60px','10px', startMapping);
+  });
+})();
+
+// === ABS VAR MANAGER: live nudge + HUD + export ==============================
+(function(){
+  const READY=(f:()=>void)=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',f):f();
+
+  type Vars = {
+    orbX:number; orbY:number; orbSize:number;
+    copyX:number; copyY:number; copyW:number;
+    ctasX:number; ctasY:number;
+    chamX:number; chamY:number; chamW:number; chamH:number;
+  };
+  const KEY='__absVars__';
+  const DEF:Vars = { orbX:40, orbY:120, orbSize:980, copyX:860, copyY:150, copyW:520, ctasX:860, ctasY:300, chamX:1040, chamY:110, chamW:380, chamH:560 };
+
+  function load():Vars{
+    try{ return Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY)||'{}')); }catch{ return {...DEF}; }
+  }
+  function save(v:Vars){ localStorage.setItem(KEY, JSON.stringify(v)); }
+  function css(v:Vars){
+    return `:root{
+  --orb-x:${v.orbX}; --orb-y:${v.orbY}; --orb-size:${v.orbSize};
+  --copy-x:${v.copyX}; --copy-y:${v.copyY}; --copy-w:${v.copyW};
+  --ctas-x:${v.ctasX}; --ctas-y:${v.ctasY};
+  --cham-x:${v.chamX}; --cham-y:${v.chamY}; --cham-w:${v.chamW}; --cham-h:${v.chamH};
+}`;
+  }
+
+  function apply(v:Vars){
+    let tag = document.getElementById('abs-vars-style') as HTMLStyleElement|null;
+    if(!tag){ tag=document.createElement('style'); tag.id='abs-vars-style'; document.head.appendChild(tag); }
+    tag.textContent = css(v);
+  }
+
+  READY(()=>{
+    let v = load();
+    apply(v);
+
+    // HUD
+    const hud = document.createElement('div');
+    hud.id='abs-hud';
+    Object.assign(hud.style,{
+      position:'fixed', right:'10px', bottom:'10px', zIndex:'10002',
+      background:'rgba(0,0,0,.66)', color:'#eafff7', padding:'10px',
+      font:'12px ui-monospace,monospace', border:'1px solid rgba(255,255,255,.25)',
+      borderRadius:'10px', display:'none'
+    });
+    hud.innerHTML = `
+      <div style="margin-bottom:6px">
+        <strong>ABS Nudge</strong> — 1:orb 2:copy 3:ctas 4:cham, arrows move (Shift=10).
+        <br/> +/- size/width | [ ] height (cham) | P=save | C=copy CSS | R=reset | ; = toggle HUD
+      </div>
+      <pre id="abs-hud-pre" style="margin:0;white-space:pre"></pre>`;
+    document.body.appendChild(hud);
+    const pre = hud.querySelector('#abs-hud-pre') as HTMLElement;
+
+    let target:'orb'|'copy'|'ctas'|'cham'='orb';
+    function refresh(){
+      pre.textContent = JSON.stringify({target, v}, null, 2);
+    }
+    refresh();
+
+    function toggleHUD(show?:boolean){
+      const on = show===undefined ? hud.style.display==='none' : show;
+      hud.style.display = on ? 'block' : 'none';
+      refresh();
+    }
+
+    // Add "Nudge" button
+    if (!document.getElementById('abs-nudge-btn')){
+      const b=document.createElement('button');
+      b.id='abs-nudge-btn'; b.textContent='Nudge';
+      Object.assign(b.style,{position:'fixed', left:'110px', bottom:'10px', zIndex:'10001',
+        padding:'6px 10px', borderRadius:'10px', border:'1px solid rgba(255,255,255,.25)',
+        background:'rgba(0,0,0,.55)', color:'#fff', font:'12px ui-monospace,monospace', cursor:'pointer', opacity:'0.85'});
+      b.title='Toggle ABS Nudge HUD (;)';
+      b.onclick=()=>toggleHUD();
+      document.body.appendChild(b);
+    }
+
+    // Keyboard controls
+    window.addEventListener('keydown',(e)=>{
+      const k=(e.key||'').toLowerCase();
+      const step = e.shiftKey ? 10 : 2;
+      let changed=false;
+
+      // toggle HUD
+      if (k===';'){ toggleHUD(); return; }
+
+      // pick target
+      if (k==='1'){ target='orb'; refresh(); return; }
+      if (k==='2'){ target='copy'; refresh(); return; }
+      if (k==='3'){ target='ctas'; refresh(); return; }
+      if (k==='4'){ target='cham'; refresh(); return; }
+
+      // move
+      if (k==='arrowleft'){ if(target==='orb') v.orbX-=step; else if(target==='copy') v.copyX-=step; else if(target==='ctas') v.ctasX-=step; else v.chamX-=step; changed=true; }
+      if (k==='arrowright'){ if(target==='orb') v.orbX+=step; else if(target==='copy') v.copyX+=step; else if(target==='ctas') v.ctasX+=step; else v.chamX+=step; changed=true; }
+      if (k==='arrowup'){ if(target==='orb') v.orbY-=step; else if(target==='copy') v.copyY-=step; else if(target==='ctas') v.ctasY-=step; else v.chamY-=step; changed=true; }
+      if (k==='arrowdown'){ if(target==='orb') v.orbY+=step; else if(target==='copy') v.copyY+=step; else if(target==='ctas') v.ctasY+=step; else v.chamY+=step; changed=true; }
+
+      // size / width / height
+      if (k==='=' || k==='+'){ if(target==='orb'){ v.orbSize+=step; } else if(target==='copy'){ v.copyW+=step; } else if(target==='cham'){ v.chamW+=step; } changed=true; }
+      if (k==='-'){ if(target==='orb'){ v.orbSize-=step; } else if(target==='copy'){ v.copyW-=step; } else if(target==='cham'){ v.chamW-=step; } changed=true; }
+      if (k===']'){ if(target==='cham'){ v.chamH+=step; changed=true; } }
+      if (k==='['){ if(target==='cham'){ v.chamH-=step; changed=true; } }
+
+      // save/persist
+      if (k==='p'){ save(v); console.log('💾 ABS vars saved'); }
+
+      // copy CSS to clipboard
+      if (k==='c'){
+        const text = css(v);
+        navigator.clipboard?.writeText(text).catch(()=>{});
+        console.log(text);
+        return;
+      }
+
+      // reset
+      if (k==='r'){ v={...DEF}; changed=true; }
+
+      if(changed){ apply(v); refresh(); }
+    });
+  });
+})();

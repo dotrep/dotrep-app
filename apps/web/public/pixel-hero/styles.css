@@ -1,0 +1,86 @@
+/* --- Pixel-locked hero built from the comp, scales fluidly --- */
+:root{
+  --design-w: 1440;   /* design space (px) — adjust if your comp is different */
+  --design-h: 900;    /* design space (px) */
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:#0b0f14;
+  color:#e8ecf3;
+  font-family: system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial, sans-serif;
+  overflow:auto;
+}
+
+/* Stage keeps the comp's aspect and scales to fit */
+.stage{
+  position:relative;
+  width:100vw;
+  height:calc(100vw * (var(--design-h) / var(--design-w)));
+  max-height:100vh;
+  max-width:calc(100vh * (var(--design-w) / var(--design-h)));
+  margin:0 auto;
+  background:#000;
+}
+.stage::before{
+  content:"";
+  position:absolute; inset:0;
+  background:url("/assets/comp-hero.png") center/cover no-repeat;
+  filter:none; /* ensure exact colors */
+}
+
+/* Click hit-areas for the two CTAs (positions as percentages) */
+.cta{
+  position:absolute;
+  display:inline-block;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 10px 28px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.04);
+  backdrop-filter: blur(4px);
+  text-decoration:none;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.cta:hover{ transform: translateY(-1px); box-shadow: 0 16px 38px rgba(0,0,0,.55), 0 0 24px rgba(56,160,255,.25); }
+
+/* The text inside the buttons (we keep the comp text as art; these are accessible) */
+.cta span{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; letter-spacing:.2px; color:#eaf4ff;
+  text-shadow: 0 0 14px rgba(56,160,255,.3);
+}
+
+/* — Button geometry (in percentages of the design space). 
+   Tune these if your comp differs — these are for a 1440×900 comp. */
+.cta-reserve{
+  /* left, top, width, height (percent of stage) */
+  left: 65.0%; top: 37.6%; width: 17.4%; height: 6.6%;
+}
+.cta-discover{
+  left: 65.1%; top: 45.0%; width: 17.2%; height: 6.4%;
+}
+/* Optional: invisible borders to visualize while dialing in */
+.debug .cta{ outline:1px dashed rgba(0,255,200,.45); }
+
+/* Off-screen accessible copy (SEO + screen readers) */
+.sr-only{
+  position:absolute !important;
+  width:1px;height:1px; padding:0;margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+/* Helper overlay toggle (press O) for lining up clickable areas with the comp text) */
+.overlay{ position:absolute; inset:0; pointer-events:none; display:none; }
+.overlay.on{ display:block; mix-blend-mode:normal; opacity:.28;
+  background:url("/assets/comp-hero.png") center/cover no-repeat; 
+}
+/* Corner pill UI */
+.tools{
+  position:fixed; left:10px; bottom:10px; z-index:10; display:flex; gap:8px;
+  font-size:12px;
+}
+.tools button{
+  background:rgba(255,255,255,.08); color:#dbe7ff; border:1px solid rgba(255,255,255,.18);
+  border-radius:999px; padding:6px 10px; cursor:pointer;
+}
+.tools button:hover{ background:rgba(255,255,255,.14); }
