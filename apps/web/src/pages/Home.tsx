@@ -132,24 +132,8 @@ export default function Home() {
               />
             </div>
           </div>
-        </section>
 
-        <section className="cred-section">
-          <div className="container">
-            <div className="constellation-layer" aria-hidden="true">
-              {credStars.map((star, i) => (
-                <div 
-                  key={i} 
-                  className="star" 
-                  style={{
-                    left: `${star.left}%`,
-                    top: `${star.top}%`,
-                    animationDelay: `${star.delay}s`
-                  }}
-                />
-              ))}
-            </div>
-            
+          <div className="hero-bottom container">
             <h2 className="cred-headline">
               Identity isn't minted.<br />
               <span className="earned">It's earned.</span>
@@ -179,7 +163,7 @@ export default function Home() {
             </p>
             
             <p className="cred-description">
-              Built on Base. Defined by you.
+              <span className="bullet">●</span> Built on Base. Defined by you.
             </p>
           </div>
         </section>

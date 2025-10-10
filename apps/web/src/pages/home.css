@@ -228,19 +228,20 @@ html.motion-on .chameleon-img {
   50% { transform: translateY(-10px); }
 }
 
-.cred-section {
+.hero-bottom {
   position: relative;
-  padding: var(--space-24) 0;
-  text-align: center;
-  background: var(--bg-800);
+  margin-top: var(--space-20);
+  padding: 0 var(--space-12);
+  max-width: 800px;
 }
 
 .cred-headline {
   font-size: clamp(36px, 4vw, 56px);
   font-weight: 800;
   line-height: 1.2;
-  margin-bottom: var(--space-12);
+  margin-bottom: var(--space-8);
   color: var(--text);
+  text-align: left;
 }
 
 .cred-headline .earned {
@@ -251,7 +252,6 @@ html.motion-on .chameleon-img {
 .people-chips {
   display: flex;
   gap: var(--space-4);
-  justify-content: center;
   flex-wrap: wrap;
   margin-bottom: var(--space-8);
 }
@@ -289,16 +289,26 @@ html.motion-on .chameleon-img {
   font-size: 18px;
   color: var(--text-dim);
   margin-bottom: var(--space-4);
+  text-align: left;
 }
 
 .cred-subtitle .on-base {
-  color: var(--blue);
+  color: var(--alive);
   font-weight: 600;
 }
 
 .cred-description {
   font-size: 16px;
   color: var(--text-muted);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cred-description .bullet {
+  color: var(--text);
+  font-size: 12px;
 }
 
 
