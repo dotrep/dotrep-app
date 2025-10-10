@@ -121,15 +121,15 @@ export default function Home() {
                   </a>
                 </div>
               </div>
+            </div>
 
-              <div className="chameleon-panel">
-                <div className="chameleon-glow" aria-hidden="true"></div>
-                <img 
-                  src="/chameleon.png" 
-                  alt="Chameleon mascot representing adaptive onchain identity" 
-                  className="chameleon-img"
-                />
-              </div>
+            <div className="chameleon-panel">
+              <div className="chameleon-glow" aria-hidden="true"></div>
+              <img 
+                src="/chameleon.png" 
+                alt="Chameleon mascot representing adaptive onchain identity" 
+                className="chameleon-img"
+              />
             </div>
           </div>
         </section>

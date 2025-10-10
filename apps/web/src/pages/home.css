@@ -8,12 +8,13 @@
 
 .hero-section {
   position: relative;
-  min-height: 900px;
+  min-height: 1000px;
   padding: var(--space-24) 0;
   overflow: hidden;
   background: 
-    radial-gradient(1200px 700px at 20% 30%, rgba(24, 32, 46, 0.8), transparent 60%),
-    radial-gradient(900px 600px at 80% 20%, rgba(24, 32, 46, 0.65), transparent 55%),
+    radial-gradient(1200px 800px at 15% 40%, rgba(15, 25, 40, 0.9), transparent 65%),
+    radial-gradient(1000px 900px at 85% 60%, rgba(10, 20, 35, 0.85), transparent 70%),
+    radial-gradient(800px 600px at 70% 80%, rgba(0, 82, 255, 0.08), transparent 60%),
     var(--bg-900);
 }
 
@@ -42,18 +43,18 @@
 .hero-grid {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: var(--hero-grid-gap);
-  align-items: center;
-  min-height: 800px;
+  min-height: 900px;
   padding: 0 var(--space-12);
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 .hero-left {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  left: -50px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
 }
 
 .rep-emblem {
@@ -105,15 +106,17 @@ html.motion-on .ring-path {
 }
 
 .hero-right {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-20%, -50%);
+  z-index: 4;
 }
 
 .hero-content {
   position: relative;
-  z-index: 2;
+  z-index: 5;
+  max-width: 600px;
 }
 
 .hero-headline {
@@ -184,22 +187,21 @@ html.motion-on .ring-path {
 }
 
 .chameleon-panel {
-  position: relative;
+  position: absolute;
+  right: -100px;
+  bottom: -150px;
   width: var(--cham-w);
   height: var(--cham-h);
-  transform: translate(var(--cham-x), var(--cham-y));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .chameleon-glow {
   position: absolute;
-  inset: -40px;
-  background: radial-gradient(circle at center, rgba(0, 212, 170, 0.15), transparent 70%);
-  filter: blur(var(--blur-xl));
+  inset: -60px;
+  background: radial-gradient(circle at 60% 50%, rgba(0, 212, 170, 0.2), rgba(0, 82, 255, 0.1) 40%, transparent 70%);
+  filter: blur(40px);
+  opacity: 0.8;
   pointer-events: none;
 }
 
@@ -208,8 +210,16 @@ html.motion-on .ring-path {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+  object-position: center bottom;
+  filter: 
+    brightness(1.1)
+    contrast(1.15)
+    drop-shadow(0 30px 60px rgba(0, 0, 0, 0.8)) 
+    drop-shadow(0 0 50px rgba(0, 212, 170, 0.3))
+    drop-shadow(0 0 80px rgba(0, 82, 255, 0.2));
   animation: chameleonFloat 6s ease-in-out infinite;
+  mix-blend-mode: screen;
+  opacity: 0.95;
 }
 
 html.motion-on .chameleon-img {

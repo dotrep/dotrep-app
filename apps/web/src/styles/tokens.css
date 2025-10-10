@@ -55,13 +55,13 @@
   --container-max: 1440px;
   
   --ring-rotate: 0deg;
-  --hero-grid-gap: 48px;
-  --cham-w: 420px;
-  --cham-h: 580px;
-  --cham-x: 0px;
-  --cham-y: 0px;
-  --orb-size: 480px;
-  --orb-x: -80px;
+  --hero-grid-gap: 80px;
+  --cham-w: 550px;
+  --cham-h: 750px;
+  --cham-x: 100px;
+  --cham-y: 80px;
+  --orb-size: 500px;
+  --orb-x: -100px;
   --orb-y: 0px;
   
   --transition-fast: 150ms ease;
