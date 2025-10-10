@@ -31,16 +31,21 @@ Preferred communication style: Simple, everyday language.
 - Responsive design with mobile-first approach
 
 **Key Pages:**
-- Homepage (`Home.tsx`) - Hero section with `.rep` emblem, headline, CTAs, and prominent chameleon mascot
+- Homepage (`Home.tsx`) - Single continuous hero page matching design comp
 - Reserve page (`Reserve.tsx`) - Name reservation placeholder
 - Discover page (`Discover.tsx`) - Discovery placeholder
 
-**Hero Section Design:**
-- Absolute positioning layout for seamless composition
-- `.rep` emblem with gradient ring (blue→teal→orange) and glow effects
-- Large transparent chameleon mascot (550x750px) with drop shadows and float animation
-- "Alive on Base" headline in teal with text shadow
-- Dual CTAs: "Reserve your.rep" (primary) and "Discover.rep" (secondary)
+**Homepage Hero Design (Single Page):**
+- **Top Section:** Absolute positioning layout
+  - `.rep` emblem (left) with gradient ring (blue→teal→orange) and glow effects
+  - "Your onchain reputation. Alive on Base." headline (center)
+  - Dual CTAs: "Reserve your.rep" (primary) and "Discover.rep" (secondary)
+  - Large transparent chameleon mascot (550x750px, right) with drop shadows and float animation
+- **Bottom Section:** Left-aligned content flow
+  - "Identity isn't minted. It's earned." headline in teal
+  - People chips row (Olivia, Danibl, Ryan, Daniel)
+  - "Composed on Base, verified by.rep" text
+  - "● Built on Base. Defined by you." tagline with bullet
 - Constellation star field background with twinkling animation
 - Assets: `chameleon_transparent.png` (RGBA transparent PNG)
 
