@@ -135,8 +135,9 @@ html.motion-on .ring-path {
 
 .hero-ctas {
   display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  flex-wrap: wrap;
+  max-width: 280px;
 }
 
 .cta-button {
@@ -188,8 +189,8 @@ html.motion-on .ring-path {
 
 .chameleon-panel {
   position: absolute;
-  right: 0;
-  bottom: -100px;
+  right: 50px;
+  bottom: -300px;
   width: var(--cham-w);
   height: var(--cham-h);
   pointer-events: none;
