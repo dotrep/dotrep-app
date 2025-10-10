@@ -1,10 +1,19 @@
 import React from "react";
+import "./placeholder.css";
+
 export default function Discover() {
   return (
-    <div style={{padding:"48px 24px", color:"#eaf6ff"}}>
-      <h1 style={{fontSize:"36px", marginBottom:12}}>Discover .rep</h1>
-      <p>Browse featured identities, badges, and collections (MVP soon).</p>
-      <p style={{opacity:.7, marginTop:18}}>Back to <a href="/" style={{color:"#1fb6ff"}}>home</a>.</p>
+    <div className="placeholder-page">
+      <div className="placeholder-content">
+        <h1 className="placeholder-title">Discover.rep</h1>
+        <p className="placeholder-text">
+          Browse featured identities, badges, and collections.
+        </p>
+        <p className="placeholder-text">
+          Discovery features coming soon.
+        </p>
+        <a href="/" className="placeholder-link">← Back to Home</a>
+      </div>
     </div>
   );
 }

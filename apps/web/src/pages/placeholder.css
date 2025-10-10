@@ -1,0 +1,52 @@
+@import "../styles/tokens.css";
+@import "../styles/global.css";
+
+.placeholder-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-900);
+  padding: var(--space-6);
+}
+
+.placeholder-content {
+  max-width: 600px;
+  text-align: center;
+}
+
+.placeholder-title {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-6);
+}
+
+.placeholder-text {
+  font-size: 18px;
+  color: var(--text-dim);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+
+.placeholder-link {
+  display: inline-block;
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  border: 2px solid rgba(162, 177, 199, 0.3);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.placeholder-link:hover {
+  border-color: var(--blue);
+  background: rgba(0, 82, 255, 0.1);
+}
+
+.placeholder-link:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}

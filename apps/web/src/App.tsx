@@ -1,44 +1,52 @@
-import React from "react";
-import "./index.css";
+import React, { useState, useEffect } from "react";
+import Home from "./pages/Home";
+import Reserve from "./pages/Reserve";
+import Discover from "./pages/Discover";
 
-export default function App(){
-  return (
-    <main className="hero">
-      <div className="bg-stars" />
-      <div className="canvas">
-        {/* Left orb + wordmark */}
-        <div className="orb" aria-hidden="true">
-          <div className="orb-ring" />
-          <div className="orb-core" />
-          <div className="wedge" />
-          <div className="wedge2" />
-          <div className="wordmark">.rep</div>
-        </div>
+export default function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
-        {/* Right copy */}
-        <section className="copy" aria-label="Hero copy">
-          <h1 className="h1">
-            Your onchain<br/>reputation.<br/>
-            <span className="alive">Alive on Base.</span>
-          </h1>
-        </section>
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
 
-        {/* CTAs */}
-        <div className="ctas">
-          <button className="btn blue" onClick={()=>location.href="/reserve"}>Reserve your.rep</button>
-          <button className="btn ghost" onClick={()=>location.href="/discover"}>Discover.rep</button>
-        </div>
+    window.addEventListener('popstate', handlePopState);
+    
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a[href^="/"]');
+      
+      if (anchor && anchor.getAttribute('href')?.startsWith('/')) {
+        const href = anchor.getAttribute('href');
+        if (href && !anchor.getAttribute('target')) {
+          e.preventDefault();
+          window.history.pushState({}, '', href);
+          setCurrentPath(href);
+          window.scrollTo(0, 0);
+        }
+      }
+    };
 
-        {/* Tagline */}
-        <div className="tag">
-          Identity isn’t minted.<br/><small>It’s earned.</small>
-        </div>
+    document.addEventListener('click', handleClick);
 
-        {/* Chameleon panel (uses your image in /public) */}
-        <aside className="panel" aria-label="Chameleon">
-          <img src="/chameleon.png" alt="Chameleon mascot"/>
-        </aside>
-      </div>
-    </main>
-  );
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  const renderPage = () => {
+    switch (currentPath) {
+      case '/reserve':
+        return <Reserve />;
+      case '/discover':
+        return <Discover />;
+      case '/':
+      default:
+        return <Home />;
+    }
+  };
+
+  return renderPage();
 }

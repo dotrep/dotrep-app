@@ -1,42 +1,330 @@
-import React from "react";
-import "./../styles/rep-hero.css";
+import React, { useState, useEffect, useMemo } from "react";
+import "./home.css";
+
+const generateStars = (count: number) => {
+  return Array.from({ length: count }, (_, i) => ({
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    delay: Math.random() * 3,
+  }));
+};
 
 export default function Home() {
-  const onReserve = () => {
-    // For MVP this can go to /reserve (a simple page or modal later)
-    window.location.assign("/reserve");
-  };
-  const onDiscover = () => {
-    window.location.assign("/discover");
+  const [motionEnabled, setMotionEnabled] = useState(true);
+  const heroStars = useMemo(() => generateStars(25), []);
+  const credStars = useMemo(() => generateStars(20), []);
+
+  useEffect(() => {
+    const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (preferredMotion.matches) {
+      setMotionEnabled(false);
+      document.documentElement.classList.add('motion-off');
+    } else {
+      document.documentElement.classList.add('motion-on');
+    }
+  }, []);
+
+  const toggleMotion = () => {
+    setMotionEnabled(!motionEnabled);
+    if (motionEnabled) {
+      document.documentElement.classList.remove('motion-on');
+      document.documentElement.classList.add('motion-off');
+    } else {
+      document.documentElement.classList.remove('motion-off');
+      document.documentElement.classList.add('motion-on');
+    }
   };
 
   return (
-    <main className="hero">
-      {/* LEFT: ring + headline */}
-      <section className="brand-wrap">
-        <img className="ring" src="/rep-ring.svg" alt=".rep gradient ring" />
-        <div className="hgroup">
-          <h1>
-            Your onchain<br/> reputation.<br/>
-            <span className="accent">Alive on Base.</span>
-          </h1>
-          <div className="ctas">
-            <button className="btn btn-primary" onClick={onReserve}>
-              Reserve your .rep
-            </button>
-            <button className="btn btn-ghost" onClick={onDiscover}>
-              Discover .rep
-            </button>
-          </div>
-          <p className="subcopy">Identity isn’t minted. It’s earned.</p>
-          <p className="subcopy">Composed on Base, verified by .rep</p>
-        </div>
-      </section>
+    <>
+      <button 
+        className="motion-toggle" 
+        onClick={toggleMotion}
+        aria-label={motionEnabled ? 'Disable animations' : 'Enable animations'}
+      >
+        {motionEnabled ? '● Motion' : '○ Motion'}
+      </button>
 
-      {/* RIGHT: mascot */}
-      <aside className="mascot-wrap">
-        <img className="mascot" src="/chameleon.png" alt=".rep chameleon mascot" />
-      </aside>
-    </main>
+      <div className="homepage">
+        <section className="hero-section">
+          <div className="constellation-bg" aria-hidden="true">
+            {heroStars.map((star, i) => (
+              <div 
+                key={i} 
+                className="star" 
+                style={{
+                  left: `${star.left}%`,
+                  top: `${star.top}%`,
+                  animationDelay: `${star.delay}s`
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="hero-grid container-full">
+            <div className="hero-left">
+              <div className="rep-emblem" aria-label=".rep emblem">
+                <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
+                  <defs>
+                    <radialGradient id="innerVignette" cx="50%" cy="50%">
+                      <stop offset="0%" stopColor="rgba(10, 14, 20, 0)" />
+                      <stop offset="60%" stopColor="rgba(10, 14, 20, 0.3)" />
+                      <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
+                    </radialGradient>
+                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#0052ff" />
+                      <stop offset="50%" stopColor="#00d4aa" />
+                      <stop offset="100%" stopColor="#ff6b35" />
+                    </linearGradient>
+                    <filter id="ringGlow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  
+                  <circle cx="200" cy="200" r="180" fill="url(#innerVignette)" />
+                  
+                  <circle 
+                    cx="200" 
+                    cy="200" 
+                    r="160" 
+                    fill="none" 
+                    stroke="url(#ringGradient)" 
+                    strokeWidth="8"
+                    filter="url(#ringGlow)"
+                    className="ring-path"
+                  />
+                  
+                  <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
+                </svg>
+                <div className="rep-text">.rep</div>
+              </div>
+            </div>
+
+            <div className="hero-right">
+              <div className="hero-content">
+                <h1 className="hero-headline">
+                  Your onchain<br />
+                  reputation.<br />
+                  <span className="alive">Alive on Base.</span>
+                </h1>
+                
+                <div className="hero-ctas">
+                  <a href="/reserve" className="cta-button cta-primary">
+                    Reserve your.rep
+                  </a>
+                  <a href="/discover" className="cta-button cta-secondary">
+                    Discover.rep
+                  </a>
+                </div>
+              </div>
+
+              <div className="chameleon-panel">
+                <div className="chameleon-glow" aria-hidden="true"></div>
+                <img 
+                  src="/chameleon.png" 
+                  alt="Chameleon mascot representing adaptive onchain identity" 
+                  className="chameleon-img"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="cred-section">
+          <div className="container">
+            <div className="constellation-layer" aria-hidden="true">
+              {credStars.map((star, i) => (
+                <div 
+                  key={i} 
+                  className="star" 
+                  style={{
+                    left: `${star.left}%`,
+                    top: `${star.top}%`,
+                    animationDelay: `${star.delay}s`
+                  }}
+                />
+              ))}
+            </div>
+            
+            <h2 className="cred-headline">
+              Identity isn't minted.<br />
+              <span className="earned">It's earned.</span>
+            </h2>
+            
+            <div className="people-chips">
+              <div className="person-chip">
+                <div className="chip-avatar"></div>
+                <span className="chip-name">Olivia</span>
+              </div>
+              <div className="person-chip">
+                <div className="chip-avatar"></div>
+                <span className="chip-name">Danibl</span>
+              </div>
+              <div className="person-chip">
+                <div className="chip-avatar"></div>
+                <span className="chip-name">Ryan</span>
+              </div>
+              <div className="person-chip">
+                <div className="chip-avatar"></div>
+                <span className="chip-name">Daniel</span>
+              </div>
+            </div>
+            
+            <p className="cred-subtitle">
+              Composed <span className="on-base">on Base</span>, verified by.rep
+            </p>
+            
+            <p className="cred-description">
+              Built on Base. Defined by you.
+            </p>
+          </div>
+        </section>
+
+        <section className="how-section">
+          <div className="container">
+            <h2 className="section-title">How it works</h2>
+            
+            <div className="steps-grid">
+              <div className="step-card">
+                <div className="step-icon">
+                  <div className="icon-circle">1</div>
+                </div>
+                <h3 className="step-title">Reserve your.rep</h3>
+                <p className="step-text">
+                  Claim your unique onchain identifier on Base
+                </p>
+              </div>
+              
+              <div className="step-card">
+                <div className="step-icon">
+                  <div className="icon-circle">2</div>
+                </div>
+                <h3 className="step-title">Build reputation</h3>
+                <p className="step-text">
+                  Earn credibility through verified onchain actions
+                </p>
+              </div>
+              
+              <div className="step-card">
+                <div className="step-icon">
+                  <div className="icon-circle">3</div>
+                </div>
+                <h3 className="step-title">Prove your worth</h3>
+                <p className="step-text">
+                  Let your.rep speak for itself across the ecosystem
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="features-section">
+          <div className="container">
+            <h2 className="section-title">Features</h2>
+            
+            <div className="features-grid">
+              <div className="feature-card">
+                <h3 className="feature-title">Onchain Verified</h3>
+                <p className="feature-text">
+                  Every action is cryptographically verified on Base
+                </p>
+              </div>
+              
+              <div className="feature-card">
+                <h3 className="feature-title">Portable Identity</h3>
+                <p className="feature-text">
+                  Your reputation follows you across all apps
+                </p>
+              </div>
+              
+              <div className="feature-card">
+                <h3 className="feature-title">Privacy First</h3>
+                <p className="feature-text">
+                  Control what you share and when
+                </p>
+              </div>
+              
+              <div className="feature-card">
+                <h3 className="feature-title">Composable</h3>
+                <p className="feature-text">
+                  Build on top of Base's growing ecosystem
+                </p>
+              </div>
+              
+              <div className="feature-card">
+                <h3 className="feature-title">Real-time Updates</h3>
+                <p className="feature-text">
+                  Your reputation evolves with every action
+                </p>
+              </div>
+              
+              <div className="feature-card">
+                <h3 className="feature-title">Developer Friendly</h3>
+                <p className="feature-text">
+                  Easy integration with robust APIs
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ecosystem-section">
+          <div className="container">
+            <h2 className="section-title">Ecosystem</h2>
+            
+            <div className="logos-row">
+              <div className="logo-placeholder" aria-label="Partner logo">Base</div>
+              <div className="logo-placeholder" aria-label="Partner logo">Coinbase</div>
+              <div className="logo-placeholder" aria-label="Partner logo">Protocol</div>
+              <div className="logo-placeholder" aria-label="Partner logo">Network</div>
+              <div className="logo-placeholder" aria-label="Partner logo">Platform</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="cta-band">
+          <div className="container">
+            <h2 className="cta-band-title">Reserve your.rep</h2>
+            <p className="cta-band-text">Join the onchain reputation layer on Base</p>
+            <a href="/reserve" className="cta-button cta-primary cta-large">
+              Get Started
+            </a>
+          </div>
+        </section>
+
+        <footer className="site-footer">
+          <div className="container">
+            <div className="footer-grid">
+              <div className="footer-brand">
+                <div className="footer-logo">.rep</div>
+                <p className="footer-tagline">Your onchain reputation</p>
+              </div>
+              
+              <div className="footer-links">
+                <h4 className="footer-heading">Legal</h4>
+                <a href="/privacy" className="footer-link">Privacy</a>
+                <a href="/terms" className="footer-link">Terms</a>
+              </div>
+              
+              <div className="footer-links">
+                <h4 className="footer-heading">Connect</h4>
+                <a href="https://twitter.com/rep" target="_blank" rel="noopener noreferrer" className="footer-link">
+                  X / Twitter
+                </a>
+                <a href="/docs" className="footer-link">Docs</a>
+              </div>
+            </div>
+            
+            <div className="footer-bottom">
+              <p className="footer-copyright">© 2025 .rep. Built on Base.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </>
   );
 }
