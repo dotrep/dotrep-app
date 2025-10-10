@@ -51,7 +51,7 @@
 
 .hero-left {
   position: absolute;
-  left: -50px;
+  left: 150px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
