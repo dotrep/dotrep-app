@@ -11,7 +11,6 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
-  const [spacing, setSpacing] = useState(-20);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -105,7 +104,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="hero-right" style={{ transform: `translate(${spacing}%, -50%)` }}>
+            <div className="hero-right">
               <div className="hero-content">
                 <h1 className="hero-headline">
                   Your onchain<br />
@@ -121,14 +120,6 @@ export default function Home() {
                     Discover.rep
                   </a>
                 </div>
-              </div>
-              
-              <div className="content-controls">
-                <div className="control-row">
-                  <span>Spacing: {spacing}%</span>
-                  <input type="range" min="-80" max="20" value={spacing} onChange={(e) => setSpacing(Number(e.target.value))} />
-                </div>
-                <button onClick={() => console.log(`Final: spacing=${spacing}%`)}>Save</button>
               </div>
             </div>
 
