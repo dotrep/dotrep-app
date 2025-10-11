@@ -52,7 +52,7 @@
 
 .hero-left {
   position: absolute;
-  left: 152px;
+  left: 49px;
   top: 52%;
   transform: translateY(-50%);
   z-index: 2;
@@ -111,52 +111,6 @@ html.motion-on .ring-path {
   top: 50%;
   transform: translate(-7%, -50%);
   z-index: 4;
-}
-
-.emblem-controls {
-  position: absolute;
-  top: calc(100% + 20px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  padding: 16px;
-  border-radius: 8px;
-  color: white;
-  font-size: 12px;
-  min-width: 280px;
-  z-index: 10;
-}
-
-.emblem-controls .control-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.emblem-controls .control-row span {
-  min-width: 90px;
-  font-family: monospace;
-}
-
-.emblem-controls input[type="range"] {
-  flex: 1;
-  accent-color: var(--blue);
-}
-
-.emblem-controls button {
-  width: 100%;
-  padding: 8px;
-  background: var(--blue);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.emblem-controls button:hover {
-  background: #0046e0;
 }
 
 .hero-content {
