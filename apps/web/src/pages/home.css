@@ -190,34 +190,13 @@ html.motion-on .ring-path {
 
 .chameleon-panel {
   position: absolute;
+  right: 254px;
+  top: 379px;
   width: var(--cham-w);
   height: var(--cham-h);
-  pointer-events: all;
+  pointer-events: none;
   z-index: 3;
   background: transparent;
-}
-
-.cham-controls {
-  position: absolute;
-  bottom: -80px;
-  left: 0;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 12px;
-  border-radius: 8px;
-  color: white;
-  font-size: 12px;
-}
-
-.cham-controls input {
-  width: 120px;
-}
-
-.cham-controls span {
-  min-width: 50px;
-  font-family: monospace;
 }
 
 .chameleon-glow {

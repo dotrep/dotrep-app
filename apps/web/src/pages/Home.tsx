@@ -11,8 +11,6 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
-  const [chamRight, setChamRight] = useState(50);
-  const [chamTop, setChamTop] = useState(300);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -125,19 +123,13 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="chameleon-panel" style={{ right: `${chamRight}px`, top: `${chamTop}px` }}>
+            <div className="chameleon-panel">
               <div className="chameleon-glow" aria-hidden="true"></div>
               <img 
                 src="/chameleon_transparent.png" 
                 alt="Chameleon mascot representing adaptive onchain identity" 
                 className="chameleon-img"
               />
-              <div className="cham-controls">
-                <input type="range" min="0" max="600" value={chamRight} onChange={(e) => setChamRight(Number(e.target.value))} />
-                <span>R:{chamRight}</span>
-                <input type="range" min="0" max="800" value={chamTop} onChange={(e) => setChamTop(Number(e.target.value))} />
-                <span>T:{chamTop}</span>
-              </div>
             </div>
           </div>
 
