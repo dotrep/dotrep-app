@@ -11,6 +11,9 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
+  const [orbSize, setOrbSize] = useState(500);
+  const [orbLeft, setOrbLeft] = useState(150);
+  const [orbTop, setOrbTop] = useState(50);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -62,8 +65,8 @@ export default function Home() {
           </div>
 
           <div className="hero-grid container-full">
-            <div className="hero-left">
-              <div className="rep-emblem" aria-label=".rep emblem">
+            <div className="hero-left" style={{ left: `${orbLeft}px`, top: `${orbTop}%` }}>
+              <div className="rep-emblem" style={{ width: `${orbSize}px`, height: `${orbSize}px` }} aria-label=".rep emblem">
                 <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
                   <defs>
                     <radialGradient id="innerVignette" cx="50%" cy="50%">
@@ -101,6 +104,21 @@ export default function Home() {
                   <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
                 </svg>
                 <div className="rep-text">.rep</div>
+              </div>
+              <div className="orb-controls">
+                <div className="control-row">
+                  <span>Size: {orbSize}px</span>
+                  <input type="range" min="200" max="700" value={orbSize} onChange={(e) => setOrbSize(Number(e.target.value))} />
+                </div>
+                <div className="control-row">
+                  <span>Left: {orbLeft}px</span>
+                  <input type="range" min="0" max="400" value={orbLeft} onChange={(e) => setOrbLeft(Number(e.target.value))} />
+                </div>
+                <div className="control-row">
+                  <span>Top: {orbTop}%</span>
+                  <input type="range" min="0" max="100" value={orbTop} onChange={(e) => setOrbTop(Number(e.target.value))} />
+                </div>
+                <button onClick={() => console.log(`Final: size=${orbSize}, left=${orbLeft}, top=${orbTop}%`)}>Save</button>
               </div>
             </div>
 

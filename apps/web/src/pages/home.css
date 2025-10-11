@@ -52,17 +52,57 @@
 
 .hero-left {
   position: absolute;
-  left: 150px;
-  top: 50%;
   transform: translateY(-50%);
   z-index: 2;
 }
 
 .rep-emblem {
   position: relative;
-  width: var(--orb-size);
-  height: var(--orb-size);
-  transform: translate(var(--orb-x), var(--orb-y));
+}
+
+.orb-controls {
+  position: absolute;
+  top: calc(100% + 20px);
+  left: 0;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  min-width: 280px;
+  z-index: 10;
+}
+
+.orb-controls .control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.orb-controls .control-row span {
+  min-width: 90px;
+  font-family: monospace;
+}
+
+.orb-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--blue);
+}
+
+.orb-controls button {
+  width: 100%;
+  padding: 8px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.orb-controls button:hover {
+  background: #0046e0;
 }
 
 .rep-ring {
