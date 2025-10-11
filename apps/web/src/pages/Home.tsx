@@ -11,8 +11,6 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
-  const [bottomLeft, setBottomLeft] = useState(72);
-  const [bottomTop, setBottomTop] = useState(-200);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -135,7 +133,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-bottom container" style={{ left: `${bottomLeft}px`, top: `${bottomTop}px` }}>
+          <div className="hero-bottom container">
             <h2 className="cred-headline">
               Identity isn't minted.<br />
               <span className="earned">It's earned.</span>
@@ -167,18 +165,6 @@ export default function Home() {
             <p className="cred-description">
               <span className="bullet">●</span> Built on Base. Defined by you.
             </p>
-            
-            <div className="bottom-controls">
-              <div className="control-row">
-                <span>Left: {bottomLeft}px</span>
-                <input type="range" min="-200" max="400" value={bottomLeft} onChange={(e) => setBottomLeft(Number(e.target.value))} />
-              </div>
-              <div className="control-row">
-                <span>Top: {bottomTop}px</span>
-                <input type="range" min="-400" max="100" value={bottomTop} onChange={(e) => setBottomTop(Number(e.target.value))} />
-              </div>
-              <button onClick={() => console.log(`Final: left=${bottomLeft}, top=${bottomTop}`)}>Save</button>
-            </div>
           </div>
         </section>
       </div>
