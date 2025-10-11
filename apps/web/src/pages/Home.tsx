@@ -11,6 +11,9 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
+  const [columnGap, setColumnGap] = useState(120);
+  const [chamRight, setChamRight] = useState(200);
+  const [chamBottom, setChamBottom] = useState(100);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -61,7 +64,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="hero-grid container-full">
+          <div className="hero-grid container-full" style={{ columnGap: `${columnGap}px` }}>
             <div className="hero-left">
               <div className="rep-emblem" aria-label=".rep emblem">
                 <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
@@ -123,13 +126,29 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="chameleon-panel">
+            <div className="chameleon-panel" style={{ right: `${chamRight}px`, bottom: `${chamBottom}px` }}>
               <div className="chameleon-glow" aria-hidden="true"></div>
               <img 
                 src="/chameleon_transparent.png" 
                 alt="Chameleon mascot representing adaptive onchain identity" 
                 className="chameleon-img"
               />
+              
+              <div className="layout-controls">
+                <div className="control-row">
+                  <span>Gap: {columnGap}px</span>
+                  <input type="range" min="60" max="200" value={columnGap} onChange={(e) => setColumnGap(Number(e.target.value))} />
+                </div>
+                <div className="control-row">
+                  <span>Cham Right: {chamRight}px</span>
+                  <input type="range" min="0" max="400" value={chamRight} onChange={(e) => setChamRight(Number(e.target.value))} />
+                </div>
+                <div className="control-row">
+                  <span>Cham Bottom: {chamBottom}px</span>
+                  <input type="range" min="0" max="300" value={chamBottom} onChange={(e) => setChamBottom(Number(e.target.value))} />
+                </div>
+                <button onClick={() => console.log(`Final: gap=${columnGap}px, chamRight=${chamRight}px, chamBottom=${chamBottom}px`)}>Save</button>
+              </div>
             </div>
           </div>
 
