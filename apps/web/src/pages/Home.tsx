@@ -11,6 +11,7 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
+  const [contentLeft, setContentLeft] = useState(0);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -104,7 +105,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="hero-right">
+            <div className="hero-right" style={{ left: `${contentLeft}px` }}>
               <div className="hero-content">
                 <h1 className="hero-headline">
                   Your onchain<br />
@@ -120,6 +121,14 @@ export default function Home() {
                     Discover.rep
                   </a>
                 </div>
+              </div>
+              
+              <div className="content-controls">
+                <div className="control-row">
+                  <span>Left: {contentLeft}px</span>
+                  <input type="range" min="-200" max="400" value={contentLeft} onChange={(e) => setContentLeft(Number(e.target.value))} />
+                </div>
+                <button onClick={() => console.log(`Final: left=${contentLeft}`)}>Save</button>
               </div>
             </div>
 
