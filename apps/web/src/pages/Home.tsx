@@ -11,6 +11,8 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
+  const [emblemLeft, setEmblemLeft] = useState(152);
+  const [emblemTop, setEmblemTop] = useState(52);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -63,7 +65,7 @@ export default function Home() {
 
           <div className="hero-grid container-full">
             <div className="hero-left">
-              <div className="rep-emblem" aria-label=".rep emblem">
+              <div className="rep-emblem" style={{ left: `${emblemLeft}px`, top: `${emblemTop}%` }} aria-label=".rep emblem">
                 <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
                   <defs>
                     <radialGradient id="innerVignette" cx="50%" cy="50%">
@@ -101,6 +103,18 @@ export default function Home() {
                   <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
                 </svg>
                 <div className="rep-text">.rep</div>
+                
+                <div className="emblem-controls">
+                  <div className="control-row">
+                    <span>Left: {emblemLeft}px</span>
+                    <input type="range" min="0" max="400" value={emblemLeft} onChange={(e) => setEmblemLeft(Number(e.target.value))} />
+                  </div>
+                  <div className="control-row">
+                    <span>Top: {emblemTop}%</span>
+                    <input type="range" min="30" max="70" value={emblemTop} onChange={(e) => setEmblemTop(Number(e.target.value))} />
+                  </div>
+                  <button onClick={() => console.log(`Final emblem: left=${emblemLeft}px, top=${emblemTop}%`)}>Save</button>
+                </div>
               </div>
             </div>
 
