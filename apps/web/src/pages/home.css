@@ -226,6 +226,51 @@ html.motion-on .ring-path {
   max-width: 800px;
 }
 
+.bottom-controls {
+  position: absolute;
+  bottom: -120px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  min-width: 280px;
+  z-index: 10;
+}
+
+.bottom-controls .control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bottom-controls .control-row span {
+  min-width: 90px;
+  font-family: monospace;
+}
+
+.bottom-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--teal);
+}
+
+.bottom-controls button {
+  width: 100%;
+  padding: 8px;
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.bottom-controls button:hover {
+  background: #00b894;
+}
+
 .cred-headline {
   font-size: clamp(36px, 4vw, 56px);
   font-weight: 800;
