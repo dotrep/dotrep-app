@@ -7,6 +7,10 @@ channel = "stable-23_11"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 34421
+externalPort = 3000
+
 [agent]
 expertMode = true
 

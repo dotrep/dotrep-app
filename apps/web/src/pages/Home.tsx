@@ -11,6 +11,9 @@ const generateStars = (count: number) => {
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
+  const [chamRight, setChamRight] = useState(120);
+  const [chamTop, setChamTop] = useState(480);
+  const [showControls, setShowControls] = useState(true);
   const heroStars = useMemo(() => generateStars(25), []);
   const credStars = useMemo(() => generateStars(20), []);
 
@@ -44,6 +47,35 @@ export default function Home() {
       >
         {motionEnabled ? '● Motion' : '○ Motion'}
       </button>
+
+      {showControls && (
+        <div className="position-controls">
+          <button onClick={() => setShowControls(false)} className="control-close">✕</button>
+          <div className="control-group">
+            <label>Right: {chamRight}px</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="400" 
+              value={chamRight} 
+              onChange={(e) => setChamRight(Number(e.target.value))}
+            />
+          </div>
+          <div className="control-group">
+            <label>Top: {chamTop}px</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="800" 
+              value={chamTop} 
+              onChange={(e) => setChamTop(Number(e.target.value))}
+            />
+          </div>
+          <button onClick={() => console.log(`Final values: right: ${chamRight}px, top: ${chamTop}px`)} className="control-save">
+            Save to Console
+          </button>
+        </div>
+      )}
 
       <div className="homepage">
         <section className="hero-section">
@@ -123,7 +155,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="chameleon-panel">
+            <div className="chameleon-panel" style={{ right: `${chamRight}px`, top: `${chamTop}px` }}>
               <div className="chameleon-glow" aria-hidden="true"></div>
               <img 
                 src="/chameleon_transparent.png" 
