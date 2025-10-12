@@ -229,8 +229,8 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: fixed;
-  right: -20px;
-  bottom: 40px;
+  right: -40px;
+  bottom: 20px;
   width: 520px;
   height: 650px;
   pointer-events: none;
@@ -259,10 +259,10 @@ html.motion-off .ring-pulse {
 }
 
 .identity-section {
-  margin-top: 40px;
-  margin-bottom: 0;
-  max-width: 640px;
-  position: relative;
+  position: absolute;
+  left: 80px;
+  bottom: 80px;
+  max-width: 480px;
   z-index: 15;
 }
 
