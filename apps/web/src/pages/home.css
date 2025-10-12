@@ -227,10 +227,10 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: absolute;
-  right: -60px;
-  bottom: 40px;
-  width: 440px;
-  height: 540px;
+  right: -80px;
+  bottom: 60px;
+  width: 460px;
+  height: 560px;
   pointer-events: none;
   z-index: 10;
 }
