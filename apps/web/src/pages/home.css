@@ -160,6 +160,8 @@ html.motion-off .ring-pulse {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  position: relative;
+  z-index: 15;
 }
 
 .hero-headline {
@@ -227,12 +229,12 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: absolute;
-  right: -80px;
-  bottom: 60px;
-  width: 460px;
-  height: 560px;
+  right: -100px;
+  bottom: 40px;
+  width: 500px;
+  height: 620px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 5;
 }
 
 .chameleon-glow {
