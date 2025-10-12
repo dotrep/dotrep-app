@@ -1,41 +1,27 @@
-import React, { useState, useEffect, useMemo } from "react";
-import "./home.css";
+import { useState, useEffect, useMemo } from 'react';
+import './home.css';
 
-const generateStars = (count: number) => {
-  return Array.from({ length: count }, (_, i) => ({
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    delay: Math.random() * 3,
-  }));
-};
+const generateStars = (count: number) => Array.from({ length: count }, () => ({
+  left: Math.random() * 100,
+  top: Math.random() * 100,
+  delay: Math.random() * 3,
+}));
 
 export default function Home() {
   const [motionEnabled, setMotionEnabled] = useState(true);
-  const [columnGap, setColumnGap] = useState(120);
-  const [chamRight, setChamRight] = useState(200);
-  const [chamBottom, setChamBottom] = useState(100);
   const heroStars = useMemo(() => generateStars(25), []);
-  const credStars = useMemo(() => generateStars(20), []);
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (preferredMotion.matches) {
       setMotionEnabled(false);
       document.documentElement.classList.add('motion-off');
-    } else {
-      document.documentElement.classList.add('motion-on');
     }
   }, []);
 
   const toggleMotion = () => {
     setMotionEnabled(!motionEnabled);
-    if (motionEnabled) {
-      document.documentElement.classList.remove('motion-on');
-      document.documentElement.classList.add('motion-off');
-    } else {
-      document.documentElement.classList.remove('motion-off');
-      document.documentElement.classList.add('motion-on');
-    }
+    document.documentElement.classList.toggle('motion-off');
   };
 
   return (
@@ -64,51 +50,51 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="hero-grid container-full" style={{ columnGap: `${columnGap}px` }}>
-            <div className="hero-left">
-              <div className="rep-emblem" aria-label=".rep emblem">
-                <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
-                  <defs>
-                    <radialGradient id="innerVignette" cx="50%" cy="50%">
-                      <stop offset="0%" stopColor="rgba(10, 14, 20, 0)" />
-                      <stop offset="60%" stopColor="rgba(10, 14, 20, 0.3)" />
-                      <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
-                    </radialGradient>
-                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ff6b35" />
-                      <stop offset="50%" stopColor="#0052ff" />
-                      <stop offset="100%" stopColor="#00d4aa" />
-                    </linearGradient>
-                    <filter id="ringGlow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  
-                  <circle cx="200" cy="200" r="180" fill="url(#innerVignette)" />
-                  
-                  <circle 
-                    cx="200" 
-                    cy="200" 
-                    r="160" 
-                    fill="none" 
-                    stroke="url(#ringGradient)" 
-                    strokeWidth="8"
-                    filter="url(#ringGlow)"
-                    className="ring-path"
-                  />
-                  
-                  <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
-                </svg>
-                <div className="rep-text">.rep</div>
+          <div className="hero-container">
+            <div className="hero-grid">
+              <div className="emblem-column">
+                <div className="rep-emblem" aria-label=".rep emblem">
+                  <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
+                    <defs>
+                      <radialGradient id="innerVignette" cx="50%" cy="50%">
+                        <stop offset="0%" stopColor="rgba(10, 14, 20, 0)" />
+                        <stop offset="60%" stopColor="rgba(10, 14, 20, 0.3)" />
+                        <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
+                      </radialGradient>
+                      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ff6b35" />
+                        <stop offset="50%" stopColor="#0052ff" />
+                        <stop offset="100%" stopColor="#00d4aa" />
+                      </linearGradient>
+                      <filter id="ringGlow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    <circle cx="200" cy="200" r="180" fill="url(#innerVignette)" />
+                    
+                    <circle 
+                      cx="200" 
+                      cy="200" 
+                      r="160" 
+                      fill="none" 
+                      stroke="url(#ringGradient)" 
+                      strokeWidth="8"
+                      filter="url(#ringGlow)"
+                      className="ring-path"
+                    />
+                    
+                    <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
+                  </svg>
+                  <div className="rep-text">.rep</div>
+                </div>
               </div>
-            </div>
 
-            <div className="hero-right">
-              <div className="hero-content">
+              <div className="content-column">
                 <h1 className="hero-headline">
                   Your onchain<br />
                   reputation.<br />
@@ -126,64 +112,31 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="chameleon-panel" style={{ right: `${chamRight}px`, bottom: `${chamBottom}px` }}>
+            <div className="chameleon-panel">
               <div className="chameleon-glow" aria-hidden="true"></div>
               <img 
                 src="/chameleon_transparent.png" 
-                alt="Chameleon mascot representing adaptive onchain identity" 
+                alt="Chameleon mascot" 
                 className="chameleon-img"
               />
-              
-              <div className="layout-controls">
-                <div className="control-row">
-                  <span>Gap: {columnGap}px</span>
-                  <input type="range" min="60" max="200" value={columnGap} onChange={(e) => setColumnGap(Number(e.target.value))} />
-                </div>
-                <div className="control-row">
-                  <span>Cham Right: {chamRight}px</span>
-                  <input type="range" min="0" max="400" value={chamRight} onChange={(e) => setChamRight(Number(e.target.value))} />
-                </div>
-                <div className="control-row">
-                  <span>Cham Bottom: {chamBottom}px</span>
-                  <input type="range" min="0" max="300" value={chamBottom} onChange={(e) => setChamBottom(Number(e.target.value))} />
-                </div>
-                <button onClick={() => console.log(`Final: gap=${columnGap}px, chamRight=${chamRight}px, chamBottom=${chamBottom}px`)}>Save</button>
-              </div>
             </div>
-          </div>
 
-          <div className="hero-bottom container">
-            <h2 className="cred-headline">
-              Identity isn't minted.<br />
-              <span className="earned">It's earned.</span>
-            </h2>
-            
-            <div className="people-chips">
-              <div className="person-chip">
-                <div className="chip-avatar"></div>
-                <span className="chip-name">Olivia</span>
+            <div className="identity-section">
+              <h2 className="identity-headline">
+                Identity isn't minted.<br />
+                <span className="earned">It's earned.</span>
+              </h2>
+              
+              <div className="people-chips">
+                <div className="chip">Olivia</div>
+                <div className="chip">Danibl</div>
+                <div className="chip">Ryan</div>
+                <div className="chip">Daniel</div>
               </div>
-              <div className="person-chip">
-                <div className="chip-avatar"></div>
-                <span className="chip-name">Danibl</span>
-              </div>
-              <div className="person-chip">
-                <div className="chip-avatar"></div>
-                <span className="chip-name">Ryan</span>
-              </div>
-              <div className="person-chip">
-                <div className="chip-avatar"></div>
-                <span className="chip-name">Daniel</span>
-              </div>
+              
+              <p className="identity-tagline">Composed on Base, verified by.rep</p>
+              <p className="identity-footer">● Built on Base. Defined by you.</p>
             </div>
-            
-            <p className="cred-subtitle">
-              Composed <span className="on-base">on Base</span>, verified by.rep
-            </p>
-            
-            <p className="cred-description">
-              <span className="bullet">●</span> Built on Base. Defined by you.
-            </p>
           </div>
         </section>
       </div>
