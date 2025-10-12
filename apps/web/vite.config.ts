@@ -11,6 +11,11 @@ export default defineConfig({
       protocol: "wss",
       clientPort: 443,
     },
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
   },
   preview: {
     host: "0.0.0.0",
