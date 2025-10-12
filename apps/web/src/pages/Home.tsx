@@ -8,32 +8,17 @@ const generateStars = (count: number) => Array.from({ length: count }, () => ({
 }));
 
 export default function Home() {
-  const [motionEnabled, setMotionEnabled] = useState(true);
   const heroStars = useMemo(() => generateStars(25), []);
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (preferredMotion.matches) {
-      setMotionEnabled(false);
       document.documentElement.classList.add('motion-off');
     }
   }, []);
 
-  const toggleMotion = () => {
-    setMotionEnabled(!motionEnabled);
-    document.documentElement.classList.toggle('motion-off');
-  };
-
   return (
     <>
-      <button 
-        className="motion-toggle" 
-        onClick={toggleMotion}
-        aria-label={motionEnabled ? 'Disable animations' : 'Enable animations'}
-      >
-        {motionEnabled ? '● Motion' : '○ Motion'}
-      </button>
-
       <div className="homepage">
         <section className="hero-section">
           <div className="constellation-bg" aria-hidden="true">

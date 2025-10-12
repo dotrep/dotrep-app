@@ -105,7 +105,7 @@ html.motion-off .star {
 }
 
 html:not(.motion-off) .ring-path {
-  animation: ringPulse 4s ease-in-out infinite, ringRotate 8s linear infinite;
+  animation: ringPulse 3s ease-in-out infinite;
 }
 
 html.motion-off .ring-path {
@@ -114,18 +114,15 @@ html.motion-off .ring-path {
 
 @keyframes ringPulse {
   0%, 100% { 
-    opacity: 0.8;
-    filter: url(#ringGlow) drop-shadow(0 0 10px rgba(0, 212, 170, 0.4));
+    opacity: 0.7;
+    stroke-width: 8;
+    filter: url(#ringGlow) drop-shadow(0 0 8px rgba(0, 212, 170, 0.3));
   }
   50% { 
     opacity: 1;
-    filter: url(#ringGlow) drop-shadow(0 0 20px rgba(0, 212, 170, 0.6));
+    stroke-width: 10;
+    filter: url(#ringGlow) drop-shadow(0 0 24px rgba(0, 212, 170, 0.7));
   }
-}
-
-@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 .rep-text {
@@ -211,10 +208,10 @@ html.motion-off .ring-path {
 
 .chameleon-panel {
   position: absolute;
-  right: 0;
-  bottom: 120px;
-  width: 380px;
-  height: 480px;
+  right: -40px;
+  bottom: 80px;
+  width: 480px;
+  height: 600px;
   pointer-events: none;
   z-index: 10;
 }
