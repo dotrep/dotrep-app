@@ -1,12 +1,11 @@
 .homepage {
-  min-height: 100vh;
+  height: 100vh;
   background: 
     radial-gradient(ellipse at 30% 40%, rgba(0, 82, 255, 0.15), transparent 50%),
     radial-gradient(ellipse at 70% 60%, rgba(0, 212, 170, 0.1), transparent 50%),
     linear-gradient(180deg, var(--bg-900) 0%, var(--bg-800) 100%);
   color: var(--text);
-  overflow-x: hidden;
-  padding-bottom: 100px;
+  overflow: hidden;
 }
 
 .motion-toggle {
@@ -32,8 +31,10 @@
 
 .hero-section {
   position: relative;
-  min-height: auto;
-  padding: var(--space-12) 0 var(--space-20);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 0;
 }
 
 .constellation-bg {
@@ -78,8 +79,7 @@ html.motion-off .star {
   grid-template-columns: 520px 1fr;
   column-gap: 96px;
   align-items: center;
-  min-height: 420px;
-  padding-top: 60px;
+  height: 100%;
 }
 
 .emblem-column {
@@ -212,10 +212,10 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: absolute;
-  right: -40px;
-  bottom: 80px;
-  width: 480px;
-  height: 600px;
+  right: 120px;
+  bottom: 20px;
+  width: 360px;
+  height: 450px;
   pointer-events: none;
   z-index: 10;
 }
@@ -242,18 +242,17 @@ html.motion-off .ring-pulse {
 }
 
 .identity-section {
-  margin-top: 140px;
-  margin-bottom: 80px;
+  margin-top: 60px;
   max-width: 640px;
   position: relative;
   z-index: 15;
 }
 
 .identity-headline {
-  font-size: 48px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1.2;
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-4);
   color: var(--text);
 }
 
@@ -266,7 +265,7 @@ html.motion-off .ring-pulse {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-3);
 }
 
 .chip {
