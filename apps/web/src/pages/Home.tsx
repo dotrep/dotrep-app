@@ -80,9 +80,10 @@ export default function Home() {
                       r="160" 
                       fill="none" 
                       stroke="url(#ringGradient)" 
-                      strokeWidth="8"
+                      strokeWidth="7"
                       filter="url(#ringGlow)"
-                      strokeDasharray="150 850"
+                      strokeDasharray="80 920"
+                      strokeLinecap="round"
                       className="ring-pulse"
                     />
                     
