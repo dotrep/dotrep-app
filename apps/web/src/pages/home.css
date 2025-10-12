@@ -228,11 +228,11 @@ html.motion-off .ring-pulse {
 }
 
 .chameleon-panel {
-  position: absolute;
-  right: -100px;
-  bottom: 40px;
-  width: 500px;
-  height: 620px;
+  position: fixed;
+  right: 40px;
+  bottom: 60px;
+  width: 420px;
+  height: 520px;
   pointer-events: none;
   z-index: 5;
 }
