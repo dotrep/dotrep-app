@@ -91,6 +91,22 @@ export default function Home() {
                   </svg>
                   <div className="rep-text">.rep</div>
                 </div>
+
+                <div className="identity-section">
+                  <h2 className="identity-headline">
+                    Identity isn't minted.<br />
+                    <span className="earned">It's earned.</span>
+                  </h2>
+                  
+                  <div className="people-chips">
+                    <div className="chip">Olivia</div>
+                    <div className="chip">Danibl</div>
+                    <div className="chip">Ryan</div>
+                    <div className="chip">Daniel</div>
+                  </div>
+                  
+                  <p className="identity-tagline">Composed on Base, verified by.rep</p>
+                </div>
               </div>
 
               <div className="content-column">
@@ -118,22 +134,6 @@ export default function Home() {
                 alt="Chameleon mascot" 
                 className="chameleon-img"
               />
-            </div>
-
-            <div className="identity-section">
-              <h2 className="identity-headline">
-                Identity isn't minted.<br />
-                <span className="earned">It's earned.</span>
-              </h2>
-              
-              <div className="people-chips">
-                <div className="chip">Olivia</div>
-                <div className="chip">Danibl</div>
-                <div className="chip">Ryan</div>
-                <div className="chip">Daniel</div>
-              </div>
-              
-              <p className="identity-tagline">Composed on Base, verified by.rep</p>
             </div>
           </div>
         </section>
