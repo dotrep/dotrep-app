@@ -83,6 +83,7 @@ html.motion-off .star {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 180px;
+  padding-bottom: 0;
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -257,6 +258,7 @@ html.motion-off .ring-pulse {
 
 .identity-section {
   margin-top: 40px;
+  margin-bottom: 0;
   max-width: 640px;
   position: relative;
   z-index: 15;
@@ -295,13 +297,13 @@ html.motion-off .ring-pulse {
 .identity-tagline {
   font-size: 14px;
   color: rgba(162, 177, 199, 0.8);
-  margin: 0 0 var(--space-2);
+  margin: 0;
 }
 
 .identity-footer {
   font-size: 14px;
   color: rgba(162, 177, 199, 0.6);
-  margin: 0;
+  margin: 0 0 var(--space-4) 0;
 }
 
 @media (max-width: 1200px) {

@@ -134,7 +134,6 @@ export default function Home() {
               </div>
               
               <p className="identity-tagline">Composed on Base, verified by.rep</p>
-              <p className="identity-footer">● Built on Base. Defined by you.</p>
             </div>
           </div>
         </section>
