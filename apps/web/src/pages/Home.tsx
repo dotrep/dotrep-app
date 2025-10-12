@@ -46,13 +46,14 @@ export default function Home() {
                         <stop offset="60%" stopColor="rgba(10, 14, 20, 0.3)" />
                         <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
                       </radialGradient>
-                      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#ff6b35" />
-                        <stop offset="50%" stopColor="#0052ff" />
-                        <stop offset="100%" stopColor="#00d4aa" />
+                      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(-45)">
+                        <stop offset="0%" stopColor="#ff8c42" />
+                        <stop offset="35%" stopColor="#0052ff" />
+                        <stop offset="70%" stopColor="#00d4aa" />
+                        <stop offset="100%" stopColor="#1e3a8a" />
                       </linearGradient>
                       <filter id="ringGlow">
-                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                         <feMerge>
                           <feMergeNode in="coloredBlur"/>
                           <feMergeNode in="SourceGraphic"/>
@@ -68,9 +69,21 @@ export default function Home() {
                       r="160" 
                       fill="none" 
                       stroke="url(#ringGradient)" 
+                      strokeWidth="6"
+                      opacity="0.6"
+                      className="ring-base"
+                    />
+                    
+                    <circle 
+                      cx="200" 
+                      cy="200" 
+                      r="160" 
+                      fill="none" 
+                      stroke="url(#ringGradient)" 
                       strokeWidth="8"
                       filter="url(#ringGlow)"
-                      className="ring-path"
+                      strokeDasharray="150 850"
+                      className="ring-pulse"
                     />
                     
                     <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />

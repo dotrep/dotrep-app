@@ -99,29 +99,27 @@ html.motion-off .star {
   height: 100%;
 }
 
-.ring-path {
+.ring-base {
   transform-origin: center;
-  animation: ringPulse 4s ease-in-out infinite;
 }
 
-html:not(.motion-off) .ring-path {
-  animation: ringPulse 3s ease-in-out infinite;
+.ring-pulse {
+  transform-origin: center;
+  animation: travelPulse 4s linear infinite;
 }
 
-html.motion-off .ring-path {
+html.motion-off .ring-pulse {
   animation-play-state: paused;
 }
 
-@keyframes ringPulse {
-  0%, 100% { 
-    opacity: 0.7;
-    stroke-width: 8;
-    filter: url(#ringGlow) drop-shadow(0 0 8px rgba(0, 212, 170, 0.3));
-  }
-  50% { 
+@keyframes travelPulse {
+  0% { 
+    stroke-dashoffset: 1000;
     opacity: 1;
-    stroke-width: 10;
-    filter: url(#ringGlow) drop-shadow(0 0 24px rgba(0, 212, 170, 0.7));
+  }
+  100% { 
+    stroke-dashoffset: 0;
+    opacity: 1;
   }
 }
 
