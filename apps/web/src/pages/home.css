@@ -165,6 +165,7 @@ html.motion-off .ring-pulse {
   gap: var(--space-8);
   position: relative;
   z-index: 15;
+  padding-left: 80px;
 }
 
 .hero-headline {
