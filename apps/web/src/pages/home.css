@@ -149,7 +149,7 @@ html.motion-off .ring-pulse {
   font-size: 72px;
   font-weight: 700;
   color: var(--text);
-  text-shadow: 0 0 40px rgba(0, 212, 170, 0.5);
+  text-shadow: 0 0 50px rgba(255, 140, 66, 0.3), 0 0 80px rgba(0, 163, 255, 0.2);
   pointer-events: none;
 }
 
@@ -159,7 +159,7 @@ html.motion-off .ring-pulse {
   gap: var(--space-8);
   position: relative;
   z-index: 15;
-  padding-left: 80px;
+  padding-left: 40px;
 }
 
 .hero-headline {
@@ -172,7 +172,7 @@ html.motion-off .ring-pulse {
 
 .hero-headline .alive {
   color: var(--alive);
-  text-shadow: 0 0 30px var(--glow-teal);
+  text-shadow: 0 0 40px rgba(0, 212, 170, 0.6), 0 0 80px rgba(0, 212, 170, 0.3);
 }
 
 .hero-ctas {
@@ -227,10 +227,10 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: fixed;
-  right: 50px;
+  right: -120px;
   bottom: 0;
-  width: 520px;
-  height: 650px;
+  width: 480px;
+  height: 600px;
   pointer-events: none;
   z-index: 5;
 }

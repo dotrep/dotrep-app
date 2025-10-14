@@ -53,7 +53,7 @@ export default function Home() {
                         <stop offset="100%" stopColor="#0052ff" />
                       </linearGradient>
                       <filter id="ringGlow">
-                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                         <feMerge>
                           <feMergeNode in="coloredBlur"/>
                           <feMergeNode in="SourceGraphic"/>
@@ -69,8 +69,8 @@ export default function Home() {
                       r="160" 
                       fill="none" 
                       stroke="url(#ringGradient)" 
-                      strokeWidth="6"
-                      opacity="0.6"
+                      strokeWidth="7"
+                      opacity="0.7"
                       className="ring-base"
                     />
                     
@@ -80,9 +80,9 @@ export default function Home() {
                       r="160" 
                       fill="none" 
                       stroke="url(#ringGradient)" 
-                      strokeWidth="6"
+                      strokeWidth="7"
                       filter="url(#ringGlow)"
-                      strokeDasharray="60 940"
+                      strokeDasharray="80 920"
                       strokeLinecap="round"
                       className="ring-pulse"
                     />
