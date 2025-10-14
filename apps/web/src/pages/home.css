@@ -239,10 +239,10 @@ html.motion-off .ring-pulse {
 
 .chameleon-glow {
   position: absolute;
-  inset: -80px;
-  background: radial-gradient(circle at 50% 60%, rgba(0, 180, 255, 0.35), rgba(0, 120, 255, 0.25) 40%, transparent 65%);
-  filter: blur(60px);
-  opacity: 0.8;
+  inset: -100px;
+  background: radial-gradient(circle at 45% 55%, rgba(0, 200, 255, 0.6), rgba(0, 150, 255, 0.4) 35%, rgba(0, 100, 200, 0.2) 55%, transparent 70%);
+  filter: blur(80px);
+  opacity: 1;
   pointer-events: none;
 }
 
