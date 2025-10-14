@@ -1,14 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import './home.css';
 
-const generateStars = (count: number) => Array.from({ length: count }, () => ({
+const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
   left: Math.random() * 100,
   top: Math.random() * 100,
-  delay: Math.random() * 3,
+  size: 3 + Math.random() * 6,
+  delay: Math.random() * 5,
+  duration: 8 + Math.random() * 12,
+  color: i % 3 === 0 ? 'rgba(0, 212, 170, 0.4)' : i % 3 === 1 ? 'rgba(0, 82, 255, 0.35)' : 'rgba(255, 107, 53, 0.3)',
 }));
 
 export default function Home() {
-  const heroStars = useMemo(() => generateStars(25), []);
+  const particles = useMemo(() => generateParticles(30), []);
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -21,15 +24,19 @@ export default function Home() {
     <>
       <div className="homepage">
         <section className="hero-section">
-          <div className="constellation-bg" aria-hidden="true">
-            {heroStars.map((star, i) => (
+          <div className="particle-bg" aria-hidden="true">
+            {particles.map((particle, i) => (
               <div 
                 key={i} 
-                className="star" 
+                className="particle" 
                 style={{
-                  left: `${star.left}%`,
-                  top: `${star.top}%`,
-                  animationDelay: `${star.delay}s`
+                  left: `${particle.left}%`,
+                  top: `${particle.top}%`,
+                  width: `${particle.size}px`,
+                  height: `${particle.size}px`,
+                  background: particle.color,
+                  animationDelay: `${particle.delay}s`,
+                  animationDuration: `${particle.duration}s`
                 }}
               />
             ))}
