@@ -375,10 +375,11 @@ html.motion-off .ring-pulse {
 
   .hero-grid {
     padding-top: 20px;
+    gap: var(--space-6);
   }
 
   .hero-headline {
-    font-size: 40px;
+    font-size: 36px;
   }
 
   .rep-emblem {
