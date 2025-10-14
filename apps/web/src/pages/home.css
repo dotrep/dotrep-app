@@ -1,8 +1,8 @@
 .homepage {
   min-height: 100vh;
   background: 
-    radial-gradient(ellipse at 30% 40%, rgba(0, 82, 255, 0.15), transparent 50%),
-    radial-gradient(ellipse at 70% 60%, rgba(0, 212, 170, 0.1), transparent 50%),
+    radial-gradient(ellipse at 30% 40%, rgba(255, 107, 107, 0.1), transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.08), transparent 50%),
     linear-gradient(180deg, var(--bg-900) 0%, var(--bg-800) 100%);
   color: var(--text);
   overflow-x: hidden;
@@ -123,7 +123,7 @@ html.motion-off .star {
 
 .ring-pulse {
   transform-origin: center;
-  animation: travelPulse 8s ease-in-out infinite;
+  animation: travelPulse 8s linear infinite alternate;
 }
 
 html.motion-off .ring-pulse {
@@ -133,14 +133,11 @@ html.motion-off .ring-pulse {
 @keyframes travelPulse {
   0% { 
     stroke-dashoffset: 1000;
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
+    opacity: 0.75;
   }
   100% { 
     stroke-dashoffset: 0;
-    opacity: 0.8;
+    opacity: 1;
   }
 }
 
@@ -241,9 +238,9 @@ html.motion-off .ring-pulse {
 .chameleon-glow {
   position: absolute;
   inset: -60px;
-  background: radial-gradient(circle at 60% 50%, rgba(0, 212, 170, 0.2), rgba(0, 82, 255, 0.1) 40%, transparent 70%);
+  background: radial-gradient(circle at 60% 50%, rgba(168, 85, 247, 0.15), rgba(0, 82, 255, 0.1) 40%, transparent 70%);
   filter: blur(40px);
-  opacity: 0.8;
+  opacity: 0.6;
   pointer-events: none;
 }
 
@@ -340,10 +337,7 @@ html.motion-off .ring-pulse {
   }
 
   .chameleon-panel {
-    right: -20px;
-    bottom: 80px;
-    width: 380px;
-    height: 480px;
+    display: none;
   }
 
   .identity-section {
@@ -396,10 +390,7 @@ html.motion-off .ring-pulse {
   }
 
   .chameleon-panel {
-    right: -40px;
-    bottom: 40px;
-    width: 240px;
-    height: 300px;
+    display: none;
   }
 
   .cta-button {
