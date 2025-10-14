@@ -104,13 +104,6 @@ export default function Home() {
                     Identity isn't minted.<br />
                     <span className="earned">It's earned.</span>
                   </h2>
-                  
-                  <div className="people-chips">
-                    <div className="chip">Olivia</div>
-                    <div className="chip">Danibl</div>
-                    <div className="chip">Ryan</div>
-                    <div className="chip">Daniel</div>
-                  </div>
                 </div>
               </div>
 
