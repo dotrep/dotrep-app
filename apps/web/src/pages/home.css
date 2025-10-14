@@ -1,8 +1,10 @@
 .homepage {
   min-height: 100vh;
   background: 
-    radial-gradient(ellipse at 20% 40%, rgba(255, 140, 66, 0.12), transparent 50%),
-    radial-gradient(ellipse at 80% 60%, rgba(0, 163, 255, 0.1), transparent 50%),
+    radial-gradient(ellipse 800px 600px at 15% 50%, rgba(255, 100, 0, 0.25), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 85% 50%, rgba(0, 150, 255, 0.2), transparent 60%),
+    radial-gradient(ellipse at 20% 40%, rgba(255, 140, 66, 0.15), transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(0, 163, 255, 0.15), transparent 50%),
     linear-gradient(180deg, var(--bg-900) 0%, var(--bg-800) 100%);
   color: var(--text);
   overflow-x: hidden;
