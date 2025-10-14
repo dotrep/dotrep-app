@@ -104,8 +104,6 @@ export default function Home() {
                     <div className="chip">Ryan</div>
                     <div className="chip">Daniel</div>
                   </div>
-                  
-                  <p className="identity-tagline">Composed on Base, verified by.rep</p>
                 </div>
               </div>
 
