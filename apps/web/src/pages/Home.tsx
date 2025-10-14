@@ -47,10 +47,10 @@ export default function Home() {
                         <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
                       </radialGradient>
                       <linearGradient id="ringGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-                        <stop offset="0%" stopColor="#ff8c42" />
-                        <stop offset="25%" stopColor="#ffb347" />
-                        <stop offset="75%" stopColor="#00a3ff" />
-                        <stop offset="100%" stopColor="#0052ff" />
+                        <stop offset="0%" stopColor="#ff6b00" />
+                        <stop offset="30%" stopColor="#ffa500" />
+                        <stop offset="70%" stopColor="#00b4ff" />
+                        <stop offset="100%" stopColor="#0080ff" />
                       </linearGradient>
                       <filter id="ringGlow">
                         <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
@@ -70,7 +70,7 @@ export default function Home() {
                       fill="none" 
                       stroke="url(#ringGradient)" 
                       strokeWidth="7"
-                      opacity="0.7"
+                      opacity="0.85"
                       className="ring-base"
                     />
                     
