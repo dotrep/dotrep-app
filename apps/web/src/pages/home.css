@@ -82,7 +82,7 @@ html.motion-off .star {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 60px;
   padding-bottom: 0;
   z-index: 1;
   display: flex;
@@ -263,10 +263,10 @@ html.motion-off .ring-pulse {
 }
 
 .identity-headline {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 800;
   line-height: 1.2;
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
   color: var(--text);
 }
 
@@ -283,17 +283,17 @@ html.motion-off .ring-pulse {
 }
 
 .chip {
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-5);
   background: rgba(162, 177, 199, 0.1);
   border: 1px solid rgba(162, 177, 199, 0.3);
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text);
 }
 
 .identity-tagline {
-  font-size: 14px;
+  font-size: 16px;
   color: rgba(162, 177, 199, 0.8);
   margin: 0;
 }
