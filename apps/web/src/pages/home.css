@@ -108,8 +108,8 @@ html.motion-off .star {
 
 .rep-emblem {
   position: relative;
-  width: 420px;
-  height: 420px;
+  width: 460px;
+  height: 460px;
 }
 
 .rep-ring {
@@ -227,8 +227,8 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: fixed;
-  right: -50px;
-  bottom: 0;
+  right: 120px;
+  bottom: -30px;
   width: 500px;
   height: 625px;
   pointer-events: none;
