@@ -1,8 +1,8 @@
 .homepage {
   min-height: 100vh;
   background: 
-    radial-gradient(ellipse at 30% 40%, rgba(255, 107, 107, 0.1), transparent 50%),
-    radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.08), transparent 50%),
+    radial-gradient(ellipse at 20% 40%, rgba(255, 140, 66, 0.12), transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(0, 163, 255, 0.1), transparent 50%),
     linear-gradient(180deg, var(--bg-900) 0%, var(--bg-800) 100%);
   color: var(--text);
   overflow-x: hidden;
@@ -227,7 +227,7 @@ html.motion-off .ring-pulse {
 
 .chameleon-panel {
   position: fixed;
-  right: 200px;
+  right: 50px;
   bottom: 0;
   width: 520px;
   height: 650px;
@@ -238,7 +238,7 @@ html.motion-off .ring-pulse {
 .chameleon-glow {
   position: absolute;
   inset: -60px;
-  background: radial-gradient(circle at 60% 50%, rgba(168, 85, 247, 0.15), rgba(0, 82, 255, 0.1) 40%, transparent 70%);
+  background: radial-gradient(circle at 60% 50%, rgba(0, 163, 255, 0.15), rgba(0, 82, 255, 0.1) 40%, transparent 70%);
   filter: blur(40px);
   opacity: 0.6;
   pointer-events: none;
