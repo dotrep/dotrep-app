@@ -123,7 +123,7 @@ html.motion-off .star {
 
 .ring-pulse {
   transform-origin: center;
-  animation: travelPulse 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: travelPulse 8s ease-in-out infinite;
 }
 
 html.motion-off .ring-pulse {
@@ -133,17 +133,14 @@ html.motion-off .ring-pulse {
 @keyframes travelPulse {
   0% { 
     stroke-dashoffset: 1000;
-    opacity: 0.7;
+    opacity: 0.8;
   }
-  30% {
-    opacity: 0.95;
-  }
-  70% {
-    opacity: 0.95;
+  50% {
+    opacity: 1;
   }
   100% { 
     stroke-dashoffset: 0;
-    opacity: 0.7;
+    opacity: 0.8;
   }
 }
 
@@ -310,20 +307,31 @@ html.motion-off .ring-pulse {
   margin: 0 0 var(--space-4) 0;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1199px) {
+  .hero-container {
+    padding: 0 var(--space-6);
+  }
+
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-12);
+    gap: var(--space-8);
     text-align: center;
+    padding-top: 40px;
   }
 
   .emblem-column {
     order: 1;
+    align-items: center;
   }
 
   .content-column {
     order: 2;
     align-items: center;
+    padding-left: 0;
+  }
+
+  .hero-headline {
+    font-size: 52px;
   }
 
   .hero-ctas {
@@ -332,47 +340,78 @@ html.motion-off .ring-pulse {
   }
 
   .chameleon-panel {
-    right: 50px;
-    bottom: 100px;
-    width: 320px;
-    height: 400px;
+    right: -20px;
+    bottom: 80px;
+    width: 380px;
+    height: 480px;
   }
 
   .identity-section {
     position: relative;
     left: 0;
     bottom: 0;
-    margin-top: var(--space-20);
+    margin-top: var(--space-8);
     text-align: center;
   }
 
   .people-chips {
     justify-content: center;
   }
-}
-
-@media (max-width: 768px) {
-  .hero-headline {
-    font-size: 48px;
-  }
 
   .rep-emblem {
-    width: 320px;
-    height: 320px;
+    width: 360px;
+    height: 360px;
   }
 
   .rep-text {
-    font-size: 56px;
+    font-size: 64px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-container {
+    padding: 0 var(--space-4);
+  }
+
+  .hero-grid {
+    padding-top: 20px;
+  }
+
+  .hero-headline {
+    font-size: 40px;
+  }
+
+  .rep-emblem {
+    width: 280px;
+    height: 280px;
+  }
+
+  .rep-text {
+    font-size: 48px;
   }
 
   .identity-headline {
-    font-size: 36px;
+    font-size: 24px;
   }
 
   .chameleon-panel {
-    right: 20px;
-    bottom: 50px;
-    width: 280px;
-    height: 350px;
+    right: -40px;
+    bottom: 40px;
+    width: 240px;
+    height: 300px;
+  }
+
+  .cta-button {
+    font-size: 16px;
+    padding: var(--space-3) var(--space-6);
+  }
+
+  .people-chips {
+    gap: var(--space-1);
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: var(--space-1) var(--space-3);
   }
 }
