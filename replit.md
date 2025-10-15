@@ -31,23 +31,36 @@ Preferred communication style: Simple, everyday language.
 - Responsive design with mobile-first approach
 
 **Key Pages:**
-- Homepage (`Home.tsx`) - Single continuous hero page matching design comp
-- Reserve page (`Reserve.tsx`) - Name reservation placeholder
+- Homepage (`Home.tsx`) - Single continuous hero page with floating particle background
+- Claim page (`Claim.tsx`) - Name reservation page with real-time validation
+- Reserve page (`Reserve.tsx`) - Placeholder (redirects to /claim)
 - Discover page (`Discover.tsx`) - Discovery placeholder
 
-**Homepage Hero Design (Single Page):**
+**Homepage Hero Design:**
 - **Top Section:** Absolute positioning layout
-  - `.rep` emblem (left) with gradient ring (blue→teal→orange) and glow effects
+  - `.rep` emblem (left) with orange→blue gradient ring and smooth pulse animation
   - "Your onchain reputation. Alive on Base." headline (center)
-  - Dual CTAs: "Reserve your.rep" (primary) and "Discover.rep" (secondary)
-  - Large transparent chameleon mascot (550x750px, right) with drop shadows and float animation
+  - Dual CTAs: "Reserve your.rep" (primary, links to /claim) and "Discover.rep" (secondary)
+  - Large transparent chameleon mascot (500×625px, right) with blue rim light glow
 - **Bottom Section:** Left-aligned content flow
   - "Identity isn't minted. It's earned." headline in teal
-  - People chips row (Olivia, Danibl, Ryan, Daniel)
-  - "Composed on Base, verified by.rep" text
-  - "● Built on Base. Defined by you." tagline with bullet
-- Constellation star field background with twinkling animation
-- Assets: `chameleon_transparent.png` (RGBA transparent PNG)
+  - Name chips (hidden but preserve layout spacing)
+- Floating particle background (30 particles in brand colors: teal, blue, orange) with upward drift animation
+- Assets: `chameleon_transparent.png` (homepage chameleon)
+
+**Claim Page Design:**
+- Two-column layout: left content, right chameleon mascot
+- **Left Column:**
+  - "Reserve your.rep" title
+  - Validation rules text
+  - Step progress: "1 Claim • 2 Link • 3 Done"
+  - Name input field with fixed ".rep" suffix and orange border
+  - Real-time validation (3-32 chars, lowercase letters/numbers/hyphens, must start with letter)
+  - Availability indicator (checkmark + status message)
+  - "Connect wallet to claim" CTA button (disabled until valid + available)
+- **Right Column:** Chameleon mascot with matrix-style background
+- Same floating particle background as homepage
+- Assets: `chameleon_claim.png` (claim page chameleon)
 
 **Component Pattern:**
 - Functional React components with hooks
@@ -69,7 +82,7 @@ Preferred communication style: Simple, everyday language.
 - `/rep/check` - GET endpoint to check name availability
 - `/rep/reserve` - POST endpoint for mock name reservation
 - In-memory storage using Set for reserved names (development/mock)
-- Name validation: 3-30 characters, lowercase alphanumeric with optional hyphens/underscores
+- Name validation: 3-32 characters, lowercase letters/numbers/hyphens only, must start with letter
 
 **Server Configuration:**
 - Fixed port 5055 for stable Vite proxy integration

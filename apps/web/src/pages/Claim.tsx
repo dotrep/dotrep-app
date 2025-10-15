@@ -151,7 +151,7 @@ export default function Claim() {
 
         <div className="claim-chameleon">
           <img 
-            src="/chameleon_transparent.png" 
+            src="/chameleon_claim.png" 
             alt="Chameleon mascot" 
             className="claim-chameleon-img"
           />
