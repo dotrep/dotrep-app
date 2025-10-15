@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Reserve from "./pages/Reserve";
 import Discover from "./pages/Discover";
+import Claim from "./pages/Claim";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -42,6 +43,8 @@ export default function App() {
         return <Reserve />;
       case '/discover':
         return <Discover />;
+      case '/claim':
+        return <Claim />;
       case '/':
       default:
         return <Home />;

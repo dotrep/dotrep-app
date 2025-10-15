@@ -122,7 +122,7 @@ export default function Home() {
                 </h1>
                 
                 <div className="hero-ctas">
-                  <a href="/reserve" className="cta-button cta-primary">
+                  <a href="/claim" className="cta-button cta-primary">
                     Reserve your.rep
                   </a>
                   <a href="/discover" className="cta-button cta-secondary">
