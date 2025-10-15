@@ -42,8 +42,8 @@ export function useClaimButton({
       });
 
       if (response.ok) {
-        window.history.pushState({}, '', '/wallet');
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        const rid = Math.random().toString(36).substring(2, 15);
+        window.location.href = `/wallet?name=${encodeURIComponent(name)}&rid=${rid}`;
       } else {
         console.error('Failed to reserve name');
       }

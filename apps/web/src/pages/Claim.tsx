@@ -74,7 +74,7 @@ export default function Claim() {
       } finally {
         setIsChecking(false);
       }
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [name]);

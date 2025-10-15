@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useHomeButton } from '../hooks/useHomeButton';
+import { useEffect, useMemo } from 'react';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -13,7 +12,6 @@ const generateParticles = (count: number) => Array.from({ length: count }, (_, i
 
 export default function Home() {
   const particles = useMemo(() => generateParticles(30), []);
-  const homeButton = useHomeButton();
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -124,13 +122,9 @@ export default function Home() {
                 </h1>
                 
                 <div className="hero-ctas">
-                  <button 
-                    className="cta-button cta-primary"
-                    disabled={homeButton.disabled}
-                    onClick={homeButton.onClick}
-                  >
-                    {homeButton.text}
-                  </button>
+                  <a href="/claim" className="cta-button cta-primary">
+                    Reserve your.rep
+                  </a>
                   <a href="/discover" className="cta-button cta-secondary">
                     Discover.rep
                   </a>
