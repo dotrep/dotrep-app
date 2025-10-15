@@ -40,7 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **Top Section:** Absolute positioning layout
   - `.rep` emblem (left) with orange→blue gradient ring and smooth pulse animation
   - "Your onchain reputation. Alive on Base." headline (center)
-  - Dual CTAs: "Reserve your.rep" (primary, links to /claim) and "Discover.rep" (secondary)
+  - Dual CTAs: "Reserve your.rep" (primary, navigates to /claim) and "Discover.rep" (secondary)
   - Large transparent chameleon mascot (500×625px, right) with blue rim light glow
 - **Bottom Section:** Left-aligned content flow
   - "Identity isn't minted. It's earned." headline in teal
@@ -50,14 +50,22 @@ Preferred communication style: Simple, everyday language.
 
 **Claim Page Design:**
 - Two-column layout: left content, right chameleon mascot
+- **Single Button Flow:**
+  - Initial state: "Reserve your .rep" button, input hidden
+  - Click reveals name input field with fixed ".rep" suffix and orange border
+  - Button updates through states based on validation/wallet:
+    1. "Check availability" (invalid/empty, disabled)
+    2. "Checking..." (checking, disabled)
+    3. "Name is taken" (unavailable, disabled)
+    4. "Connect wallet to claim" (available, not connected)
+    5. "Switch to Base to claim" (connected, wrong chain)
+    6. "Reserve your .rep" (connected on Base, ready to reserve → POST /rep/reserve → redirect to /wallet)
 - **Left Column:**
   - "Reserve your.rep" title
   - Validation rules text
   - Step progress: "1 Claim • 2 Link • 3 Done"
-  - Name input field with fixed ".rep" suffix and orange border
   - Real-time validation (3-32 chars, lowercase letters/numbers/hyphens, must start with letter)
   - Availability indicator (checkmark + status message)
-  - "Connect wallet to claim" CTA button (disabled until valid + available)
 - **Right Column:** Chameleon mascot with matrix-style background
 - Same floating particle background as homepage
 - Assets: `chameleon_claim.png` (claim page chameleon)
@@ -112,10 +120,12 @@ Preferred communication style: Simple, everyday language.
 - Device fingerprinting and IP tracking for identity verification
 
 **Web3 Integration:**
-- Wagmi v2 for blockchain interactions
+- Wagmi v2 for blockchain interactions (custom browser wallet connector)
 - Viem for Ethereum operations
-- WalletConnect for multi-wallet support
-- Base Sepolia testnet deployment configured
+- Base chain (8453) configured for wallet switching
+- Wallet connection flow integrated with name reservation
+- POST /rep/reserve endpoint validates wallet addresses and stores reservations
+- Success redirect to /wallet page after reservation
 
 ### File Storage & Vault System
 

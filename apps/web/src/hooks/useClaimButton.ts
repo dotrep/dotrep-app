@@ -6,6 +6,8 @@ interface UseClaimButtonProps {
   isValid: boolean;
   isChecking: boolean;
   isAvailable: boolean | null;
+  showInput: boolean;
+  onShowInput: () => void;
 }
 
 interface ClaimButtonState {
@@ -19,6 +21,8 @@ export function useClaimButton({
   isValid,
   isChecking,
   isAvailable,
+  showInput,
+  onShowInput,
 }: UseClaimButtonProps): ClaimButtonState {
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors } = useConnect();
@@ -47,6 +51,14 @@ export function useClaimButton({
       console.error('Error reserving name:', error);
     }
   };
+
+  if (!showInput) {
+    return {
+      text: 'Reserve your .rep',
+      disabled: false,
+      onClick: onShowInput,
+    };
+  }
 
   if (!name || !isValid) {
     return {

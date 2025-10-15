@@ -13,6 +13,7 @@ const generateParticles = (count: number) => Array.from({ length: count }, (_, i
 
 export default function Claim() {
   const particles = useMemo(() => generateParticles(30), []);
+  const [showInput, setShowInput] = useState(false);
   const [name, setName] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -26,6 +27,8 @@ export default function Claim() {
     isValid,
     isChecking,
     isAvailable,
+    showInput,
+    onShowInput: () => setShowInput(true),
   });
 
   useEffect(() => {
@@ -113,39 +116,43 @@ export default function Claim() {
             <span className="step">3 Done</span>
           </div>
 
-          <div className="name-input-wrapper">
-            <input
-              type="text"
-              className="name-input"
-              placeholder="yourname"
-              value={name}
-              onChange={(e) => setName(e.target.value.toLowerCase())}
-              maxLength={32}
-            />
-            <span className="name-suffix">.rep</span>
-          </div>
+          {showInput && (
+            <>
+              <div className="name-input-wrapper">
+                <input
+                  type="text"
+                  className="name-input"
+                  placeholder="yourname"
+                  value={name}
+                  onChange={(e) => setName(e.target.value.toLowerCase())}
+                  maxLength={32}
+                />
+                <span className="name-suffix">.rep</span>
+              </div>
 
-          {isChecking && (
-            <div className="status-message checking">Checking availability...</div>
-          )}
+              {isChecking && (
+                <div className="status-message checking">Checking availability...</div>
+              )}
 
-          {!isChecking && isAvailable === true && (
-            <div className="status-message available">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13.3334 4L6.00002 11.3333L2.66669 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              {name}.rep is available
-            </div>
-          )}
+              {!isChecking && isAvailable === true && (
+                <div className="status-message available">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M13.3334 4L6.00002 11.3333L2.66669 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {name}.rep is available
+                </div>
+              )}
 
-          {!isChecking && isAvailable === false && (
-            <div className="status-message unavailable">
-              {name}.rep is not available
-            </div>
-          )}
+              {!isChecking && isAvailable === false && (
+                <div className="status-message unavailable">
+                  {name}.rep is not available
+                </div>
+              )}
 
-          {error && (
-            <div className="status-message error">{error}</div>
+              {error && (
+                <div className="status-message error">{error}</div>
+              )}
+            </>
           )}
 
           <button 

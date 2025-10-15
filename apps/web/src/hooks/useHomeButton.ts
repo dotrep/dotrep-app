@@ -19,14 +19,9 @@ export function useHomeButton(): HomeButtonState {
 
   if (!isConnected) {
     return {
-      text: 'Connect wallet',
+      text: 'Reserve your.rep',
       disabled: false,
-      onClick: () => {
-        const connector = connectors.find(c => c.id === 'browserWallet' || c.id === 'injected');
-        if (connector) {
-          connect({ connector });
-        }
-      },
+      onClick: navigateToClaim,
     };
   }
 
