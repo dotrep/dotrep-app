@@ -77,24 +77,26 @@ Preferred communication style: Simple, everyday language.
 - Simple client-side state management
 - Motion preferences toggle respecting `prefers-reduced-motion`
 
-### Backend Architecture (apps/api)
+### Backend Architecture
 
 **Technology Stack:**
-- Express.js with TypeScript
-- ESM modules (type: "module")
-- CORS enabled for cross-origin requests
+- Combined Express + Vite server on port 5000
+- Vite in middleware mode for development
+- Express for API routes
 - JSON request/body parsing
 
 **API Design:**
 - RESTful endpoints for `.rep` name operations
-- `/rep/check` - GET endpoint to check name availability
-- `/rep/reserve` - POST endpoint for mock name reservation
+- `/api/rep/check` - GET endpoint to check name availability
+- `/api/rep/reserve` - POST endpoint for mock name reservation
 - In-memory storage using Set for reserved names (development/mock)
 - Name validation: 3-32 characters, lowercase letters/numbers/hyphens only, must start with letter
 
 **Server Configuration:**
-- Fixed port 5055 for stable Vite proxy integration
-- Binds to 0.0.0.0 for containerized environments
+- Single server on port 5000 (apps/web/server.js)
+- Express middleware handles API routes before Vite
+- Vite middleware handles frontend assets and HMR
+- Binds to 0.0.0.0 for Replit environment
 
 ### Data Architecture
 
