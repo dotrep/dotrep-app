@@ -6,7 +6,10 @@
     "start": "node server/server.js"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.3",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "viem": "^2.38.2",
+    "wagmi": "^2.18.1"
   }
 }

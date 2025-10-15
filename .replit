@@ -1,5 +1,5 @@
 run = "bash -lc './start.sh'"
-modules = ["python-3.11"]
+modules = ["python-3.11", "nodejs-20"]
 [nix]
 channel = "stable-23_11"
 

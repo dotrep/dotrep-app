@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { config } from './wagmi.config';
 import Home from "./pages/Home";
 import Reserve from "./pages/Reserve";
 import Discover from "./pages/Discover";
 import Claim from "./pages/Claim";
+
+const queryClient = new QueryClient();
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -51,5 +56,11 @@ export default function App() {
     }
   };
 
-  return renderPage();
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        {renderPage()}
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
 }
