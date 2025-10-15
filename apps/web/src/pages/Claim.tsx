@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useClaimButton } from '../hooks/useClaimButton';
 import './claim.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -16,6 +17,16 @@ export default function Claim() {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
+
+  const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
+  const isValid = nameRegex.test(name);
+
+  const claimButton = useClaimButton({
+    name,
+    isValid,
+    isChecking,
+    isAvailable,
+  });
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -65,9 +76,6 @@ export default function Claim() {
     return () => clearTimeout(timer);
   }, [name]);
 
-  const handleConnect = () => {
-    console.log('Connect wallet for:', name);
-  };
 
   return (
     <div className="claim-page">
@@ -142,10 +150,10 @@ export default function Claim() {
 
           <button 
             className="connect-button"
-            disabled={!isAvailable || isChecking}
-            onClick={handleConnect}
+            disabled={claimButton.disabled}
+            onClick={claimButton.onClick}
           >
-            Connect wallet to claim
+            {claimButton.text}
           </button>
         </div>
 
