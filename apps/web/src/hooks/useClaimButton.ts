@@ -1,0 +1,111 @@
+import { useAccount, useConnect, useSwitchChain } from 'wagmi';
+import { base } from 'wagmi/chains';
+
+interface UseClaimButtonProps {
+  name: string;
+  isValid: boolean;
+  isChecking: boolean;
+  isAvailable: boolean | null;
+}
+
+interface ClaimButtonState {
+  text: string;
+  disabled: boolean;
+  onClick: () => void;
+}
+
+export function useClaimButton({
+  name,
+  isValid,
+  isChecking,
+  isAvailable,
+}: UseClaimButtonProps): ClaimButtonState {
+  const { address, isConnected, chain } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { switchChain } = useSwitchChain();
+
+  const handleReserve = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5055/rep/reserve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          walletAddress: address,
+        }),
+      });
+
+      if (response.ok) {
+        window.history.pushState({}, '', '/wallet');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      } else {
+        console.error('Failed to reserve name');
+      }
+    } catch (error) {
+      console.error('Error reserving name:', error);
+    }
+  };
+
+  if (!name || !isValid) {
+    return {
+      text: 'Check availability',
+      disabled: true,
+      onClick: () => {},
+    };
+  }
+
+  if (isChecking) {
+    return {
+      text: 'Checking...',
+      disabled: true,
+      onClick: () => {},
+    };
+  }
+
+  if (isAvailable === false) {
+    return {
+      text: 'Name is taken',
+      disabled: true,
+      onClick: () => {},
+    };
+  }
+
+  if (isAvailable === true) {
+    if (!isConnected) {
+      return {
+        text: 'Connect wallet to claim',
+        disabled: false,
+        onClick: () => {
+          const injectedConnector = connectors.find(c => c.id === 'injected');
+          if (injectedConnector) {
+            connect({ connector: injectedConnector });
+          }
+        },
+      };
+    }
+
+    if (chain?.id !== base.id) {
+      return {
+        text: 'Switch to Base to claim',
+        disabled: false,
+        onClick: () => {
+          switchChain({ chainId: base.id });
+        },
+      };
+    }
+
+    return {
+      text: 'Reserve your .rep',
+      disabled: false,
+      onClick: handleReserve,
+    };
+  }
+
+  return {
+    text: 'Check availability',
+    disabled: true,
+    onClick: () => {},
+  };
+}
