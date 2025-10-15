@@ -8,8 +8,9 @@ const PORT = 5055; // keep this fixed so Vite proxy is stable
 app.use(cors());
 app.use(express.json());
 
-const reserved = new Set<string>();
+const reserved = new Map<string, { name: string; walletAddress: string; timestamp: number }>();
 const isValid = (n:string)=> typeof n==="string" && !!n.trim() && n.length>=3 && n.length<=30 && /^[.]?[a-z0-9]+(?:[-_a-z0-9]*[a-z0-9])?$/.test(n);
+const isValidAddress = (addr:string) => typeof addr==="string" && /^0x[a-fA-F0-9]{40}$/.test(addr);
 
 // Check availability
 app.get("/rep/check",(req,res)=>{
@@ -18,13 +19,17 @@ app.get("/rep/check",(req,res)=>{
   res.json({ ok:true, name, available:!reserved.has(name) });
 });
 
-// Reserve mock
+// Reserve with wallet
 app.post("/rep/reserve",(req,res)=>{
   const name = String(req.body?.name||"").toLowerCase();
+  const walletAddress = String(req.body?.walletAddress||"");
+  
   if(!isValid(name)) return res.status(400).json({ ok:false, error:"INVALID_NAME" });
+  if(!isValidAddress(walletAddress)) return res.status(400).json({ ok:false, error:"INVALID_WALLET_ADDRESS" });
   if(reserved.has(name)) return res.status(409).json({ ok:false, error:"ALREADY_RESERVED" });
-  reserved.add(name);
-  res.json({ ok:true, name, status:"RESERVED_MOCK" });
+  
+  reserved.set(name, { name, walletAddress, timestamp: Date.now() });
+  res.json({ ok:true, name, walletAddress, status:"RESERVED" });
 });
 
 app.get("/",(_,res)=>res.json({ ok:true, service:"api", routes:["/rep/check","/rep/reserve"], port:PORT }));
