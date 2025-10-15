@@ -67,7 +67,13 @@ export default function Claim() {
       try {
         const response = await fetch(`http://127.0.0.1:5055/rep/check?name=${name}`);
         const data = await response.json();
-        setIsAvailable(data.available);
+        
+        if (data.ok) {
+          setIsAvailable(data.available);
+        } else {
+          setIsAvailable(null);
+          setError(data.error || 'Invalid name format');
+        }
       } catch (err) {
         setIsAvailable(null);
         setError('Error checking availability');
