@@ -3,7 +3,7 @@ import cors from "cors";
 
 const app = express();
 const HOST = "0.0.0.0";
-const PORT = 5055; // keep this fixed so Vite proxy is stable
+const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());

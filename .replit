@@ -27,6 +27,10 @@ externalPort = 4200
 localPort = 43599
 externalPort = 3002
 
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
 [agent]
 expertMode = true
 
@@ -42,6 +46,10 @@ author = "agent"
 task = "workflow.run"
 args = "Web App"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "API Server"
+
 [[workflows.workflow]]
 name = "Web App"
 author = "agent"
@@ -53,3 +61,15 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "API Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/api && npx tsx src/index.ts"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
