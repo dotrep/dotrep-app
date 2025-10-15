@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Reserve from "./pages/Reserve";
 import Discover from "./pages/Discover";
 import Claim from "./pages/Claim";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,8 @@ export default function App() {
         return <Discover />;
       case '/claim':
         return <Claim />;
+      case '/wallet':
+        return <Wallet />;
       case '/':
       default:
         return <Home />;

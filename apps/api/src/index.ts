@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 const reserved = new Map<string, { name: string; walletAddress: string; timestamp: number }>();
-const isValid = (n:string)=> typeof n==="string" && !!n.trim() && n.length>=3 && n.length<=30 && /^[.]?[a-z0-9]+(?:[-_a-z0-9]*[a-z0-9])?$/.test(n);
+const isValid = (n:string)=> typeof n==="string" && n.length>=3 && n.length<=32 && /^[a-z][a-z0-9-]{2,31}$/.test(n);
 const isValidAddress = (addr:string) => typeof addr==="string" && /^0x[a-fA-F0-9]{40}$/.test(addr);
 
 // Check availability

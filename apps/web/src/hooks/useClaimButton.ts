@@ -78,9 +78,9 @@ export function useClaimButton({
         text: 'Connect wallet to claim',
         disabled: false,
         onClick: () => {
-          const injectedConnector = connectors.find(c => c.id === 'injected');
-          if (injectedConnector) {
-            connect({ connector: injectedConnector });
+          const connector = connectors.find(c => c.id === 'browserWallet' || c.id === 'injected');
+          if (connector) {
+            connect({ connector });
           }
         },
       };
