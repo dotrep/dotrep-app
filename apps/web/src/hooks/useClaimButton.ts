@@ -89,10 +89,24 @@ export function useClaimButton({
       return {
         text: 'Connect wallet to claim',
         disabled: false,
-        onClick: () => {
+        onClick: async () => {
+          // Check if wallet is installed
+          if (!(window as any).ethereum) {
+            alert('Please install MetaMask or another Web3 wallet to continue.');
+            return;
+          }
+
           const connector = connectors.find(c => c.id === 'browserWallet' || c.id === 'injected');
           if (connector) {
-            connect({ connector });
+            try {
+              await connect({ connector });
+            } catch (error) {
+              console.error('Wallet connection error:', error);
+              alert('Failed to connect wallet. Please try again.');
+            }
+          } else {
+            console.error('No wallet connector found');
+            alert('Wallet connector not available. Please refresh the page.');
           }
         },
       };

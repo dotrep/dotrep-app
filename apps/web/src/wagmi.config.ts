@@ -25,7 +25,7 @@ function browserWalletConnector() {
       const chainId = await provider.request({ method: 'eth_chainId' });
       
       return { 
-        accounts: accounts.map((x: string) => x.toLowerCase()), 
+        accounts: accounts.map((x: string) => x.toLowerCase() as `0x${string}`), 
         chainId: Number(chainId) 
       };
     },
@@ -38,7 +38,7 @@ function browserWalletConnector() {
       const provider = (window as any).ethereum;
       if (!provider) return [];
       const accounts = await provider.request({ method: 'eth_accounts' });
-      return accounts.map((x: string) => x.toLowerCase());
+      return accounts.map((x: string) => x.toLowerCase() as `0x${string}`);
     },
     
     async getChainId() {
@@ -102,7 +102,7 @@ function browserWalletConnector() {
         config.emitter.emit('disconnect');
       } else {
         config.emitter.emit('change', { 
-          accounts: accounts.map((x) => x.toLowerCase()) 
+          accounts: accounts.map((x) => x.toLowerCase() as `0x${string}`) 
         });
       }
     },
