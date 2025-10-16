@@ -1,6 +1,6 @@
 // Wagmi configuration for Web3 integration
 import { createConfig, http } from 'wagmi';
-import { metaMask, walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
 import { defineChain } from 'viem';
 import { currentNetwork } from './contracts';
 
@@ -27,12 +27,12 @@ const networkChain = defineChain({
 });
 
 // Environment-based connector selection
-const APP_MODE = import.meta.env.VITE_APP_MODE || 'STEALTH';
+const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
 
 const baseConnectors = [
-  metaMask(),
+  injected({ target: 'metaMask' }),
   walletConnect({
-    projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+    projectId: (import.meta as any).env?.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
   }),
 ];
 

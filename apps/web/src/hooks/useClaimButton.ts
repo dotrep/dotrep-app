@@ -1,5 +1,5 @@
 import { useAccount, useConnect, useSwitchChain } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { networkChain } from '../../client/src/config/wagmi';
 
 interface UseClaimButtonProps {
   name: string;
@@ -96,7 +96,7 @@ export function useClaimButton({
             return;
           }
 
-          const connector = connectors.find(c => c.id === 'browserWallet' || c.id === 'injected');
+          const connector = connectors.find(c => c.id === 'injected' || c.id === 'metaMask');
           if (connector) {
             try {
               await connect({ connector });
@@ -112,12 +112,12 @@ export function useClaimButton({
       };
     }
 
-    if (chain?.id !== base.id) {
+    if (chain?.id !== networkChain.id) {
       return {
-        text: 'Switch to Base to claim',
+        text: `Switch to ${networkChain.name} to claim`,
         disabled: false,
         onClick: () => {
-          switchChain({ chainId: base.id });
+          switchChain({ chainId: networkChain.id });
         },
       };
     }

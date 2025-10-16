@@ -125,12 +125,13 @@ Preferred communication style: Simple, everyday language.
 - Device fingerprinting and IP tracking for identity verification
 
 **Web3 Integration:**
-- Wagmi v2 for blockchain interactions (custom browser wallet connector)
+- Wagmi v2 for blockchain interactions (injected connector for MetaMask/browser wallets)
 - Viem for Ethereum operations
 - Base chain (8453) configured for wallet switching
 - Wallet connection flow integrated with name reservation
 - POST /rep/reserve endpoint validates wallet addresses and stores reservations
 - Success redirect to /wallet page after reservation
+- **Note:** @metamask/sdk pinned to v0.28.2 (compatibility fix for Vite pre-bundling). The injected() connector is used instead of metaMask() SDK connector since basic wallet connection doesn't require MetaMask-specific features.
 
 ### File Storage & Vault System
 

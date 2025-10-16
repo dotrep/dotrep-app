@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { config } from './wagmi.config';
+import { wagmiConfig } from '../client/src/config/wagmi';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import Home from "./pages/Home";
 import Reserve from "./pages/Reserve";
@@ -62,7 +62,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <WagmiProvider config={config}>
+      <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           {renderPage()}
         </QueryClientProvider>
