@@ -39,6 +39,7 @@ app.post('/api/rep/reserve', (req, res) => {
 const vite = await createViteServer({
   server: { 
     middlewareMode: true,
+    hmr: false,
   },
   appType: 'spa',
 });
