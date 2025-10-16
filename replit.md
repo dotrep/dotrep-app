@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 
 **Key Pages:**
 - Homepage (`Home.tsx`) - Single continuous hero page with floating particle background
-- Claim page (`Claim.tsx`) - Name reservation page with real-time validation
+- Claim page (`ClaimFSN.tsx`) - Production .rep name reservation with wallet integration at /claim route
 - Reserve page (`Reserve.tsx`) - Placeholder (redirects to /claim)
 - Discover page (`Discover.tsx`) - Discovery placeholder
 
@@ -52,23 +52,25 @@ Preferred communication style: Simple, everyday language.
 - Two-column layout: left content, right chameleon mascot
 - **Single Button Flow:**
   - Initial state: "Reserve your .rep" button, input hidden
-  - Click reveals name input field with fixed ".rep" suffix and orange border
+  - Click reveals name input field with fixed ".rep" suffix
   - Button/UI updates through states based on validation/wallet:
     1. "Check availability" (invalid/empty, disabled)
     2. "Checking..." (checking, disabled)
     3. "Name is taken" (unavailable, disabled)
     4. **Shows WalletConnect component** (available, not connected - displays MetaMask/Coinbase buttons)
     5. "Switch to Base to claim" (connected, wrong chain)
-    6. "Reserve your .rep" (connected on Base, ready to reserve → POST /rep/reserve → redirect to /wallet)
+    6. "Reserve your .rep" (connected on Base, ready to reserve → registerName → redirect to /wallet)
   - **Note:** WalletConnect component used instead of direct connect() calls (MetaMask rejects programmatic connection)
 - **Left Column:**
-  - "Reserve your.rep" title
+  - "Reserve your.rep" title (teal-blue gradient)
   - Validation rules text
   - Step progress: "1 Claim • 2 Link • 3 Done"
   - Real-time validation (3-32 chars, lowercase letters/numbers/hyphens, must start with letter)
   - Availability indicator (checkmark + status message)
-- **Right Column:** Chameleon mascot with matrix-style background
-- Same floating particle background as homepage
+- **Right Column:** Chameleon mascot
+- Floating particle background (30 particles with @keyframes float animation - upward drift with scale/opacity changes)
+- Uses inline styles with component-scoped <style> tag for keyframe animations
+- Browser alerts for success/error feedback (no toast library dependencies)
 - Assets: `chameleon_claim.png` (claim page chameleon)
 
 **Component Pattern:**
