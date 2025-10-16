@@ -127,11 +127,14 @@ Preferred communication style: Simple, everyday language.
 **Web3 Integration:**
 - Wagmi v2 for blockchain interactions (injected connector for MetaMask/browser wallets)
 - Viem for Ethereum operations
-- Base chain (8453) configured for wallet switching
-- Wallet connection flow integrated with name reservation
-- POST /rep/reserve endpoint validates wallet addresses and stores reservations
-- Success redirect to /wallet page after reservation
+- **Base Mainnet (8453)** configured as default network for wallet connection
+- Wallet connection uses direct wagmi hooks (useAccount, useConnect, useSwitchChain) in Claim.tsx
+- Connector selection via name-based filtering: `connector.name.toLowerCase().includes('metamask')`
+- Current claim flow is **API-based** (no smart contract interaction yet):
+  - POST /rep/reserve endpoint validates wallet addresses and stores reservations in-memory
+  - Success redirect to /wallet page after reservation
 - **Note:** @metamask/sdk pinned to v0.28.2 (compatibility fix for Vite pre-bundling). The injected() connector is used instead of metaMask() SDK connector since basic wallet connection doesn't require MetaMask-specific features.
+- **Network Configuration:** Base Mainnet set for MetaMask compatibility; contract addresses reference local/sepolia but aren't used in current mock claim flow
 
 ### File Storage & Vault System
 
