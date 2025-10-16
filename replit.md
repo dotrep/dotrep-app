@@ -88,9 +88,11 @@ Preferred communication style: Simple, everyday language.
 **API Design:**
 - RESTful endpoints for `.rep` name operations
 - `/api/rep/check` - GET endpoint to check name availability
-- `/api/rep/reserve` - POST endpoint for mock name reservation
+- `/api/rep/reserve` - POST endpoint for name reservation with wallet validation
 - In-memory storage using Set for reserved names (development/mock)
 - Name validation: 3-32 characters, lowercase letters/numbers/hyphens only, must start with letter
+- Wallet address validation: 0x followed by 40 hexadecimal characters
+- HTTP status codes: 400 (invalid input), 409 (name already reserved), 200 (success)
 
 **Server Configuration:**
 - Single server on port 5000 (apps/web/server.js)
