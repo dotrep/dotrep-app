@@ -96,9 +96,10 @@ export function useClaimButton({
             return;
           }
 
-          console.log('Available connectors:', connectors.map(c => ({ id: c.id, name: c.name })));
-          const connector = connectors.find(c => c.id === 'injected' || c.id === 'metaMask');
-          console.log('Selected connector:', connector?.id);
+          // Use same logic as working WalletConnect component - filter by name
+          const connector = connectors.find(c => 
+            c.name.toLowerCase().includes('metamask')
+          );
           
           if (connector) {
             try {
@@ -108,8 +109,8 @@ export function useClaimButton({
               alert('Failed to connect wallet. Please try again.');
             }
           } else {
-            console.error('No wallet connector found');
-            alert('Wallet connector not available. Please refresh the page.');
+            console.error('No MetaMask connector found');
+            alert('MetaMask connector not available. Please refresh the page.');
           }
         },
       };
