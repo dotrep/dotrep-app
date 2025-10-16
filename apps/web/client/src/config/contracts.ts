@@ -98,6 +98,12 @@ export const networks = {
     rpcUrl: 'http://127.0.0.1:8545',
     blockExplorer: undefined
   },
+  baseMainnet: {
+    id: 8453,
+    name: 'Base',
+    rpcUrl: 'https://mainnet.base.org',
+    blockExplorer: 'https://basescan.org'
+  },
   baseSepolia: {
     id: 84532,
     name: 'Base Sepolia',
@@ -106,4 +112,8 @@ export const networks = {
   }
 };
 
-export const currentNetwork = APP_MODE === 'PUBLIC' ? networks.baseSepolia : networks.local;
+// Use Base Mainnet for wallet connection (no contracts deployed yet - claim flow uses mock API)
+export const currentNetwork = networks.baseMainnet;
+
+// Note: contractAddresses point to local/sepolia but current claim flow doesn't use them
+// When blockchain integration is added, deploy contracts to Base Mainnet and update addresses
