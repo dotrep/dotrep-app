@@ -30,7 +30,7 @@ const networkChain = defineChain({
 const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
 
 const baseConnectors = [
-  injected({ target: 'metaMask' }),
+  injected(),
   walletConnect({
     projectId: (import.meta as any).env?.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
   }),

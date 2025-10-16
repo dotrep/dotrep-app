@@ -96,7 +96,10 @@ export function useClaimButton({
             return;
           }
 
+          console.log('Available connectors:', connectors.map(c => ({ id: c.id, name: c.name })));
           const connector = connectors.find(c => c.id === 'injected' || c.id === 'metaMask');
+          console.log('Selected connector:', connector?.id);
+          
           if (connector) {
             try {
               await connect({ connector });
