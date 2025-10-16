@@ -95,9 +95,9 @@ Preferred communication style: Simple, everyday language.
 **Server Configuration:**
 - Single server on port 5000 (apps/web/server.js)
 - Express middleware handles API routes before Vite
-- Vite middleware handles frontend assets and HMR
+- Vite middleware handles frontend assets (HMR disabled for stability)
 - Binds to 0.0.0.0 for Replit environment
-- **Note:** WebSocket HMR warnings in browser console are expected in Replit due to networking constraints; they only affect hot-reload and do not impact app functionality
+- **Note:** HMR (hot module replacement) is disabled to prevent refresh loops in Replit's webview environment. The app runs stably but requires manual refresh after code changes during development.
 
 ### Data Architecture
 
