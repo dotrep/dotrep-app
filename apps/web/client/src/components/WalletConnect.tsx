@@ -1,14 +1,39 @@
 // Wallet connection component
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useContractOperations } from '../hooks/useContractOperations';
+
+// Detect if running in iframe (Replit preview)
+const isInIframe = () => {
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    return true;
+  }
+};
 
 export function WalletConnect() {
   // Re-enabled for wallet-first mode
   const { address, isConnected } = useAccount();
-  const { connectors, connect, isPending } = useConnect();
+  const { connectors, connect, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
   const { points } = useContractOperations();
+  const [showIframeWarning, setShowIframeWarning] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if MetaMask is available and we're in iframe
+    const hasMetaMask = connectors.some(c => c.name.toLowerCase().includes('metamask'));
+    if (hasMetaMask && isInIframe()) {
+      setShowIframeWarning(true);
+    }
+  }, [connectors]);
+
+  useEffect(() => {
+    if (error) {
+      setConnectionError(error.message);
+    }
+  }, [error]);
 
   if (isConnected) {
     return (
@@ -89,11 +114,76 @@ export function WalletConnect() {
     connectorsLength: connectors.length,
     supportedConnectors: supportedConnectors.map(c => ({ name: c.name, id: c.id })),
     isPending,
-    isConnected
+    isConnected,
+    isInIframe: isInIframe(),
+    showIframeWarning
   });
+
+  // Show iframe warning for MetaMask
+  if (showIframeWarning && supportedConnectors.some(c => c.name.toLowerCase().includes('metamask'))) {
+    return (
+      <div className="wallet-connectors">
+        <div style={{ 
+          padding: '20px', 
+          textAlign: 'center',
+          background: 'rgba(255, 107, 53, 0.1)',
+          border: '1px solid rgba(255, 107, 53, 0.3)',
+          borderRadius: '12px'
+        }}>
+          <div style={{ marginBottom: '16px', color: '#ff6b35', fontSize: '14px', lineHeight: '1.5' }}>
+            🦊 <strong>MetaMask Detected</strong><br/>
+            Wallet connections don't work inside preview frames.<br/>
+            Open this page in a new tab to connect.
+          </div>
+          <button
+            onClick={() => {
+              const currentUrl = window.location.href;
+              window.open(currentUrl, '_blank');
+            }}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#f6851b',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '16px',
+              width: '100%',
+              minHeight: '48px'
+            }}
+          >
+            🚀 Open in New Tab
+          </button>
+        </div>
+        <style>{`
+          .wallet-connectors {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="wallet-connectors">
+      {connectionError && (
+        <div style={{
+          padding: '12px',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '8px',
+          color: '#ef4444',
+          fontSize: '14px',
+          marginBottom: '12px'
+        }}>
+          {connectionError}
+        </div>
+      )}
       {supportedConnectors.length === 0 ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '15px', color: '#fff', fontSize: '14px' }}>
@@ -148,22 +238,6 @@ export function WalletConnect() {
           </button>
         </div>
       ) : (
-        supportedConnectors.map((connector) => (
-          <button
-            key={connector.uid}
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Connect button clicked:', connector.name);
-              try {
-                await connect({ connector });
-              } catch (error) {
-                console.error('Connect error:', error);
-                alert(`Failed to connect to ${connector.name}. Please try again.`);
-              }
-            }}
-            disabled={isPending}
-            className="connect-button"
             style={{
               backgroundColor: connector.name.toLowerCase().includes('metamask') ? '#f6851b' : '#0052ff',
               color: '#fff',
