@@ -151,14 +151,15 @@ export function WalletConnect() {
         supportedConnectors.map((connector) => (
           <button
             key={connector.uid}
-            onClick={(e) => {
+            onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
               console.log('Connect button clicked:', connector.name);
               try {
-                connect({ connector });
+                await connect({ connector });
               } catch (error) {
                 console.error('Connect error:', error);
+                alert(`Failed to connect to ${connector.name}. Please try again.`);
               }
             }}
             disabled={isPending}
