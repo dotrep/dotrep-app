@@ -13,7 +13,6 @@ const isInIframe = () => {
 };
 
 export function WalletConnect() {
-  // Re-enabled for wallet-first mode
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
@@ -109,16 +108,6 @@ export function WalletConnect() {
     connector.name.toLowerCase().includes('coinbase')
   );
 
-  // Add debugging for mobile
-  console.log('WalletConnect render:', {
-    connectorsLength: connectors.length,
-    supportedConnectors: supportedConnectors.map(c => ({ name: c.name, id: c.id })),
-    isPending,
-    isConnected,
-    isInIframe: isInIframe(),
-    showIframeWarning
-  });
-
   // Show iframe warning for MetaMask
   if (showIframeWarning && supportedConnectors.some(c => c.name.toLowerCase().includes('metamask'))) {
     return (
@@ -190,13 +179,7 @@ export function WalletConnect() {
             No wallet detected. Install a compatible wallet:
           </div>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Install MetaMask clicked');
-              window.open('https://metamask.io/download/', '_blank');
-            }}
-            className="connect-button"
+            onClick={() => window.open('https://metamask.io/download/', '_blank')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#f6851b',
@@ -214,13 +197,7 @@ export function WalletConnect() {
             Install MetaMask
           </button>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Install Coinbase clicked');
-              window.open('https://www.coinbase.com/wallet/', '_blank');
-            }}
-            className="connect-button"
+            onClick={() => window.open('https://www.coinbase.com/wallet/', '_blank')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#0052ff',
@@ -238,6 +215,24 @@ export function WalletConnect() {
           </button>
         </div>
       ) : (
+        supportedConnectors.map((connector) => (
+          <button
+            key={connector.uid}
+            onClick={async () => {
+              setConnectionError(null);
+              try {
+                await connect({ connector });
+              } catch (error: any) {
+                const errorMsg = error?.message || 'Connection failed';
+                setConnectionError(`Failed to connect: ${errorMsg}`);
+                
+                // If it's an iframe issue, show the warning
+                if (isInIframe()) {
+                  setShowIframeWarning(true);
+                }
+              }
+            }}
+            disabled={isPending}
             style={{
               backgroundColor: connector.name.toLowerCase().includes('metamask') ? '#f6851b' : '#0052ff',
               color: '#fff',
@@ -249,7 +244,7 @@ export function WalletConnect() {
               borderRadius: '8px',
               cursor: isPending ? 'not-allowed' : 'pointer',
               opacity: isPending ? 0.7 : 1,
-              touchAction: 'manipulation'
+              fontWeight: 'bold'
             }}
           >
             {connector.name.toLowerCase().includes('metamask') ? '🦊 Connect MetaMask' : '🔷 Connect Coinbase Wallet'}
@@ -263,40 +258,8 @@ export function WalletConnect() {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          padding: 20px;
-          background: rgba(10, 25, 41, 0.8);
-          border: 1px solid rgba(0, 240, 255, 0.3);
-          border-radius: 12px;
-          backdrop-filter: blur(10px);
-          min-width: 200px;
-        }
-        
-        .connect-title {
-          color: #00f0ff;
-          font-weight: bold;
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        
-        .connect-button {
-          background: linear-gradient(135deg, #00f0ff 0%, #66fcf1 100%);
-          border: none;
-          color: #000;
-          padding: 12px 20px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
-          transition: all 0.3s ease;
-        }
-        
-        .connect-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0, 240, 255, 0.4);
-        }
-        
-        .connect-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+          width: 100%;
+          max-width: 400px;
         }
       `}</style>
     </div>
