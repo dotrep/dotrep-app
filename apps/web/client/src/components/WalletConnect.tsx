@@ -21,14 +21,6 @@ export function WalletConnect() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if MetaMask is available and we're in iframe
-    const hasMetaMask = connectors.some(c => c.name.toLowerCase().includes('metamask'));
-    if (hasMetaMask && isInIframe()) {
-      setShowIframeWarning(true);
-    }
-  }, [connectors]);
-
-  useEffect(() => {
     if (error) {
       setConnectionError(error.message);
     }
