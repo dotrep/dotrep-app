@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount, useConnect, useSwitchChain } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { networkChain } from '../../client/src/config/wagmi';
+import WalletConnect from '../../client/src/components/WalletConnect';
 import './claim.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -26,7 +27,6 @@ export default function Claim() {
   const [isReserving, setIsReserving] = useState(false);
 
   const { address, isConnected, chain } = useAccount();
-  const { connectors, connect } = useConnect();
   const { switchChain } = useSwitchChain();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
@@ -116,10 +116,6 @@ export default function Claim() {
     }
   };
 
-  const handleWalletConnect = (connector: any) => {
-    connect({ connector });
-  };
-
   const renderButton = () => {
     // Initial state: show input
     if (!showInput) {
@@ -160,30 +156,12 @@ export default function Claim() {
       );
     }
 
-    // Name is available, but wallet not connected
+    // Name is available, but wallet not connected - show WalletConnect component
     if (isAvailable === true && !isConnected) {
-      const metamaskConnector = connectors.find(c => 
-        c.name.toLowerCase().includes('metamask')
-      );
-      
-      if (!metamaskConnector) {
-        return (
-          <button 
-            className="connect-button" 
-            onClick={() => window.open('https://metamask.io/download/', '_blank')}
-          >
-            Install MetaMask to claim
-          </button>
-        );
-      }
-
       return (
-        <button 
-          className="connect-button"
-          onClick={() => handleWalletConnect(metamaskConnector)}
-        >
-          Connect wallet to claim
-        </button>
+        <div style={{ width: '100%', maxWidth: '400px' }}>
+          <WalletConnect />
+        </div>
       );
     }
 
