@@ -11,8 +11,12 @@ const generateParticles = (count: number) => Array.from({ length: count }, (_, i
   color: i % 3 === 0 ? 'rgba(0, 212, 170, 0.4)' : i % 3 === 1 ? 'rgba(0, 82, 255, 0.35)' : 'rgba(255, 107, 53, 0.3)',
 }));
 
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+};
+
 export default function Claim() {
-  const particles = useMemo(() => generateParticles(30), []);
+  const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
   const [showInput, setShowInput] = useState(false);
   const [name, setName] = useState('');
   const [isChecking, setIsChecking] = useState(false);
