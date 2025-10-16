@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useClaimButton } from '../hooks/useClaimButton';
+import { useAccount, useConnect, useSwitchChain } from 'wagmi';
+import { networkChain } from '../../client/src/config/wagmi';
 import './claim.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -22,18 +23,14 @@ export default function Claim() {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
+  const [isReserving, setIsReserving] = useState(false);
+
+  const { address, isConnected, chain } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { switchChain } = useSwitchChain();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
   const isValid = nameRegex.test(name);
-
-  const claimButton = useClaimButton({
-    name,
-    isValid,
-    isChecking,
-    isAvailable,
-    showInput,
-    onShowInput: () => setShowInput(true),
-  });
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -89,6 +86,138 @@ export default function Claim() {
     return () => clearTimeout(timer);
   }, [name]);
 
+  const handleReserve = async () => {
+    if (!address || isReserving) return;
+
+    setIsReserving(true);
+    try {
+      const response = await fetch('/api/rep/reserve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          walletAddress: address,
+        }),
+      });
+
+      if (response.ok) {
+        const rid = Math.random().toString(36).substring(2, 15);
+        window.location.href = `/wallet?name=${encodeURIComponent(name)}&rid=${rid}`;
+      } else {
+        alert('Failed to reserve name. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error reserving name:', error);
+      alert('Error reserving name. Please try again.');
+    } finally {
+      setIsReserving(false);
+    }
+  };
+
+  const handleWalletConnect = (connector: any) => {
+    connect({ connector });
+  };
+
+  const renderButton = () => {
+    // Initial state: show input
+    if (!showInput) {
+      return (
+        <button 
+          className="connect-button"
+          onClick={() => setShowInput(true)}
+        >
+          Reserve your .rep
+        </button>
+      );
+    }
+
+    // Name not valid or empty
+    if (!name || !isValid) {
+      return (
+        <button className="connect-button" disabled>
+          Check availability
+        </button>
+      );
+    }
+
+    // Checking availability
+    if (isChecking) {
+      return (
+        <button className="connect-button" disabled>
+          Checking...
+        </button>
+      );
+    }
+
+    // Name not available
+    if (isAvailable === false) {
+      return (
+        <button className="connect-button" disabled>
+          Name is taken
+        </button>
+      );
+    }
+
+    // Name is available, but wallet not connected
+    if (isAvailable === true && !isConnected) {
+      const metamaskConnector = connectors.find(c => 
+        c.name.toLowerCase().includes('metamask')
+      );
+      
+      if (!metamaskConnector) {
+        return (
+          <button 
+            className="connect-button" 
+            onClick={() => window.open('https://metamask.io/download/', '_blank')}
+          >
+            Install MetaMask to claim
+          </button>
+        );
+      }
+
+      return (
+        <button 
+          className="connect-button"
+          onClick={() => handleWalletConnect(metamaskConnector)}
+        >
+          Connect wallet to claim
+        </button>
+      );
+    }
+
+    // Connected but wrong chain
+    if (isAvailable === true && isConnected && chain?.id !== networkChain.id) {
+      return (
+        <button 
+          className="connect-button"
+          onClick={() => switchChain({ chainId: networkChain.id })}
+        >
+          Switch to {networkChain.name} to claim
+        </button>
+      );
+    }
+
+    // Ready to reserve
+    if (isAvailable === true && isConnected && chain?.id === networkChain.id) {
+      return (
+        <button 
+          className="connect-button"
+          onClick={handleReserve}
+          disabled={isReserving}
+        >
+          {isReserving ? 'Reserving...' : 'Reserve your .rep'}
+        </button>
+      );
+    }
+
+    return (
+      <button className="connect-button" disabled>
+        Check availability
+      </button>
+    );
+  };
 
   return (
     <div className="claim-page">
@@ -165,13 +294,7 @@ export default function Claim() {
             </>
           )}
 
-          <button 
-            className="connect-button"
-            disabled={claimButton.disabled}
-            onClick={claimButton.onClick}
-          >
-            {claimButton.text}
-          </button>
+          {renderButton()}
         </div>
 
         <div className="claim-chameleon">
