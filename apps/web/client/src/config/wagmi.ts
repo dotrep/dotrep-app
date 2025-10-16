@@ -14,12 +14,13 @@ const baseConnectors = [
   walletConnect({
     projectId: (import.meta as any).env?.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
   }),
+  coinbaseWallet({ 
+    appName: '.rep Platform',
+    preference: 'all', // Support both mobile app and browser extension
+  }),
 ];
 
-// Add Coinbase Wallet only in PUBLIC mode
-const connectors = APP_MODE === 'PUBLIC' 
-  ? [...baseConnectors, coinbaseWallet({ appName: 'FSN Vault' })]
-  : baseConnectors;
+const connectors = baseConnectors;
 
 export const wagmiConfig = createConfig({
   chains: [networkChain],
