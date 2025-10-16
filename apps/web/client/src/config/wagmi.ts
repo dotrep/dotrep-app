@@ -1,30 +1,10 @@
 // Wagmi configuration for Web3 integration
 import { createConfig, http } from 'wagmi';
 import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
-import { defineChain } from 'viem';
-import { currentNetwork } from './contracts';
+import { base } from 'wagmi/chains';
 
-// Define network chain
-const networkChain = defineChain({
-  id: currentNetwork.id,
-  name: currentNetwork.name,
-  nativeCurrency: {
-    decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
-  },
-  rpcUrls: {
-    default: {
-      http: [currentNetwork.rpcUrl],
-    },
-  },
-  blockExplorers: currentNetwork.blockExplorer ? {
-    default: {
-      name: 'Explorer',
-      url: currentNetwork.blockExplorer,
-    },
-  } : undefined,
-});
+// Use wagmi's built-in Base chain (MetaMask recognizes this)
+const networkChain = base;
 
 // Environment-based connector selection
 const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
@@ -45,11 +25,7 @@ export const wagmiConfig = createConfig({
   chains: [networkChain],
   connectors,
   transports: {
-    [networkChain.id]: http(currentNetwork.rpcUrl, {
-      timeout: 10_000, // 10 second timeout
-      retryCount: 2,
-      retryDelay: 1000,
-    }),
+    [networkChain.id]: http(),
   },
   batch: {
     multicall: false, // Disable multicall to prevent batch fetch issues
