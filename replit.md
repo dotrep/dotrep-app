@@ -97,6 +97,7 @@ Preferred communication style: Simple, everyday language.
 - Express middleware handles API routes before Vite
 - Vite middleware handles frontend assets and HMR
 - Binds to 0.0.0.0 for Replit environment
+- **Note:** WebSocket HMR warnings in browser console are expected in Replit due to networking constraints; they only affect hot-reload and do not impact app functionality
 
 ### Data Architecture
 
