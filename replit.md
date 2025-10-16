@@ -53,13 +53,14 @@ Preferred communication style: Simple, everyday language.
 - **Single Button Flow:**
   - Initial state: "Reserve your .rep" button, input hidden
   - Click reveals name input field with fixed ".rep" suffix and orange border
-  - Button updates through states based on validation/wallet:
+  - Button/UI updates through states based on validation/wallet:
     1. "Check availability" (invalid/empty, disabled)
     2. "Checking..." (checking, disabled)
     3. "Name is taken" (unavailable, disabled)
-    4. "Connect wallet to claim" (available, not connected)
+    4. **Shows WalletConnect component** (available, not connected - displays MetaMask/Coinbase buttons)
     5. "Switch to Base to claim" (connected, wrong chain)
     6. "Reserve your .rep" (connected on Base, ready to reserve → POST /rep/reserve → redirect to /wallet)
+  - **Note:** WalletConnect component used instead of direct connect() calls (MetaMask rejects programmatic connection)
 - **Left Column:**
   - "Reserve your.rep" title
   - Validation rules text
