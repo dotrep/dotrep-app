@@ -6,7 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import Home from "./pages/Home";
 import Reserve from "./pages/Reserve";
 import Discover from "./pages/Discover";
-import Claim from "./pages/Claim";
+import ClaimFSN from "../client/src/pages/ClaimFSN";
 import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
@@ -51,7 +51,7 @@ export default function App() {
       case '/discover':
         return <Discover />;
       case '/claim':
-        return <Claim />;
+        return <ClaimFSN />;
       case '/wallet':
         return <Wallet />;
       case '/':
