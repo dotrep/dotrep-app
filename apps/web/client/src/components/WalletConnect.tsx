@@ -149,40 +149,35 @@ export function WalletConnect() {
     );
   }
 
-  // Map connectors to user-friendly display
-  const getConnectorDisplay = (connector: any) => {
-    const name = connector.name.toLowerCase();
-    const id = connector.id.toLowerCase();
-    
-    if (name.includes('metamask') || name.includes('injected')) {
-      return { label: '🦊 MetaMask', color: '#f6851b', priority: 1 };
-    }
-    if (id.includes('walletconnect')) {
-      return { label: '📱 Mobile Wallet', color: '#0052ff', priority: 2 };
-    }
-    return null;
-  };
-
-  const displayConnectors = connectors
-    .map(connector => ({ connector, display: getConnectorDisplay(connector) }))
-    .filter(({ display }) => display !== null)
-    .sort((a, b) => a.display!.priority - b.display!.priority);
+  // Find Base Wallet (WalletConnect) and other connectors
+  const baseWalletConnector = connectors.find(c => c.id.toLowerCase().includes('walletconnect'));
+  const metaMaskConnector = connectors.find(c => 
+    c.name.toLowerCase().includes('metamask') || 
+    c.name.toLowerCase().includes('injected')
+  );
 
   // Add debugging for mobile
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    displayConnectors: displayConnectors.map(({ connector, display }) => ({ 
-      name: connector.name, 
-      id: connector.id,
-      display: display?.label 
-    })),
+    hasBaseWallet: !!baseWalletConnector,
+    hasMetaMask: !!metaMaskConnector,
     isPending,
     isConnected
   });
 
+  const handleConnect = async (connector: any, walletName: string) => {
+    console.log('Connect button clicked:', walletName);
+    try {
+      await connect({ connector });
+    } catch (error) {
+      console.error('Connect error:', error);
+      alert('Connection failed. Please try again.');
+    }
+  };
+
   return (
     <div className="wallet-connectors">
-      {displayConnectors.length === 0 ? (
+      {!baseWalletConnector && !metaMaskConnector ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '15px', color: '#fff', fontSize: '14px' }}>
             No wallet detected. Install a compatible wallet:
@@ -191,123 +186,171 @@ export function WalletConnect() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              window.open('https://metamask.io/download/', '_blank');
+              window.open('https://www.coinbase.com/wallet/', '_blank');
             }}
-            className="connect-button"
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#f6851b',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              marginBottom: '10px',
-              width: '100%',
-              fontSize: '16px',
-              minHeight: '48px'
-            }}
+            className="primary-cta"
           >
-            Install MetaMask
+            Install Base Wallet
           </button>
+          <div className="divider">Or install other wallets</div>
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              window.open('https://www.coinbase.com/wallet/', '_blank');
+              window.open('https://metamask.io/download/', '_blank');
             }}
-            className="connect-button"
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#0052ff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              width: '100%',
-              fontSize: '16px',
-              minHeight: '48px'
-            }}
+            className="secondary-button"
           >
-            Install Coinbase Wallet
+            Install MetaMask
           </button>
         </div>
       ) : (
-        displayConnectors.map(({ connector, display }) => (
-          <button
-            key={connector.uid}
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Connect button clicked:', connector.name);
-              try {
-                await connect({ connector });
-              } catch (error) {
-                console.error('Connect error:', error);
-                alert('Connection failed. Please try again.');
-              }
-            }}
-            disabled={isPending}
-            className="connect-button"
-            style={{
-              backgroundColor: display!.color,
-              color: '#fff',
-              fontSize: '16px',
-              minHeight: '48px',
-              width: '100%',
-              padding: '12px 24px',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: isPending ? 'not-allowed' : 'pointer',
-              opacity: isPending ? 0.7 : 1,
-              touchAction: 'manipulation'
-            }}
-          >
-            {display!.label}
-            {isPending && ' (Connecting...)'}
-          </button>
-        ))
+        <>
+          {/* Primary: Base Wallet */}
+          {baseWalletConnector && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleConnect(baseWalletConnector, 'Base Wallet');
+              }}
+              disabled={isPending}
+              className="primary-cta"
+            >
+              🔵 Claim with Base Wallet
+              {isPending && ' (Connecting...)'}
+            </button>
+          )}
+
+          {/* Divider */}
+          <div className="divider">Or claim with other wallets</div>
+
+          {/* Secondary: MetaMask and Others */}
+          <div className="secondary-options">
+            {metaMaskConnector && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleConnect(metaMaskConnector, 'MetaMask');
+                }}
+                disabled={isPending}
+                className="secondary-button"
+              >
+                🦊 MetaMask
+              </button>
+            )}
+            {baseWalletConnector && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleConnect(baseWalletConnector, 'Other Mobile Wallets');
+                }}
+                disabled={isPending}
+                className="secondary-button"
+              >
+                📱 Other Mobile Wallets
+              </button>
+            )}
+          </div>
+        </>
       )}
       
       <style>{`
         .wallet-connectors {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding: 20px;
+          gap: 16px;
+          padding: 24px;
           background: rgba(10, 25, 41, 0.8);
           border: 1px solid rgba(0, 240, 255, 0.3);
           border-radius: 12px;
           backdrop-filter: blur(10px);
-          min-width: 200px;
+          min-width: 280px;
         }
         
-        .connect-title {
-          color: #00f0ff;
-          font-weight: bold;
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        
-        .connect-button {
-          background: linear-gradient(135deg, #00f0ff 0%, #66fcf1 100%);
+        /* Primary CTA - Large and prominent */
+        .primary-cta {
+          background: linear-gradient(135deg, #0052ff 0%, #0066ff 100%);
           border: none;
-          color: #000;
+          color: #fff;
+          padding: 18px 28px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 18px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 20px rgba(0, 82, 255, 0.3);
+          width: 100%;
+        }
+        
+        .primary-cta:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 25px rgba(0, 82, 255, 0.5);
+          background: linear-gradient(135deg, #0066ff 0%, #0052ff 100%);
+        }
+        
+        .primary-cta:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        /* Divider text */
+        .divider {
+          text-align: center;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 13px;
+          margin: 8px 0;
+          position: relative;
+        }
+        
+        .divider::before,
+        .divider::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          width: 35%;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .divider::before {
+          left: 0;
+        }
+        
+        .divider::after {
+          right: 0;
+        }
+        
+        /* Secondary options - Smaller buttons */
+        .secondary-options {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        
+        .secondary-button {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #fff;
           padding: 12px 20px;
           border-radius: 8px;
           cursor: pointer;
-          font-weight: bold;
+          font-weight: 500;
+          font-size: 15px;
           transition: all 0.3s ease;
+          width: 100%;
         }
         
-        .connect-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0, 240, 255, 0.4);
+        .secondary-button:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-1px);
         }
         
-        .connect-button:disabled {
-          opacity: 0.6;
+        .secondary-button:disabled {
+          opacity: 0.5;
           cursor: not-allowed;
         }
       `}</style>
