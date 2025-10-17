@@ -12,7 +12,13 @@ const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
 const baseConnectors = [
   injected(),
   walletConnect({
-    projectId: (import.meta as any).env?.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+    projectId: '970eeb20c557717336e257b5a871fad2',
+    metadata: {
+      name: '.rep Platform',
+      description: 'Your onchain reputation. Alive on Base.',
+      url: typeof window !== 'undefined' ? window.location.origin : 'https://rep.live',
+      icons: ['https://rep.live/icon.png'],
+    },
   }),
   coinbaseWallet({ 
     appName: '.rep Platform',
