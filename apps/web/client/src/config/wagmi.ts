@@ -12,12 +12,12 @@ const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
 const baseConnectors = [
   injected(),
   walletConnect({
-    projectId: '970eeb20c557717336e257b5a871fad2',
+    projectId: '0a187c090d191ab29644b8d866854106',
     metadata: {
       name: '.rep Platform',
       description: 'Claim your .rep identity on Base',
-      url: typeof window !== 'undefined' ? window.location.origin : 'https://rep.live',
-      icons: ['https://rep.live/icon.png'],
+      url: typeof window !== 'undefined' ? window.location.origin : 'https://dotrep2.replit.app',
+      icons: [],
     },
     showQrModal: true, // Enable QR modal for mobile wallet connections
   }),
