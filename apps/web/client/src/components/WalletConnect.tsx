@@ -149,18 +149,27 @@ export function WalletConnect() {
     );
   }
 
-  // Find Base Wallet (WalletConnect) and other connectors
-  const baseWalletConnector = connectors.find(c => c.id.toLowerCase().includes('walletconnect'));
+  // Find connectors - prioritize Coinbase Wallet SDK for direct app opening
+  const coinbaseConnector = connectors.find(c => 
+    c.id.toLowerCase().includes('coinbase') || 
+    c.name.toLowerCase().includes('coinbase')
+  );
+  const walletConnectConnector = connectors.find(c => c.id.toLowerCase().includes('walletconnect'));
   const metaMaskConnector = connectors.find(c => 
     c.name.toLowerCase().includes('metamask') || 
     c.name.toLowerCase().includes('injected')
   );
 
+  // Use Coinbase SDK as primary, fallback to WalletConnect if not available
+  const baseWalletConnector = coinbaseConnector || walletConnectConnector;
+
   // Add debugging for mobile
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    hasBaseWallet: !!baseWalletConnector,
+    hasCoinbase: !!coinbaseConnector,
+    hasWalletConnect: !!walletConnectConnector,
     hasMetaMask: !!metaMaskConnector,
+    baseWalletUsing: coinbaseConnector ? 'Coinbase SDK' : 'WalletConnect',
     isPending,
     isConnected
   });
@@ -240,12 +249,12 @@ export function WalletConnect() {
                 🦊 MetaMask
               </button>
             )}
-            {baseWalletConnector && (
+            {walletConnectConnector && !coinbaseConnector && (
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleConnect(baseWalletConnector, 'Other Mobile Wallets');
+                  handleConnect(walletConnectConnector, 'Other Mobile Wallets');
                 }}
                 disabled={isPending}
                 className="secondary-button"
