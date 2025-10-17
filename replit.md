@@ -57,10 +57,15 @@ Preferred communication style: Simple, everyday language.
     1. "Check availability" (invalid/empty, disabled)
     2. "Checking..." (checking, disabled)
     3. "Name is taken" (unavailable, disabled)
-    4. **Shows WalletConnect component** (available, not connected - displays MetaMask/Coinbase buttons)
+    4. **Shows WalletConnect component** (available, not connected)
     5. "Switch to Base to claim" (connected, wrong chain)
     6. "Reserve your .rep" (connected on Base, ready to reserve → registerName → redirect to /wallet)
-  - **Note:** WalletConnect component handles iframe detection - if running in Replit preview (iframe), shows "Open in New Tab" button since MetaMask blocks iframe connections for security
+  - **WalletConnect Component Hierarchy:**
+    - Primary CTA: "🔵 Claim with Base Wallet" (large, prominent blue button using WalletConnect protocol)
+    - Divider: "Or claim with other wallets" with decorative lines
+    - Secondary options: 🦊 MetaMask and 📱 Other Mobile Wallets (smaller, subtle buttons)
+    - Base Wallet prioritized as the leading option for Base-native experience
+  - **Note:** WalletConnect component handles iframe detection - if running in Replit preview (iframe), shows "Open in New Tab" button since wallet connections require opening in a browser tab for security
   - Iframe detection: `window.self !== window.top` check with try/catch
   - Error handling: Shows clear error messages instead of silent hangs
   - Connection failures inside iframes automatically trigger the "Open in New Tab" flow
