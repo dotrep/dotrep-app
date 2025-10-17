@@ -13,7 +13,7 @@ const baseConnectors = [
   injected(),
   coinbaseWallet({ 
     appName: '.rep Platform',
-    preference: 'smartWalletOnly', // Prioritize Smart Wallet on Base for direct app opening
+    preference: 'all', // Support all wallet types with mobile deep linking
   }),
   walletConnect({
     projectId: '970eeb20c557717336e257b5a871fad2',
