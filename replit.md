@@ -73,8 +73,42 @@ Preferred communication style: Simple, everyday language.
 - **Right Column:** Chameleon mascot
 - Floating particle background (30 particles with @keyframes float animation - upward drift with scale/opacity changes)
 - Uses inline styles with component-scoped <style> tag for keyframe animations
-- Browser alerts for success/error feedback (no toast library dependencies)
+- Toast notifications for success/error feedback (shadcn/ui toast system)
 - Assets: `chameleon_claim.png` (claim page chameleon)
+
+**Wallet Dashboard (`/wallet`):**
+- Three-state CTA flow with localStorage persistence:
+  1. **Not Connected:** Shows WalletConnect component (MetaMask/Coinbase Wallet buttons)
+  2. **Wrong Chain:** "Switch to Base" button (uses useSwitchChain hook)
+  3. **Connected on Base:** "Link wallet to claim" button
+  4. **Linked:** Success state with disabled secondary actions
+- Status progression: reserved → linked → done
+- Retrieves reservation from URL params (`?name=...&rid=...`) or localStorage
+- Persists: rep:lastName, rep:address, rep:reservationId, rep:connectorId, rep:linked
+- Auto-reconnect support via connector ID persistence
+- Empty state with "Back to Claim" button if no reservation found
+
+**Signed-In Header:**
+- Shows wallet pill: "name.rep • 0xAb...1234" when connected
+- Fixed position top-right with teal-blue gradient on hover
+- Routes to /wallet on click
+- Auto-reconnect logic: Checks localStorage for rep:address, rep:connected, rep:connectorId
+- Reconnects using stored connector ID (supports both MetaMask and Coinbase Wallet)
+
+**Footer:**
+- "Built on Base" badge (no chain ID number)
+- Links to Privacy and Terms stub pages
+- Consistent styling with platform design
+
+**Stub Pages:**
+- `/privacy` - Privacy Policy placeholder
+- `/terms` - Terms of Service placeholder
+- Both styled consistently with teal-blue gradients and platform theme
+
+**SEO & Meta Tags:**
+- SEOHead component with dynamic title, description, OG image
+- Applied to Home and Claim pages
+- Twitter card support for social sharing
 
 **Component Pattern:**
 - Functional React components with hooks
@@ -95,7 +129,8 @@ Preferred communication style: Simple, everyday language.
 - RESTful endpoints for `.rep` name operations
 - `/api/rep/check` - GET endpoint to check name availability
 - `/api/rep/reserve` - POST endpoint for name reservation with wallet validation
-- In-memory storage using Set for reserved names (development/mock)
+  - Returns server-issued reservationId: `rid_${timestamp}_${random}` format
+  - Stores reservation in-memory Set (development/mock - database schema ready but awaiting dependency resolution)
 - Name validation: 3-32 characters, lowercase letters/numbers/hyphens only, must start with letter
 - Wallet address validation: 0x followed by 40 hexadecimal characters
 - HTTP status codes: 400 (invalid input), 409 (name already reserved), 200 (success)
@@ -112,13 +147,16 @@ Preferred communication style: Simple, everyday language.
 **Database Integration (Drizzle):**
 - Drizzle ORM configured in `drizzle.config.ts`
 - PostgreSQL dialect with migrations in `/migrations`
-- Schema defined in `./shared/schema.ts`
+- Schema defined in `./shared/schema.ts` (includes repReservations table for persistence)
 - Environment-based DATABASE_URL configuration
+- **Note:** Database schema ready but drizzle-orm installation blocked by peer dependency conflicts with @radix-ui/react-toast. In-memory Set used for MVP testing.
 
 **Name Registry:**
 - Client-side validation before API calls
 - Backend validation with reserved name filtering
-- Availability checking via Set-based lookup (mock)
+- Availability checking via Set-based lookup (in-memory for MVP)
+- Server-issued reservation IDs with timestamp tracking
+- Database persistence ready when dependencies resolved
 - Future blockchain integration prepared
 
 ### Authentication & Identity
@@ -131,14 +169,22 @@ Preferred communication style: Simple, everyday language.
 - Device fingerprinting and IP tracking for identity verification
 
 **Web3 Integration:**
-- Wagmi v2 for blockchain interactions (injected connector for MetaMask/browser wallets)
+- Wagmi v2 for blockchain interactions (injected + coinbaseWallet connectors)
 - Viem for Ethereum operations
 - **Base Mainnet (8453)** configured as default network for wallet connection
-- Wallet connection uses direct wagmi hooks (useAccount, useConnect, useSwitchChain) in Claim.tsx
-- Connector selection via name-based filtering: `connector.name.toLowerCase().includes('metamask')`
+- Wallet connection uses direct wagmi hooks (useAccount, useConnect, useSwitchChain)
+- **Connector Persistence:** 
+  - Stores connector.id in localStorage (rep:connectorId) for auto-reconnect
+  - Supports both MetaMask and Coinbase Wallet session restoration
+  - Auto-reconnect in SignedInHeader checks stored connector ID and reconnects on load
+- **Coinbase Wallet Configuration:**
+  - coinbaseWallet() connector with preference: 'all' for Base app support
+  - Enables connection through Coinbase Wallet mobile app on Base
 - Current claim flow is **API-based** (no smart contract interaction yet):
-  - POST /rep/reserve endpoint validates wallet addresses and stores reservations in-memory
-  - Success redirect to /wallet page after reservation
+  - POST /rep/reserve endpoint validates wallet addresses and stores reservations
+  - Returns server-issued reservationId (rid_timestamp_random format)
+  - Success redirect to /wallet page with URL params and localStorage persistence
+  - Toast notifications for user feedback
 - **Note:** @metamask/sdk pinned to v0.28.2 (compatibility fix for Vite pre-bundling). The injected() connector is used instead of metaMask() SDK connector since basic wallet connection doesn't require MetaMask-specific features.
 - **Network Configuration:** Base Mainnet set for MetaMask compatibility; contract addresses reference local/sepolia but aren't used in current mock claim flow
 
