@@ -43,6 +43,97 @@ app.post('/api/rep/reserve', (req, res) => {
   res.json({ ok: true, name, walletAddress, status: 'RESERVED', reservationId });
 });
 
+// Mock wallet endpoints
+app.get('/api/wallet/addresses/:userId', (req, res) => {
+  res.json([
+    {
+      id: 1,
+      userId: parseInt(req.params.userId),
+      fsnName: 'demo.rep',
+      blockchain: 'ethereum',
+      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1',
+      label: 'Main Wallet',
+      isActive: true,
+      balance: '1.234',
+      createdAt: new Date()
+    }
+  ]);
+});
+
+app.get('/api/wallet/transactions/:userId', (req, res) => {
+  res.json([
+    {
+      id: 1,
+      walletAddressId: 1,
+      txHash: '0x123...abc',
+      amount: '0.5',
+      toAddress: '0x456...def',
+      fromAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1',
+      status: 'confirmed',
+      createdAt: new Date(),
+      note: 'Test transaction'
+    }
+  ]);
+});
+
+// Mock contacts endpoints
+app.get('/api/contacts/:userId', (req, res) => {
+  res.json([
+    {
+      id: 1,
+      userId: parseInt(req.params.userId),
+      contactFsnName: 'alice.rep',
+      displayName: 'Alice',
+      isFriend: true,
+      addedAt: new Date().toISOString()
+    }
+  ]);
+});
+
+// Mock FSN message endpoints
+app.get('/api/fsn/messages/inbox/:fsnName', (req, res) => {
+  res.json({
+    messages: [
+      {
+        id: 1,
+        fromFsn: 'core.rep',
+        toFsn: req.params.fsnName,
+        message: 'Welcome to .rep! This is your secure messaging system.',
+        fileUrl: null,
+        fileName: null,
+        fileType: null,
+        timestamp: new Date().toISOString(),
+        isRead: false
+      }
+    ]
+  });
+});
+
+app.get('/api/fsn/messages/sent/:fsnName', (req, res) => {
+  res.json({ messages: [] });
+});
+
+app.get('/api/fsn/contacts/:userId', (req, res) => {
+  res.json({
+    contacts: [
+      {
+        id: 1,
+        userId: parseInt(req.params.userId),
+        contactFsn: 'core.rep',
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
+app.post('/api/fsn/messages/send', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Message sent successfully',
+    messageId: Date.now()
+  });
+});
+
 // Create Vite server in middleware mode
 const vite = await createViteServer({
   server: { 

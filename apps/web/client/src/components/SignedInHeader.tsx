@@ -36,7 +36,7 @@ export function SignedInHeader() {
   }, [isConnected, connectors, connect]);
 
   const handleClick = () => {
-    setLocation('/wallet');
+    setLocation('/rep-dashboard');
   };
 
   if (!isConnected && !repName) {

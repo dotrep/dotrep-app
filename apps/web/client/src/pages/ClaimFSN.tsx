@@ -289,7 +289,7 @@ export default function ClaimFSN() {
         });
 
         setTimeout(() => {
-          setLocation(`/wallet?name=${encodeURIComponent(name)}&rid=${rid}`);
+          setLocation(`/rep-dashboard`);
         }, 500);
       } else {
         toast({

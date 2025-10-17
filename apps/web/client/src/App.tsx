@@ -47,6 +47,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import ClaimFSN from "@/pages/ClaimFSN";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import { RepDashboard } from "@/pages/RepDashboard";
 import "./styles/dashboard-extensions.css";
 import "./styles/debug-panel.css";
 
@@ -84,6 +85,7 @@ function Router() {
       </Route>
       {/* ✅ add a route for the wallet explorer */}
       <Route path="/wallet" component={WalletExplorer} />
+      <Route path="/rep-dashboard" component={RepDashboard} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
