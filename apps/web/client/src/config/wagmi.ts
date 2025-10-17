@@ -1,6 +1,6 @@
 // Wagmi configuration for Web3 integration
 import { createConfig, http } from 'wagmi';
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { base } from 'wagmi/chains';
 
 // Use wagmi's built-in Base chain (MetaMask recognizes this)
@@ -19,10 +19,6 @@ const baseConnectors = [
       url: typeof window !== 'undefined' ? window.location.origin : 'https://rep.live',
       icons: ['https://rep.live/icon.png'],
     },
-  }),
-  coinbaseWallet({ 
-    appName: '.rep Platform',
-    preference: 'all', // Support both mobile app and browser extension
   }),
 ];
 

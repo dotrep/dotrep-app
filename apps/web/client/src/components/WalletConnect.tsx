@@ -149,23 +149,40 @@ export function WalletConnect() {
     );
   }
 
-  // Filter to only show MetaMask and Coinbase Wallet
-  const supportedConnectors = connectors.filter(connector => 
-    connector.name.toLowerCase().includes('metamask') || 
-    connector.name.toLowerCase().includes('coinbase')
-  );
+  // Map connectors to user-friendly display
+  const getConnectorDisplay = (connector: any) => {
+    const name = connector.name.toLowerCase();
+    const id = connector.id.toLowerCase();
+    
+    if (name.includes('metamask') || name.includes('injected')) {
+      return { label: '🦊 MetaMask', color: '#f6851b', priority: 1 };
+    }
+    if (id.includes('walletconnect')) {
+      return { label: '📱 Mobile Wallet', color: '#0052ff', priority: 2 };
+    }
+    return null;
+  };
+
+  const displayConnectors = connectors
+    .map(connector => ({ connector, display: getConnectorDisplay(connector) }))
+    .filter(({ display }) => display !== null)
+    .sort((a, b) => a.display!.priority - b.display!.priority);
 
   // Add debugging for mobile
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    supportedConnectors: supportedConnectors.map(c => ({ name: c.name, id: c.id })),
+    displayConnectors: displayConnectors.map(({ connector, display }) => ({ 
+      name: connector.name, 
+      id: connector.id,
+      display: display?.label 
+    })),
     isPending,
     isConnected
   });
 
   return (
     <div className="wallet-connectors">
-      {supportedConnectors.length === 0 ? (
+      {displayConnectors.length === 0 ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '15px', color: '#fff', fontSize: '14px' }}>
             No wallet detected. Install a compatible wallet:
@@ -174,7 +191,6 @@ export function WalletConnect() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Install MetaMask clicked');
               window.open('https://metamask.io/download/', '_blank');
             }}
             className="connect-button"
@@ -198,7 +214,6 @@ export function WalletConnect() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Install Coinbase clicked');
               window.open('https://www.coinbase.com/wallet/', '_blank');
             }}
             className="connect-button"
@@ -219,7 +234,7 @@ export function WalletConnect() {
           </button>
         </div>
       ) : (
-        supportedConnectors.map((connector) => (
+        displayConnectors.map(({ connector, display }) => (
           <button
             key={connector.uid}
             onClick={async (e) => {
@@ -230,13 +245,13 @@ export function WalletConnect() {
                 await connect({ connector });
               } catch (error) {
                 console.error('Connect error:', error);
-                alert('Connection failed. Please try opening this page in a new tab if you\'re in a preview frame.');
+                alert('Connection failed. Please try again.');
               }
             }}
             disabled={isPending}
             className="connect-button"
             style={{
-              backgroundColor: connector.name.toLowerCase().includes('metamask') ? '#f6851b' : '#0052ff',
+              backgroundColor: display!.color,
               color: '#fff',
               fontSize: '16px',
               minHeight: '48px',
@@ -249,7 +264,7 @@ export function WalletConnect() {
               touchAction: 'manipulation'
             }}
           >
-            {connector.name.toLowerCase().includes('metamask') ? '🦊 Connect MetaMask' : '🔷 Connect Coinbase Wallet'}
+            {display!.label}
             {isPending && ' (Connecting...)'}
           </button>
         ))
