@@ -169,17 +169,23 @@ Preferred communication style: Simple, everyday language.
 - Device fingerprinting and IP tracking for identity verification
 
 **Web3 Integration:**
-- Wagmi v2 for blockchain interactions (injected + coinbaseWallet connectors)
+- Wagmi v2 for blockchain interactions (injected + walletConnect connectors)
 - Viem for Ethereum operations
 - **Base Mainnet (8453)** configured as default network for wallet connection
 - Wallet connection uses direct wagmi hooks (useAccount, useConnect, useSwitchChain)
+- **Connector Configuration:**
+  - `injected()` - MetaMask browser extension and other injected providers
+  - `walletConnect()` - Mobile wallet connections via WalletConnect protocol (Coinbase Wallet, Trust, etc.)
+  - WalletConnect Project ID: 970eeb20c557717336e257b5a871fad2
+  - **Note:** Previously used coinbaseWallet() SDK connector but removed due to timeout issues in mobile browsers and iframe environments (popups fail). WalletConnect protocol provides reliable mobile wallet connections.
 - **Connector Persistence:** 
   - Stores connector.id in localStorage (rep:connectorId) for auto-reconnect
-  - Supports both MetaMask and Coinbase Wallet session restoration
+  - Supports MetaMask and mobile wallet session restoration
   - Auto-reconnect in SignedInHeader checks stored connector ID and reconnects on load
-- **Coinbase Wallet Configuration:**
-  - coinbaseWallet() connector with preference: 'all' for Base app support
-  - Enables connection through Coinbase Wallet mobile app on Base
+- **Iframe Detection:**
+  - WalletConnect component detects iframe environment (`window.self !== window.top`)
+  - Shows "Open in New Tab" button when in iframe (Replit app) to enable wallet connections
+  - Prevents timeout errors by guiding users to open in browser tab
 - Current claim flow is **API-based** (no smart contract interaction yet):
   - POST /rep/reserve endpoint validates wallet addresses and stores reservations
   - Returns server-issued reservationId (rid_timestamp_random format)
