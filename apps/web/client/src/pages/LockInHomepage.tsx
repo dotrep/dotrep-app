@@ -6,6 +6,7 @@ import FsnHexagon from "@/components/FsnHexagon";
 import ClaimButton from "@/components/ClaimButton";
 import CrossBrowserInput from "@/components/CrossBrowserInput";
 import Navigation from "@/components/Navigation";
+import { SEOHead } from "@/components/SEOHead";
 import "../styles/terminal-ui.css";
 
 /**
@@ -106,10 +107,9 @@ const LockInHomepage: React.FC = () => {
     return { valid: true };
   };
 
-  // Handle claim button click - show input field
+  // Handle claim button click - navigate to claim page
   const handleClaimButtonClick = () => {
-    console.log('handleClaimButtonClick called - showing input field');
-    setShowInput(true);
+    setLocation('/claim');
   };
 
   // Check name availability with proper validation
@@ -263,9 +263,11 @@ const LockInHomepage: React.FC = () => {
   };
 
   return (
-    <section className="hero mobile-friendly-hero">
-      <Navigation isLoggedIn={isLoggedIn} showFullNav={false} />
-      <SharedNetworkAnimation className="network-background" />
+    <>
+      <SEOHead />
+      <section className="hero mobile-friendly-hero">
+        <Navigation isLoggedIn={isLoggedIn} showFullNav={false} />
+        <SharedNetworkAnimation className="network-background" />
       
       {/* Main content - Always show Picture 1 design */}
       {!showSignalOverlay && !showTerminalForm && (
@@ -443,7 +445,8 @@ const LockInHomepage: React.FC = () => {
           </div>
         </>
       )}
-    </section>
+      </section>
+    </>
   );
 };
 

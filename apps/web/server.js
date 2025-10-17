@@ -39,7 +39,8 @@ app.post('/api/rep/reserve', (req, res) => {
   }
   
   reservedNames.add(name);
-  res.json({ ok: true, name, walletAddress, status: 'RESERVED' });
+  const reservationId = `rid_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  res.json({ ok: true, name, walletAddress, status: 'RESERVED', reservationId });
 });
 
 // Create Vite server in middleware mode

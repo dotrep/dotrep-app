@@ -8,6 +8,7 @@ import RewardsProvider from "@/components/RewardsSystem/RewardsProvider";
 import RewardsUIProvider from "@/components/RewardsUI/RewardsUIProvider";
 import ThemeProvider from "@/components/ThemeProvider";
 import { Web3Provider } from "@/components/Web3Provider";
+import { SignedInHeader } from "@/components/SignedInHeader";
 // @ts-ignore
 import { XPProvider } from "./context/XPContext";
 // @ts-ignore  
@@ -44,6 +45,8 @@ import Social from "@/pages/Social";
 import GameCenter from "@/pages/GameCenter";
 import Leaderboard from "@/pages/Leaderboard";
 import ClaimFSN from "@/pages/ClaimFSN";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import "./styles/dashboard-extensions.css";
 import "./styles/debug-panel.css";
 
@@ -81,6 +84,8 @@ function Router() {
       </Route>
       {/* ✅ add a route for the wallet explorer */}
       <Route path="/wallet" component={WalletExplorer} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -252,6 +257,7 @@ function App() {
                   <RewardsProvider>
                     <TooltipProvider>
                       <Toaster />
+                      <SignedInHeader />
                       <Router />
                       {/* ✅ Wallet explorer visible anywhere */}
                       <WalletExplorer />

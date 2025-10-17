@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { networkChain } from '../config/wagmi';
-import { useNameRegistry } from '../hooks/useNameRegistry';
+import { useLocation } from 'wouter';
 import WalletConnect from '../components/WalletConnect';
+import { toast } from '../hooks/use-toast';
+import { SEOHead } from '../components/SEOHead';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
   left: Math.random() * 100,
@@ -181,16 +183,16 @@ const styles = {
 
 export default function ClaimFSN() {
   const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
+  const [, setLocation] = useLocation();
   const [showInput, setShowInput] = useState(false);
   const [name, setName] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
-  const [userExistingName, setUserExistingName] = useState<string | null>(null);
+  const [isReserving, setIsReserving] = useState(false);
 
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { checkNameAvailability, registerName, getUserName, isLoading: isRegistering } = useNameRegistry();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
   const isValid = nameRegex.test(name);
@@ -201,22 +203,6 @@ export default function ClaimFSN() {
       document.documentElement.classList.add('motion-off');
     }
   }, []);
-
-  useEffect(() => {
-    const checkExistingName = async () => {
-      if (isConnected && address) {
-        const existingName = await getUserName(address);
-        setUserExistingName(existingName);
-        if (existingName) {
-          alert(`Name Already Claimed: This wallet already owns ${existingName}.rep`);
-        }
-      } else {
-        setUserExistingName(null);
-      }
-    };
-    
-    checkExistingName();
-  }, [isConnected, address]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -253,10 +239,17 @@ export default function ClaimFSN() {
 
     const timer = setTimeout(async () => {
       try {
-        const result = await checkNameAvailability(name);
-        setIsAvailable(result.available);
-        if (!result.available) {
-          setError(result.reason || 'Name not available');
+        const response = await fetch(`/api/rep/check?name=${encodeURIComponent(name)}`);
+        const result = await response.json();
+        
+        if (result.ok) {
+          setIsAvailable(result.available);
+          if (!result.available) {
+            setError('Name already taken');
+          }
+        } else {
+          setIsAvailable(null);
+          setError('Error checking availability');
         }
       } catch (err) {
         setIsAvailable(null);
@@ -270,17 +263,49 @@ export default function ClaimFSN() {
   }, [name]);
 
   const handleReserve = async () => {
-    if (!address || isRegistering || userExistingName) return;
+    if (!address || isReserving) return;
 
+    setIsReserving(true);
     try {
-      await registerName(name);
-      
-      alert(`Name Claimed! 🎉\n\nYou've successfully claimed ${name}.rep!`);
-      window.location.href = '/wallet';
+      const response = await fetch('/api/rep/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, walletAddress: address }),
+      });
 
+      const result = await response.json();
+
+      if (result.ok) {
+        const rid = result.reservationId || Math.random().toString(36).substring(2, 15);
+        
+        localStorage.setItem('rep:lastName', name);
+        localStorage.setItem('rep:address', address);
+        localStorage.setItem('rep:reservationId', rid);
+        localStorage.removeItem('rep:linked');
+        
+        toast({
+          title: "Name Reserved! 🎉",
+          description: `You've successfully reserved ${name}.rep`,
+        });
+
+        setTimeout(() => {
+          setLocation(`/wallet?name=${encodeURIComponent(name)}&rid=${rid}`);
+        }, 500);
+      } else {
+        toast({
+          title: "Reservation Failed",
+          description: result.error === 'ALREADY_RESERVED' ? 'This name is already taken' : 'Failed to reserve name',
+          variant: "destructive",
+        });
+      }
     } catch (err: any) {
-      console.error('Registration failed:', err);
-      alert(`Claim Failed\n\n${err.message || "Failed to claim name. Please try again."}`);
+      toast({
+        title: "Reservation Failed",
+        description: err.message || "Failed to reserve name. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsReserving(false);
     }
   };
 
@@ -292,14 +317,6 @@ export default function ClaimFSN() {
           onClick={() => setShowInput(true)}
         >
           Reserve your .rep
-        </button>
-      );
-    }
-
-    if (userExistingName) {
-      return (
-        <button style={styles.connectButtonDisabled} disabled>
-          Wallet already owns {userExistingName}.rep
         </button>
       );
     }
@@ -328,33 +345,33 @@ export default function ClaimFSN() {
       );
     }
 
-    if (isAvailable === true && !isConnected) {
-      return (
-        <div style={{ width: '100%', maxWidth: '400px' }}>
-          <WalletConnect />
-        </div>
-      );
-    }
+    if (isAvailable === true) {
+      if (!isConnected) {
+        return (
+          <div style={{ width: '100%', maxWidth: '400px' }}>
+            <WalletConnect />
+          </div>
+        );
+      }
 
-    if (isAvailable === true && isConnected && chain?.id !== networkChain.id) {
-      return (
-        <button 
-          style={styles.connectButton}
-          onClick={() => switchChain({ chainId: networkChain.id })}
-        >
-          Switch to {networkChain.name} to claim
-        </button>
-      );
-    }
+      if (chain?.id !== networkChain.id) {
+        return (
+          <button
+            style={styles.connectButton}
+            onClick={() => switchChain({ chainId: networkChain.id })}
+          >
+            Switch to Base to claim
+          </button>
+        );
+      }
 
-    if (isAvailable === true && isConnected && chain?.id === networkChain.id) {
       return (
-        <button 
-          style={{...styles.connectButton, ...(isRegistering ? { opacity: 0.7 } : {})}}
+        <button
+          style={isReserving ? styles.connectButtonDisabled : styles.connectButton}
           onClick={handleReserve}
-          disabled={isRegistering}
+          disabled={isReserving}
         >
-          {isRegistering ? 'Reserving...' : 'Reserve your .rep'}
+          {isReserving ? 'Reserving...' : 'Reserve your .rep'}
         </button>
       );
     }
@@ -368,55 +385,42 @@ export default function ClaimFSN() {
 
   return (
     <>
-      <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-            opacity: 0.6;
-          }
-          25% {
-            transform: translate(30px, -40px) scale(1.2);
-            opacity: 0.8;
-          }
-          50% {
-            transform: translate(-20px, -80px) scale(0.9);
-            opacity: 1;
-          }
-          75% {
-            transform: translate(40px, -120px) scale(1.1);
-            opacity: 0.7;
-          }
-        }
-      `}</style>
+      <SEOHead
+        title="Claim your .rep name - .rep Platform"
+        description="Reserve your soulbound .rep name on Base blockchain. 3-32 characters, lowercase letters/numbers/hyphens."
+        ogImage="/og-claim.png"
+        path="/claim"
+      />
       <div style={styles.claimPage}>
-        <div style={styles.particleBg} aria-hidden="true">
-          {particles.map((particle, i) => (
-            <div 
-              key={i} 
-              style={{
-                ...styles.particle,
-                left: `${particle.left}%`,
-                top: `${particle.top}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                background: particle.color,
-                animationDelay: `${particle.delay}s`,
-                animationDuration: `${particle.duration}s`
-              }}
-            />
-          ))}
-        </div>
+        <div style={styles.particleBg}>
+        {particles.map((p, i) => (
+          <div
+            key={i}
+            style={{
+              ...styles.particle,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              background: p.color,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+            }}
+          />
+        ))}
+      </div>
 
       <div style={styles.claimContainer}>
         <div style={styles.claimContent}>
           <h1 style={styles.claimTitle}>Reserve your.rep</h1>
+          
           <p style={styles.claimRules}>
-            Rules: 3-32 characters, lowercase letters,<br />
-            numbers, hyphens. Start with a letter.
+            3-32 characters, lowercase letters/numbers/hyphens<br />
+            Must start with a letter
           </p>
 
           <div style={styles.claimSteps}>
-            <span style={styles.stepActive}>1 Claim</span>
+            <span style={showInput ? styles.stepActive : styles.step}>1 Claim</span>
             <span style={styles.stepDot}>•</span>
             <span style={styles.step}>2 Link</span>
             <span style={styles.stepDot}>•</span>
@@ -428,36 +432,22 @@ export default function ClaimFSN() {
               <div style={styles.nameInputWrapper}>
                 <input
                   type="text"
-                  style={styles.nameInput}
-                  placeholder="yourname"
                   value={name}
-                  onChange={(e) => setName(e.target.value.toLowerCase())}
-                  maxLength={32}
+                  onChange={(e) => setName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="yourname"
+                  style={styles.nameInput}
+                  autoFocus
                 />
                 <span style={styles.nameSuffix}>.rep</span>
               </div>
 
-              {isChecking && (
-                <div style={{...styles.statusMessage, ...styles.statusChecking}}>Checking availability...</div>
-              )}
-
-              {!isChecking && isAvailable === true && (
-                <div style={{...styles.statusMessage, ...styles.statusAvailable}}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M13.3334 4L6.00002 11.3333L2.66669 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  {name}.rep is available
+              {name && (
+                <div style={styles.statusMessage}>
+                  {isChecking && <span style={styles.statusChecking}>Checking...</span>}
+                  {!isChecking && isAvailable === true && <span style={styles.statusAvailable}>✓ {name}.rep is available</span>}
+                  {!isChecking && isAvailable === false && <span style={styles.statusUnavailable}>✗ Name is taken</span>}
+                  {!isChecking && error && !isAvailable && <span style={styles.statusError}>{error}</span>}
                 </div>
-              )}
-
-              {!isChecking && isAvailable === false && (
-                <div style={{...styles.statusMessage, ...styles.statusUnavailable}}>
-                  {name}.rep is not available
-                </div>
-              )}
-
-              {error && (
-                <div style={{...styles.statusMessage, ...styles.statusError}}>{error}</div>
               )}
             </>
           )}
@@ -465,15 +455,35 @@ export default function ClaimFSN() {
           {renderButton()}
         </div>
 
-        <div style={styles.claimChameleon}>
-          <img 
-            src="/chameleon_claim.png" 
-            alt="Chameleon mascot" 
-            style={styles.claimChameleonImg}
-          />
-        </div>
+        {!isMobile() && (
+          <div style={styles.claimChameleon}>
+            <img 
+              src="/chameleon_claim.png" 
+              alt="Chameleon mascot" 
+              style={styles.claimChameleonImg}
+            />
+          </div>
+        )}
       </div>
-    </div>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(-30px) scale(1.1);
+            opacity: 0.6;
+          }
+        }
+        
+        .motion-off * {
+          animation: none !important;
+          transition: none !important;
+        }
+      `}</style>
+      </div>
     </>
   );
 }
