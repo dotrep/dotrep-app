@@ -1,0 +1,98 @@
+TITLE: Finish MVP: signed-in header, /wallet dashboard, flow glue (reuse existing API + wallet logic)
+
+ROLE: Act as a repo-editing agent. Apply diffs; don’t give steps. Do not change layout, spacing, colors, images, or typography. Only wire logic and add small UI elements called out below.
+
+Use existing code (must reuse)
+
+Availability & reserve: import from projects/api/rep/* (client/helpers already exist).
+
+Wallet connect + ensure Base: import from projects/web/wallet/* (don’t reimplement).
+
+Toasts/notifications: if a toast util exists in projects/web/ui/*, use it; otherwise add a minimal non-blocking toast component that matches current style.
+
+1) Header: “signed in” state (all pages)
+
+If connected, replace the “Connect wallet” button with a pill: yourname.rep • 0xAb…1234 (or ENS if available).
+
+Click → route to /wallet.
+
+If only address known (no reservation), show 0xAb…1234.
+
+Auto-reconnect on load: if a previous session exists, silently reconnect and set connected/onBase state.
+
+No visual restyling; use existing header container.
+
+Persistence: use localStorage keys
+
+rep:lastName (string), rep:reservationId (string), rep:address (string), rep:connected (bool).
+
+2) /wallet dashboard (new page)
+
+Card (reuse existing card styles) showing:
+
+{name}.rep (from query ?name= or localStorage),
+
+Status pill: Reserved → Linked → Done,
+
+Connected address (shortened).
+
+Primary CTA (stateful):
+
+Not connected → Connect wallet (uses existing util).
+
+Connected, wrong chain → Switch to Base.
+
+Connected on Base & reserved → Link wallet to claim (use our existing activate/link call if present; otherwise call reserve completion we already use), on success show Done ✓ and status = Linked.
+
+Secondary actions (disabled styles only): Add avatar, Set display name (do nothing yet).
+
+Add “View on Base” link if a tx/attestation URL is returned; otherwise hide.
+
+Routing: if /wallet loads without a known {name} in query or storage, show a minimal empty state with a single Back to Claim button.
+
+3) /claim flow (keep current visuals)
+
+Keep existing input + availability check with 300ms debounce using our client.
+
+Primary button labels (exact):
+“Check availability” (invalid/empty, disabled) → “Checking…” → “Name is taken” (disabled) → “Connect wallet to claim” (available, not connected) → “Switch to Base to claim” (connected, wrong chain) → “Reserve your .rep” (connected on Base).
+
+On successful reserve, store to localStorage and redirect to /wallet?name=…&rid=….
+
+Replace any alerts with toasts (success/error).
+
+4) Home (/)
+
+Make primary CTA link to /claim (keep design exactly).
+
+If you already added inline claim here, leave visuals unchanged and simply mirror /claim logic; otherwise just link.
+
+5) Footer + small pages
+
+Add a tiny “Built on Base” badge in footer across pages (same place, no number “8453”).
+
+Create minimal /404, /privacy, /terms stubs (reuse site shell).
+
+6) Analytics (if lib present)
+
+Fire events: claim_started (first valid keystroke), claim_available, wallet_connected, switch_to_base, claim_reserved, wallet_linked.
+
+7) SEO/OG
+
+Set page titles/descriptions; add og:image for / and /claim (use existing assets); keep current favicon.
+
+Acceptance (manual QA)
+
+Home CTA → /claim (no style changes).
+
+/claim: invalid → “Check availability”; valid → “Checking…” → correct available/taken states.
+
+Available + not connected → “Connect wallet to claim” opens wallet; wrong chain → “Switch to Base to claim”; on Base → “Reserve your .rep” reserves and redirects to /wallet.
+
+/wallet: shows {name}.rep, address, correct CTA state; linking flips to Done ✓; header pill appears and routes back to /wallet.
+
+Refresh keeps state via localStorage; auto-reconnect works; no alerts—toasts only.
+
+No layout/visual regressions compared to current pages.
+
+When done: list changed files with one-line summaries (what logic was wired) and confirm all 6 QA checks passed.
