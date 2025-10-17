@@ -6,7 +6,7 @@ import { useLocation } from 'wouter';
 
 export default function WalletExplorer() {
   const [, setLocation] = useLocation();
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected, chain, connector } = useAccount();
   const { switchChain } = useSwitchChain();
   
   const [name, setName] = useState('');
@@ -33,9 +33,10 @@ export default function WalletExplorer() {
       }
     }
     
-    if (isConnected && address) {
+    if (isConnected && address && connector) {
       localStorage.setItem('rep:address', address);
       localStorage.setItem('rep:connected', 'true');
+      localStorage.setItem('rep:connectorId', connector.id);
     }
     
     const linkedStatus = localStorage.getItem('rep:linked');
@@ -44,7 +45,7 @@ export default function WalletExplorer() {
     } else if (isConnected && address) {
       setStatus('linked');
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, connector]);
 
   const handleLink = async () => {
     if (!isConnected || !address || !name) return;

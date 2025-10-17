@@ -18,10 +18,11 @@ export function SignedInHeader() {
   useEffect(() => {
     const storedAddress = localStorage.getItem('rep:address');
     const storedConnected = localStorage.getItem('rep:connected');
+    const storedConnectorId = localStorage.getItem('rep:connectorId');
     
-    if (!isConnected && storedAddress && storedConnected === 'true') {
+    if (!isConnected && storedAddress && storedConnected === 'true' && storedConnectorId) {
       const tryReconnect = async () => {
-        const connector = connectors.find(c => c.name.toLowerCase().includes('injected'));
+        const connector = connectors.find(c => c.id === storedConnectorId);
         if (connector) {
           try {
             await connect({ connector });

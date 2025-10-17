@@ -53,6 +53,17 @@ export const fsnDomains = pgTable('fsn_domains', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Rep Name Reservations table
+export const repReservations = pgTable('rep_reservations', {
+  id: varchar('id', { length: 100 }).primaryKey(), // rid_timestamp_random
+  name: varchar('name', { length: 50 }).notNull().unique(), // .rep name
+  walletAddress: varchar('wallet_address', { length: 42 }).notNull(), // Reserved by address
+  linked: boolean('linked').default(false).notNull(), // Whether wallet is linked
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  walletAddressIdx: index('rep_reservations_wallet_idx').on(table.walletAddress),
+}));
+
 // Vault Items table for IPFS storage
 export const vaultItems = pgTable('vault_items', {
   id: serial('id').primaryKey(),
@@ -98,3 +109,9 @@ export const insertVaultItemSchema = createInsertSchema(vaultItems).omit({
 });
 export type InsertVaultItem = z.infer<typeof insertVaultItemSchema>;
 export type VaultItem = typeof vaultItems.$inferSelect;
+
+export const insertRepReservationSchema = createInsertSchema(repReservations).omit({
+  createdAt: true,
+});
+export type InsertRepReservation = z.infer<typeof insertRepReservationSchema>;
+export type RepReservation = typeof repReservations.$inferSelect;
