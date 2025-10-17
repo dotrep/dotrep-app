@@ -149,27 +149,22 @@ export function WalletConnect() {
     );
   }
 
-  // Find connectors - prioritize Coinbase Wallet SDK for direct app opening
-  const coinbaseConnector = connectors.find(c => 
-    c.id.toLowerCase().includes('coinbase') || 
-    c.name.toLowerCase().includes('coinbase')
-  );
+  // Find connectors - use WalletConnect for Base Wallet (reliable QR code flow)
   const walletConnectConnector = connectors.find(c => c.id.toLowerCase().includes('walletconnect'));
   const metaMaskConnector = connectors.find(c => 
     c.name.toLowerCase().includes('metamask') || 
     c.name.toLowerCase().includes('injected')
   );
 
-  // Use Coinbase SDK as primary, fallback to WalletConnect if not available
-  const baseWalletConnector = coinbaseConnector || walletConnectConnector;
+  // Use WalletConnect for Base Wallet (works reliably with QR codes)
+  const baseWalletConnector = walletConnectConnector;
 
   // Add debugging for mobile
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    hasCoinbase: !!coinbaseConnector,
     hasWalletConnect: !!walletConnectConnector,
     hasMetaMask: !!metaMaskConnector,
-    baseWalletUsing: coinbaseConnector ? 'Coinbase SDK' : 'WalletConnect',
+    baseWalletUsing: 'WalletConnect Protocol',
     isPending,
     isConnected
   });
@@ -249,7 +244,7 @@ export function WalletConnect() {
                 🦊 MetaMask
               </button>
             )}
-            {walletConnectConnector && !coinbaseConnector && (
+            {walletConnectConnector && (
               <button
                 onClick={(e) => {
                   e.preventDefault();

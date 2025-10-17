@@ -1,6 +1,6 @@
 // Wagmi configuration for Web3 integration
 import { createConfig, http } from 'wagmi';
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { base } from 'wagmi/chains';
 
 // Use wagmi's built-in Base chain (MetaMask recognizes this)
@@ -11,18 +11,15 @@ const APP_MODE = (import.meta as any).env?.VITE_APP_MODE || 'STEALTH';
 
 const baseConnectors = [
   injected(),
-  coinbaseWallet({ 
-    appName: '.rep Platform',
-    preference: 'all', // Support all wallet types with mobile deep linking
-  }),
   walletConnect({
     projectId: '970eeb20c557717336e257b5a871fad2',
     metadata: {
       name: '.rep Platform',
-      description: 'Your onchain reputation. Alive on Base.',
+      description: 'Claim your .rep identity on Base',
       url: typeof window !== 'undefined' ? window.location.origin : 'https://rep.live',
       icons: ['https://rep.live/icon.png'],
     },
+    showQrModal: true, // Enable QR modal for mobile wallet connections
   }),
 ];
 
