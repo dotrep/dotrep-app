@@ -10,6 +10,77 @@ export function WalletConnect() {
   const { disconnect } = useDisconnect();
   const { points } = useContractOperations();
 
+  // Check if running inside an iframe (like Replit preview)
+  const [isInIframe, setIsInIframe] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      setIsInIframe(window.self !== window.top);
+    } catch (e) {
+      // If we can't access window.top due to cross-origin, we're definitely in an iframe
+      setIsInIframe(true);
+    }
+  }, []);
+
+  // If in iframe, show "Open in New Tab" message
+  if (isInIframe && !isConnected) {
+    return (
+      <div className="wallet-connectors">
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '20px',
+          background: 'rgba(255, 107, 53, 0.1)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 107, 53, 0.3)'
+        }}>
+          <div style={{ 
+            fontSize: '24px', 
+            marginBottom: '12px' 
+          }}>
+            🔓
+          </div>
+          <div style={{ 
+            color: '#fff', 
+            fontSize: '16px', 
+            fontWeight: 'bold',
+            marginBottom: '8px' 
+          }}>
+            Wallet Connection Required
+          </div>
+          <div style={{ 
+            color: 'rgba(255, 255, 255, 0.7)', 
+            fontSize: '14px',
+            marginBottom: '16px',
+            lineHeight: '1.5'
+          }}>
+            For security, wallet connections must open in a new tab
+          </div>
+          <button
+            onClick={() => {
+              window.open(window.location.href, '_blank');
+            }}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(90deg, #00d4aa 0%, #0052ff 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            Open in New Tab
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isConnected) {
     return (
       <div className="wallet-connected">
