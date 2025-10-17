@@ -182,7 +182,8 @@ Preferred communication style: Simple, everyday language.
   - `injected()` - MetaMask browser extension and other injected providers
   - `walletConnect()` - Mobile wallet connections via WalletConnect protocol (Coinbase Wallet, Trust, etc.)
   - WalletConnect Project ID: 970eeb20c557717336e257b5a871fad2
-  - **Note:** Previously used coinbaseWallet() SDK connector but removed due to timeout issues in mobile browsers and iframe environments (popups fail). WalletConnect protocol provides reliable mobile wallet connections.
+  - QR modal enabled (`showQrModal: true`) for reliable mobile wallet connections
+  - **Note:** Coinbase SDK connector removed due to persistent timeout issues in mobile browsers and iframe environments. WalletConnect protocol provides reliable QR code-based connections that work across all environments.
 - **Connector Persistence:** 
   - Stores connector.id in localStorage (rep:connectorId) for auto-reconnect
   - Supports MetaMask and mobile wallet session restoration
