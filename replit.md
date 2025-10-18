@@ -12,7 +12,8 @@ Preferred communication style: Simple, everyday language.
 The project utilizes a Turborepo-based monorepo, encompassing a React + Vite frontend (`apps/web`) and an Express.js backend API (`apps/api`), with shared TypeScript types in `packages/shared`.
 
 ### Frontend Architecture (apps/web)
-- **Technology Stack**: React 18 with TypeScript, Vite 5.
+- **Technology Stack**: React 18 with TypeScript, Vite 5, wouter for routing.
+- **Routing**: Client-side routing using wouter's `<Route>` and `<Switch>` components. Routes: `/` (home), `/claim` and `/reserve` (claim page), `/discover`, `/wallet`.
 - **Styling**: Vanilla CSS with custom properties for a deep navy/space theme, accented with neon blue, teal, and orange. Features glow effects and a responsive, mobile-first design.
 - **Key Features**:
     - **Homepage**: A single-page hero layout with a floating particle background and dual calls to action for claiming and discovering `.rep` names.
