@@ -32,6 +32,10 @@ localPort = 37253
 externalPort = 5000
 
 [[ports]]
+localPort = 37965
+externalPort = 8008
+
+[[ports]]
 localPort = 38563
 externalPort = 6800
 
@@ -70,10 +74,10 @@ args = "Web App"
 name = "Web App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd apps/web && node server.js"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/web && npx tsx server.ts"
+waitForPort = 5000

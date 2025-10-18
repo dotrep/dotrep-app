@@ -115,3 +115,112 @@ export const insertRepReservationSchema = createInsertSchema(repReservations).om
 });
 export type InsertRepReservation = z.infer<typeof insertRepReservationSchema>;
 export type RepReservation = typeof repReservations.$inferSelect;
+
+// FSN Messages table
+export const fsnMessages = pgTable('fsn_messages', {
+  id: serial('id').primaryKey(),
+  fromFsn: varchar('from_fsn', { length: 50 }).notNull(), // Sender's FSN name
+  toFsn: varchar('to_fsn', { length: 50 }).notNull(), // Recipient's FSN name
+  message: text('message').notNull(), // Message content
+  fileUrl: varchar('file_url', { length: 500 }), // Optional file attachment URL
+  fileName: varchar('file_name', { length: 255 }), // Original file name
+  fileType: varchar('file_type', { length: 100 }), // MIME type
+  isRead: boolean('is_read').default(false).notNull(), // Read status
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  toFsnIdx: index('fsn_messages_to_fsn_idx').on(table.toFsn),
+  fromFsnIdx: index('fsn_messages_from_fsn_idx').on(table.fromFsn),
+}));
+
+// Contacts table
+export const contacts = pgTable('contacts', {
+  id: serial('id').primaryKey(),
+  ownerAddress: varchar('owner_address', { length: 42 }).notNull(), // User's wallet address
+  contactFsnName: varchar('contact_fsn_name', { length: 50 }).notNull(), // Contact's FSN name
+  displayName: varchar('display_name', { length: 100 }).notNull(), // Display name
+  notes: text('notes'), // Optional notes
+  isFriend: boolean('is_friend').default(true).notNull(), // Friend status
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  ownerAddressIdx: index('contacts_owner_address_idx').on(table.ownerAddress),
+}));
+
+// Chat history for AI agent conversations
+export const chatHistory = pgTable('chat_history', {
+  id: serial('id').primaryKey(),
+  userAddress: varchar('user_address', { length: 42 }).notNull(), // User's wallet address
+  role: varchar('role', { length: 20 }).notNull(), // 'user' or 'assistant'
+  content: text('content').notNull(), // Message content
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  userAddressIdx: index('chat_history_user_address_idx').on(table.userAddress),
+}));
+
+// Schema types for new tables
+export const insertFsnMessageSchema = createInsertSchema(fsnMessages).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFsnMessage = z.infer<typeof insertFsnMessageSchema>;
+export type FsnMessage = typeof fsnMessages.$inferSelect;
+
+export const insertContactSchema = createInsertSchema(contacts).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Contact = typeof contacts.$inferSelect;
+
+export const insertChatHistorySchema = createInsertSchema(chatHistory).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertChatHistory = z.infer<typeof insertChatHistorySchema>;
+export type ChatHistory = typeof chatHistory.$inferSelect;
+
+// Wallet addresses table
+export const walletAddresses = pgTable('wallet_addresses', {
+  id: serial('id').primaryKey(),
+  ownerAddress: varchar('owner_address', { length: 42 }).notNull(), // User's wallet address
+  fsnName: varchar('fsn_name', { length: 50 }), // Associated FSN name
+  blockchain: varchar('blockchain', { length: 50 }).notNull().default('base'), // Blockchain network
+  label: varchar('label', { length: 100 }).notNull(), // User-friendly label
+  isActive: boolean('is_active').default(true).notNull(), // Active status
+  balance: varchar('balance', { length: 50 }).default('0.0').notNull(), // Balance as string
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  ownerAddressIdx: index('wallet_addresses_owner_idx').on(table.ownerAddress),
+}));
+
+// Transactions table
+export const transactions = pgTable('transactions', {
+  id: serial('id').primaryKey(),
+  walletAddressId: integer('wallet_address_id').notNull(), // References walletAddresses.id
+  txHash: varchar('tx_hash', { length: 66 }).notNull().unique(), // Transaction hash
+  amount: varchar('amount', { length: 50 }).notNull(), // Amount as string
+  toAddress: varchar('to_address', { length: 42 }).notNull(), // Recipient address
+  fromAddress: varchar('from_address', { length: 42 }).notNull(), // Sender address
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // pending, confirmed, failed
+  note: text('note'), // Optional note
+  blockHeight: integer('block_height'), // Block number
+  blockTime: timestamp('block_time'), // Block timestamp
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  walletAddressIdIdx: index('transactions_wallet_id_idx').on(table.walletAddressId),
+  txHashIdx: index('transactions_tx_hash_idx').on(table.txHash),
+}));
+
+// Schema types for wallet tables
+export const insertWalletAddressSchema = createInsertSchema(walletAddresses).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertWalletAddress = z.infer<typeof insertWalletAddressSchema>;
+export type WalletAddress = typeof walletAddresses.$inferSelect;
+
+export const insertTransactionSchema = createInsertSchema(transactions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type Transaction = typeof transactions.$inferSelect;
