@@ -47,11 +47,10 @@ export default function App() {
   const renderPage = () => {
     switch (currentPath) {
       case '/reserve':
-        return <Reserve />;
-      case '/discover':
-        return <Discover />;
       case '/claim':
         return <ClaimFSN />;
+      case '/discover':
+        return <Discover />;
       case '/wallet':
         return <Wallet />;
       case '/':

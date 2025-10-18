@@ -65,6 +65,7 @@ function Router() {
     <Switch>
       <Route path="/claim-fsn" component={ClaimFSN} />
       <Route path="/claim" component={ClaimFSN} />
+      <Route path="/reserve" component={ClaimFSN} />
       <Route path="/" component={LockInHomepage} />
       <Route path="/register" component={Register} />
       <Route path="/login" component={Login} />
