@@ -22,13 +22,14 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 - **Component Design**: Functional React components, inline SVG for graphics, CSS keyframes for animations, and client-side state management.
 
 ### Backend Architecture (apps/api)
-- **Technology Stack**: Express.js, integrated with Vite in middleware mode for development.
-- **API Design**: RESTful endpoints for `.rep` name operations, including `/api/rep/check` for availability and `/api/rep/reserve` for reservations. Features name and wallet address validation.
-- **Server Configuration**: Single server on port 5000; HMR is disabled in development for stability in the Replit environment.
+- **Technology Stack**: Express.js TypeScript server running via tsx, integrated with Vite in middleware mode for development.
+- **API Design**: RESTful endpoints for `.rep` names, wallet management, messaging, vault storage, and AI chat. All endpoints persist to PostgreSQL via Drizzle ORM.
+- **Server Configuration**: Single server on port 5000 (apps/web/server.ts); HMR is disabled in development for stability in the Replit environment.
 
 ### Data Architecture
-- **Database**: Drizzle ORM configured for PostgreSQL, with a schema defined in `packages/shared/schema.ts`. Currently uses in-memory storage for MVP due to dependency conflicts.
-- **Name Registry**: Manages `.rep` name availability and reservations with server-issued IDs.
+- **Database**: Production PostgreSQL database using Drizzle ORM. Schema includes tables for users, FSN domains, wallet addresses, transactions, messages, contacts, vault items, and chat history.
+- **Name Registry**: `.rep` name reservations stored in PostgreSQL with conflict handling and automatic wallet provisioning.
+- **Data Flow**: All mock data replaced with real database operations - claim flow creates user + domain + wallet records; dashboard tabs query live PostgreSQL data.
 
 ### Authentication & Identity
 - **Web3 Integration**: Utilizes Wagmi v2 for wallet connections, supporting MetaMask and WalletConnect. Auto-reconnect and iframe detection are implemented.
@@ -36,7 +37,10 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 
 ### File Storage & Vault System
 - **Encryption**: Client-side AES-GCM 256-bit encryption with a zero-knowledge server design.
-- **Decentralized Storage**: Integrates Pinata for IPFS, with file metadata stored in the database.
+- **Decentralized Storage**: Production Pinata SDK integration for IPFS uploads. Files uploaded via Node.js buffer→Blob→File flow, with CIDs and metadata persisted to vault_items table.
+
+### AI Integration
+- **OpenAI Chat**: Production OpenAI API integration for AI assistant conversations. All user and assistant messages persisted to chat_history table for conversation continuity.
 
 ## External Dependencies
 
