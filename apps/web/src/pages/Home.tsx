@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { Link } from 'wouter';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -126,12 +127,12 @@ export default function Home() {
                 </h1>
                 
                 <div className="hero-ctas">
-                  <a href="/claim" className="cta-button cta-primary">
+                  <Link href="/claim" className="cta-button cta-primary">
                     Reserve your.rep
-                  </a>
-                  <a href="/discover" className="cta-button cta-secondary">
+                  </Link>
+                  <Link href="/discover" className="cta-button cta-secondary">
                     Discover.rep
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
