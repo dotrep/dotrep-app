@@ -149,6 +149,26 @@ export function WalletConnect() {
     );
   }
 
+  // Check which browser extensions are actually installed
+  const [hasMetaMaskExtension, setHasMetaMaskExtension] = React.useState(false);
+  const [hasCoinbaseExtension, setHasCoinbaseExtension] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check specifically for MetaMask extension (not just any ethereum provider)
+    const ethereum = (window as any).ethereum;
+    if (ethereum) {
+      // Check if MetaMask is the provider or in the providers array
+      const isMetaMask = ethereum.isMetaMask || 
+        (ethereum.providers && ethereum.providers.some((p: any) => p.isMetaMask));
+      setHasMetaMaskExtension(isMetaMask);
+    }
+    
+    // Check for Coinbase Wallet extension
+    setHasCoinbaseExtension(typeof (window as any).coinbaseWalletExtension !== 'undefined');
+  }, []);
+
   // Find desktop browser extension connectors
   const coinbaseConnector = connectors.find(c => 
     c.id.toLowerCase().includes('coinbase') || 
@@ -159,10 +179,16 @@ export function WalletConnect() {
     c.name.toLowerCase().includes('metamask')
   );
 
+  // Only show connectors if extensions are installed
+  const readyCoinbaseConnector = hasCoinbaseExtension ? coinbaseConnector : null;
+  const readyMetaMaskConnector = hasMetaMaskExtension ? metaMaskConnector : null;
+
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    hasCoinbase: !!coinbaseConnector,
-    hasMetaMask: !!metaMaskConnector,
+    hasMetaMaskExtension,
+    hasCoinbaseExtension,
+    readyCoinbase: !!readyCoinbaseConnector,
+    readyMetaMask: !!readyMetaMaskConnector,
     isPending,
     isConnected
   });
@@ -179,10 +205,10 @@ export function WalletConnect() {
 
   return (
     <div className="wallet-connectors">
-      {!coinbaseConnector && !metaMaskConnector ? (
+      {!readyCoinbaseConnector && !readyMetaMaskConnector ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '15px', color: '#fff', fontSize: '14px' }}>
-            No wallet detected. Install a browser extension wallet:
+            No wallet extension detected. Install one to continue:
           </div>
           <button
             onClick={(e) => {
@@ -209,12 +235,12 @@ export function WalletConnect() {
       ) : (
         <>
           {/* Coinbase Wallet - Primary for Base network */}
-          {coinbaseConnector && (
+          {readyCoinbaseConnector && (
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleConnect(coinbaseConnector, 'Coinbase Wallet');
+                handleConnect(readyCoinbaseConnector, 'Coinbase Wallet');
               }}
               disabled={isPending}
               className="primary-cta"
@@ -225,14 +251,14 @@ export function WalletConnect() {
           )}
 
           {/* MetaMask - Secondary option */}
-          {metaMaskConnector && (
+          {readyMetaMaskConnector && (
             <>
               <div className="divider">Or connect with</div>
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleConnect(metaMaskConnector, 'MetaMask');
+                  handleConnect(readyMetaMaskConnector, 'MetaMask');
                 }}
                 disabled={isPending}
                 className="secondary-button"

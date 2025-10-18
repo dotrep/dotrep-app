@@ -11,8 +11,8 @@ const connectors = [
   injected(), // MetaMask, Brave Wallet, etc.
   coinbaseWallet({
     appName: '.rep Platform',
-    appLogoUrl: undefined,
-  }), // Coinbase Wallet browser extension
+    preference: 'eoaOnly',
+  }),
 ];
 
 export const wagmiConfig = createConfig({
