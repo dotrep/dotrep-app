@@ -23,12 +23,14 @@ export default function App() {
     
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const anchor = target.closest('a[href^="/"]');
+      const anchor = target.closest('a[href^="/"]') as HTMLAnchorElement;
       
       if (anchor && anchor.getAttribute('href')?.startsWith('/')) {
         const href = anchor.getAttribute('href');
         if (href && !anchor.getAttribute('target')) {
+          console.log('Intercepting navigation to:', href);
           e.preventDefault();
+          e.stopPropagation();
           window.history.pushState({}, '', href);
           setCurrentPath(href);
           window.scrollTo(0, 0);
@@ -36,11 +38,11 @@ export default function App() {
       }
     };
 
-    document.addEventListener('click', handleClick);
+    document.addEventListener('click', handleClick, true);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener('click', handleClick, true);
     };
   }, []);
 
