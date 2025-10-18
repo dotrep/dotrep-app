@@ -262,8 +262,6 @@ function App() {
                       <Toaster />
                       <SignedInHeader />
                       <Router />
-                      {/* ✅ Wallet explorer visible anywhere */}
-                      <WalletExplorer />
                       <ChatIntegration />
                     </TooltipProvider>
                   </RewardsProvider>
