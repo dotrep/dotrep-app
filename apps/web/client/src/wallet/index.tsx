@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import { networkChain } from '../../client/src/config/wagmi';
-import WalletConnect from '../../client/src/components/WalletConnect';
+import { networkChain } from '../config/wagmi';
+import WalletConnect from '../components/WalletConnect';
 import { useLocation } from 'wouter';
 
 export default function WalletExplorer() {
