@@ -149,22 +149,20 @@ export function WalletConnect() {
     );
   }
 
-  // Find connectors - use WalletConnect for Base Wallet (reliable QR code flow)
-  const walletConnectConnector = connectors.find(c => c.id.toLowerCase().includes('walletconnect'));
+  // Find desktop browser extension connectors
+  const coinbaseConnector = connectors.find(c => 
+    c.id.toLowerCase().includes('coinbase') || 
+    c.name.toLowerCase().includes('coinbase')
+  );
   const metaMaskConnector = connectors.find(c => 
-    c.name.toLowerCase().includes('metamask') || 
-    c.name.toLowerCase().includes('injected')
+    c.id.toLowerCase().includes('injected') ||
+    c.name.toLowerCase().includes('metamask')
   );
 
-  // Use WalletConnect for Base Wallet (works reliably with QR codes)
-  const baseWalletConnector = walletConnectConnector;
-
-  // Add debugging for mobile
   console.log('WalletConnect render:', {
     connectorsLength: connectors.length,
-    hasWalletConnect: !!walletConnectConnector,
+    hasCoinbase: !!coinbaseConnector,
     hasMetaMask: !!metaMaskConnector,
-    baseWalletUsing: 'WalletConnect Protocol',
     isPending,
     isConnected
   });
@@ -181,22 +179,22 @@ export function WalletConnect() {
 
   return (
     <div className="wallet-connectors">
-      {!baseWalletConnector && !metaMaskConnector ? (
+      {!coinbaseConnector && !metaMaskConnector ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '15px', color: '#fff', fontSize: '14px' }}>
-            No wallet detected. Install a compatible wallet:
+            No wallet detected. Install a browser extension wallet:
           </div>
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              window.open('https://www.coinbase.com/wallet/', '_blank');
+              window.open('https://www.coinbase.com/wallet/downloads', '_blank');
             }}
             className="primary-cta"
           >
-            Install Base Wallet
+            Install Coinbase Wallet
           </button>
-          <div className="divider">Or install other wallets</div>
+          <div className="divider">Or</div>
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -210,28 +208,26 @@ export function WalletConnect() {
         </div>
       ) : (
         <>
-          {/* Primary: Base Wallet */}
-          {baseWalletConnector && (
+          {/* Coinbase Wallet - Primary for Base network */}
+          {coinbaseConnector && (
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleConnect(baseWalletConnector, 'Base Wallet');
+                handleConnect(coinbaseConnector, 'Coinbase Wallet');
               }}
               disabled={isPending}
               className="primary-cta"
             >
-              🔵 Claim with Base Wallet
+              🔵 Connect Coinbase Wallet
               {isPending && ' (Connecting...)'}
             </button>
           )}
 
-          {/* Divider */}
-          <div className="divider">Or claim with other wallets</div>
-
-          {/* Secondary: MetaMask and Others */}
-          <div className="secondary-options">
-            {metaMaskConnector && (
+          {/* MetaMask - Secondary option */}
+          {metaMaskConnector && (
+            <>
+              <div className="divider">Or connect with</div>
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -243,21 +239,8 @@ export function WalletConnect() {
               >
                 🦊 MetaMask
               </button>
-            )}
-            {walletConnectConnector && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleConnect(walletConnectConnector, 'Other Mobile Wallets');
-                }}
-                disabled={isPending}
-                className="secondary-button"
-              >
-                📱 Other Mobile Wallets
-              </button>
-            )}
-          </div>
+            </>
+          )}
         </>
       )}
       
@@ -325,13 +308,6 @@ export function WalletConnect() {
         
         .divider::after {
           right: 0;
-        }
-        
-        /* Secondary options - Smaller buttons */
-        .secondary-options {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
         }
         
         .secondary-button {
