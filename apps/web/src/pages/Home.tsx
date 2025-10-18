@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -17,6 +17,7 @@ const isMobile = () => {
 
 export default function Home() {
   const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -127,12 +128,20 @@ export default function Home() {
                 </h1>
                 
                 <div className="hero-ctas">
-                  <Link href="/claim" className="cta-button cta-primary">
+                  <button 
+                    type="button"
+                    onClick={() => setLocation('/claim')} 
+                    className="cta-button cta-primary"
+                  >
                     Reserve your.rep
-                  </Link>
-                  <Link href="/discover" className="cta-button cta-secondary">
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setLocation('/discover')} 
+                    className="cta-button cta-secondary"
+                  >
                     Discover.rep
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
