@@ -11,12 +11,12 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
 
   if (!isOpen) return null;
 
-  const coinbaseConnector = connectors.find(c => 
+  const coinbaseConnector = connectors.find((c: any) => 
     c.id.toLowerCase().includes('coinbase') || 
     c.name.toLowerCase().includes('coinbase')
   );
   
-  const walletConnectConnector = connectors.find(c => 
+  const walletConnectConnector = connectors.find((c: any) => 
     c.id.toLowerCase().includes('walletconnect') ||
     c.name.toLowerCase().includes('walletconnect')
   );
