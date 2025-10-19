@@ -320,8 +320,14 @@ export default function ClaimFSN() {
   };
 
   const handleSmartCTA = () => {
+    console.log('[CLAIM DEBUG] Smart CTA clicked');
+    console.log('[CLAIM DEBUG] isConnected:', isConnected);
+    console.log('[CLAIM DEBUG] address:', address);
+    console.log('[CLAIM DEBUG] chain:', chain);
+    
     // Layer 1: Check wallet connection status AND address value
     if (!isConnected || !address) {
+      console.log('[CLAIM DEBUG] No wallet connected - opening modal');
       toast({
         title: "Wallet Required",
         description: "Connect your wallet to claim your .rep name",
@@ -333,6 +339,7 @@ export default function ClaimFSN() {
 
     // Layer 2: Check network - must be on Base
     if (chain?.id !== networkChain.id) {
+      console.log('[CLAIM DEBUG] Wrong network - switching to Base');
       toast({
         title: "Wrong Network",
         description: "Switching to Base network...",
@@ -342,6 +349,7 @@ export default function ClaimFSN() {
     }
 
     // Layer 3: All validations passed, proceed to reservation
+    console.log('[CLAIM DEBUG] All checks passed - proceeding to reserve');
     handleReserve();
   };
 
