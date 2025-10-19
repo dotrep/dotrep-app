@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { networkChain } from '../config/wagmi';
 import { useLocation } from 'wouter';
-import WalletConnect from '../components/WalletConnect';
+import { WalletPickerModal } from '../components/WalletPickerModal';
 import { toast } from '../hooks/use-toast';
 import { SEOHead } from '../components/SEOHead';
 
@@ -190,6 +190,7 @@ export default function ClaimFSN() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [isReserving, setIsReserving] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -289,7 +290,7 @@ export default function ClaimFSN() {
         });
 
         setTimeout(() => {
-          setLocation(`/rep-dashboard`);
+          setLocation(`/wallet`);
         }, 500);
       } else {
         toast({
@@ -307,6 +308,23 @@ export default function ClaimFSN() {
     } finally {
       setIsReserving(false);
     }
+  };
+
+  const handleSmartCTA = () => {
+    // If not connected, open wallet picker modal
+    if (!isConnected) {
+      setShowWalletModal(true);
+      return;
+    }
+
+    // If connected but wrong network, switch to Base
+    if (chain?.id !== networkChain.id) {
+      switchChain({ chainId: networkChain.id });
+      return;
+    }
+
+    // If connected on Base, reserve immediately
+    handleReserve();
   };
 
   const renderButton = () => {
@@ -346,32 +364,13 @@ export default function ClaimFSN() {
     }
 
     if (isAvailable === true) {
-      if (!isConnected) {
-        return (
-          <div style={{ width: '100%', maxWidth: '400px' }}>
-            <WalletConnect />
-          </div>
-        );
-      }
-
-      if (chain?.id !== networkChain.id) {
-        return (
-          <button
-            style={styles.connectButton}
-            onClick={() => switchChain({ chainId: networkChain.id })}
-          >
-            Switch to Base to claim
-          </button>
-        );
-      }
-
       return (
         <button
           style={isReserving ? styles.connectButtonDisabled : styles.connectButton}
-          onClick={handleReserve}
+          onClick={handleSmartCTA}
           disabled={isReserving}
         >
-          {isReserving ? 'Reserving...' : 'Reserve your .rep'}
+          {isReserving ? 'Reserving...' : `Claim ${name}.rep`}
         </button>
       );
     }
@@ -484,6 +483,11 @@ export default function ClaimFSN() {
         }
       `}</style>
       </div>
+
+      <WalletPickerModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
     </>
   );
 }
