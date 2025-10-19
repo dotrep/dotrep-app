@@ -11,6 +11,13 @@ import OpenAI from 'openai';
 const app = express();
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 const pinata = new PinataSDK({

@@ -7,9 +7,17 @@ interface WalletPickerModalProps {
 }
 
 export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
-  const { connectors, connect, isPending } = useConnect();
+  const { connectors, connect, isPending, isSuccess } = useConnect();
 
   if (!isOpen) return null;
+
+  // Auto-close modal when connection is successful
+  React.useEffect(() => {
+    if (isSuccess && isOpen) {
+      console.log('[WALLET] Connection successful, closing modal');
+      setTimeout(() => onClose(), 500); // Small delay to show success state
+    }
+  }, [isSuccess, isOpen, onClose]);
 
   const coinbaseConnector = connectors.find((c: any) => 
     c.id.toLowerCase().includes('coinbase') || 
@@ -23,10 +31,11 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
 
   const handleConnect = async (connector: any, walletName: string) => {
     try {
+      console.log(`[WALLET] Attempting to connect via ${walletName}`);
       await connect({ connector });
-      onClose();
+      // Modal will auto-close via useEffect when isSuccess becomes true
     } catch (error) {
-      console.error('Connect error:', error);
+      console.error('[WALLET] Connect error:', error);
     }
   };
 
