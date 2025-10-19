@@ -264,7 +264,16 @@ export default function ClaimFSN() {
   }, [name]);
 
   const handleReserve = async () => {
-    if (!address || isReserving) return;
+    // Triple validation: isConnecting check, address existence, and actual value
+    if (!isConnected || !address || address === '' || isReserving) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to claim a .rep name",
+        variant: "destructive",
+      });
+      setShowWalletModal(true);
+      return;
+    }
 
     setIsReserving(true);
     try {
@@ -311,19 +320,28 @@ export default function ClaimFSN() {
   };
 
   const handleSmartCTA = () => {
-    // If not connected, open wallet picker modal
-    if (!isConnected) {
+    // Layer 1: Check wallet connection status AND address value
+    if (!isConnected || !address || address === '') {
+      toast({
+        title: "Wallet Required",
+        description: "Connect your wallet to claim your .rep name",
+        variant: "destructive",
+      });
       setShowWalletModal(true);
       return;
     }
 
-    // If connected but wrong network, switch to Base
+    // Layer 2: Check network - must be on Base
     if (chain?.id !== networkChain.id) {
+      toast({
+        title: "Wrong Network",
+        description: "Switching to Base network...",
+      });
       switchChain({ chainId: networkChain.id });
       return;
     }
 
-    // If connected on Base, reserve immediately
+    // Layer 3: All validations passed, proceed to reservation
     handleReserve();
   };
 
