@@ -265,7 +265,7 @@ export default function ClaimFSN() {
 
   const handleReserve = async () => {
     // Triple validation: isConnecting check, address existence, and actual value
-    if (!isConnected || !address || address === '' || isReserving) {
+    if (!isConnected || !address || isReserving) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet to claim a .rep name",
@@ -321,7 +321,7 @@ export default function ClaimFSN() {
 
   const handleSmartCTA = () => {
     // Layer 1: Check wallet connection status AND address value
-    if (!isConnected || !address || address === '') {
+    if (!isConnected || !address) {
       toast({
         title: "Wallet Required",
         description: "Connect your wallet to claim your .rep name",
