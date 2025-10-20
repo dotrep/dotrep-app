@@ -325,21 +325,17 @@ export default function ClaimFSN() {
   };
 
   const handleSmartCTA = () => {
-    // IMMEDIATE TEST - prove button clicks work
-    console.log('🔴 BUTTON CLICKED!', new Date().toISOString());
-    alert('Button click detected! Check console for details.');
-    
-    console.log('[CLAIM DEBUG] Smart CTA clicked');
-    console.log('[CLAIM DEBUG] isConnected:', isConnected);
-    console.log('[CLAIM DEBUG] address:', address);
-    console.log('[CLAIM DEBUG] chain:', chain);
+    console.log('[CLAIM] Button clicked - checking wallet connection');
+    console.log('[CLAIM] isConnected:', isConnected);
+    console.log('[CLAIM] address:', address);
+    console.log('[CLAIM] chain:', chain);
     
     // Layer 1: Check wallet connection status AND address value
     if (!isConnected || !address) {
-      console.log('[CLAIM DEBUG] No wallet connected - opening modal');
+      console.log('[CLAIM] No wallet connected - opening WalletPickerModal');
       toast({
         title: "Wallet Required",
-        description: "Connect your wallet to claim your .rep name",
+        description: "Connect your Coinbase Wallet to claim your .rep name",
         variant: "destructive",
       });
       setShowWalletModal(true);
@@ -348,7 +344,7 @@ export default function ClaimFSN() {
 
     // Layer 2: Check network - must be on Base
     if (chain?.id !== networkChain.id) {
-      console.log('[CLAIM DEBUG] Wrong network - switching to Base');
+      console.log('[CLAIM] Wrong network - switching to Base');
       toast({
         title: "Wrong Network",
         description: "Switching to Base network...",
@@ -358,7 +354,7 @@ export default function ClaimFSN() {
     }
 
     // Layer 3: All validations passed, proceed to reservation
-    console.log('[CLAIM DEBUG] All checks passed - proceeding to reserve');
+    console.log('[CLAIM] All checks passed - proceeding to reserve name');
     handleReserve();
   };
 
