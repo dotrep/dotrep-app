@@ -327,7 +327,7 @@ export default function ClaimFSN() {
         });
 
         setTimeout(() => {
-          setLocation(`/wallet`);
+          setLocation(`/rep-dashboard`);
         }, 500);
       } else {
         let errorMessage = 'Failed to reserve name';

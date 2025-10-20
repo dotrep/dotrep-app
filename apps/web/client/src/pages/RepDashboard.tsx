@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAccount } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
 import WalletTab from '../components/WalletTab';
 import FsnMessageTab from '../components/FsnMessageTab';
 import VaultUpload from '../components/VaultUpload';
 import ChatDashboard from '../components/ChatSystem/ChatDashboard';
+import PulseGauge from '../components/PulseGauge';
 import { SEOHead } from '../components/SEOHead';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -24,26 +26,38 @@ export function RepDashboard() {
   const [userId, setUserId] = useState<number>(1);
   const particles = generateParticles(30);
 
+  // Check session
+  const { data: sessionData, isLoading: sessionLoading } = useQuery({
+    queryKey: ['/api/auth/me'],
+    retry: false,
+  });
+
+  // Fetch user stats for pulse gauge
+  const { data: userStats } = useQuery({
+    queryKey: ['/api/user/stats'],
+    enabled: !!sessionData?.ok,
+    refetchInterval: 5000,
+  });
+
   useEffect(() => {
-    const storedName = localStorage.getItem('rep:lastName');
-    
-    if (!storedName) {
+    if (!sessionLoading && !sessionData?.ok) {
+      // No valid session, redirect to claim
       setLocation('/claim');
       return;
     }
     
-    setRepName(storedName);
-    
-    if (storedName) {
-      const rid = localStorage.getItem('rep:reservationId') || storedName;
-      const hash = rid.split('').reduce((acc, char, idx) => 
+    if (sessionData?.ok) {
+      setRepName(sessionData.repName);
+      // Generate userId from reservation ID
+      const rid = sessionData.userId || sessionData.repName;
+      const hash = rid.split('').reduce((acc: number, char: string, idx: number) => 
         acc + char.charCodeAt(0) * (idx + 1), 0
       );
       setUserId(Math.abs(hash));
     }
-  }, [setLocation]);
+  }, [sessionData, sessionLoading, setLocation]);
 
-  if (!repName) {
+  if (sessionLoading || !repName) {
     return null;
   }
 
@@ -95,6 +109,28 @@ export function RepDashboard() {
                 {address.slice(0, 6)}...{address.slice(-4)}
               </div>
             )}
+          </div>
+
+          {/* Pulse Gauge Hero Section */}
+          <div style={styles.pulseHero}>
+            <div style={styles.pulseContainer}>
+              <h2 style={styles.pulseTitle}>Your Pulse</h2>
+              <PulseGauge pulseScore={userStats?.pulseScore || 55} isTabActive={true} />
+              <div style={styles.statsRow}>
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{userStats?.xpPoints || 0}</span>
+                  <span style={styles.statLabel}>XP</span>
+                </div>
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{userStats?.signalsSent || 0}</span>
+                  <span style={styles.statLabel}>Signals</span>
+                </div>
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{userStats?.currentLoginStreak || 0}</span>
+                  <span style={styles.statLabel}>Streak</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={styles.tabNav}>
@@ -261,5 +297,51 @@ const styles = {
     fontSize: '16px',
     color: '#94a3b8',
     marginBottom: '32px',
+  },
+  pulseHero: {
+    background: 'linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 82, 255, 0.1) 100%)',
+    borderRadius: '20px',
+    padding: '40px 20px',
+    marginBottom: '32px',
+    border: '2px solid rgba(0, 212, 170, 0.2)',
+    boxShadow: '0 0 40px rgba(0, 212, 170, 0.1)',
+  } as const,
+  pulseContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '24px',
+  },
+  pulseTitle: {
+    fontSize: '24px',
+    fontWeight: 700,
+    background: 'linear-gradient(90deg, #00d4aa 0%, #0052ff 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    margin: 0,
+  } as const,
+  statsRow: {
+    display: 'flex',
+    gap: '40px',
+    justifyContent: 'center',
+    flexWrap: 'wrap' as const,
+  },
+  statItem: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '8px',
+  },
+  statValue: {
+    fontSize: '28px',
+    fontWeight: 700,
+    color: '#00d4aa',
+  },
+  statLabel: {
+    fontSize: '14px',
+    color: '#94a3b8',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '1px',
   },
 };
