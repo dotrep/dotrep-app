@@ -273,6 +273,54 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 });
 
+// User Stats endpoint for dashboard
+app.get('/api/user/stats', async (req, res) => {
+  try {
+    if (!req.session.walletAddress) {
+      return res.status(401).json({ ok: false, error: 'NOT_AUTHENTICATED' });
+    }
+    
+    const walletAddress = req.session.walletAddress;
+    
+    // Get user data
+    const user = await db.select().from(users).where(eq(users.address, walletAddress)).limit(1);
+    
+    // Get message count (signals sent)
+    const messageCount = await db.select().from(fsnMessages).where(eq(fsnMessages.fromFsn, req.session.repName || ''));
+    
+    // Get vault items count
+    const vaultCount = await db.select().from(vaultItems).where(eq(vaultItems.address, walletAddress));
+    
+    const userData = user[0] || { xpMirror: 0, streak: 0 };
+    const xpPoints = userData.xpMirror || 0;
+    const currentLoginStreak = userData.streak || 0;
+    const signalsSent = messageCount.length || 0;
+    const vaultItemsCount = vaultCount.length || 0;
+    
+    // Calculate pulse score (base 55 + XP bonus + activity bonus)
+    const pulseScore = Math.min(100, 55 + Math.floor(xpPoints / 10) + (signalsSent * 2) + (vaultItemsCount * 3));
+    
+    // Determine beacon status
+    let beaconStatus = 'locked';
+    if (pulseScore >= 70 && signalsSent >= 1 && currentLoginStreak >= 3) {
+      beaconStatus = signalsSent >= 5 ? 'active' : 'warming_up';
+    }
+    
+    res.json({
+      ok: true,
+      pulseScore,
+      xpPoints,
+      currentLoginStreak,
+      signalsSent,
+      vaultItemsCount,
+      beaconStatus,
+    });
+  } catch (error) {
+    console.error('User stats error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
+  }
+});
+
 app.get('/api/wallet/addresses/:userId', async (req, res) => {
   try {
     const userAddress = req.params.userId;
