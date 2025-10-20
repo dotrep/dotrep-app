@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
+import { useAccount, useSignMessage } from 'wagmi';
+import { WalletPickerModal } from '../../client/src/components/WalletPickerModal';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -18,6 +20,10 @@ const isMobile = () => {
 export default function Home() {
   const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
   const [, setLocation] = useLocation();
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -25,6 +31,68 @@ export default function Home() {
       document.documentElement.classList.add('motion-off');
     }
   }, []);
+
+  // Handle login flow when wallet connects
+  useEffect(() => {
+    if (isConnected && address && isLoggingIn) {
+      handleLogin();
+    }
+  }, [isConnected, address, isLoggingIn]);
+
+  const handleLogin = async () => {
+    if (!address) return;
+    
+    try {
+      // Check if wallet has a .rep name
+      const checkRes = await fetch('/api/rep/lookup-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address }),
+      });
+      
+      const checkData = await checkRes.json();
+      
+      if (!checkData.ok || !checkData.repName) {
+        alert(`No .rep name found for this wallet. Please claim one first!`);
+        setIsLoggingIn(false);
+        setLocation('/claim');
+        return;
+      }
+
+      // Request signature to prove wallet ownership
+      const message = `Login to ${checkData.repName}.rep\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      const signature = await signMessageAsync({ message });
+
+      // Call auth endpoint
+      const authRes = await fetch('/api/auth/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          walletAddress: address,
+          message,
+          signature
+        }),
+      });
+
+      const authData = await authRes.json();
+      
+      if (authData.ok) {
+        setLocation('/rep-dashboard');
+      } else {
+        alert('Login failed: ' + (authData.error || 'Unknown error'));
+        setIsLoggingIn(false);
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLoginClick = () => {
+    setIsLoggingIn(true);
+    setShowWalletModal(true);
+  };
 
   return (
     <>
@@ -137,6 +205,14 @@ export default function Home() {
                   </button>
                   <button 
                     type="button"
+                    onClick={handleLoginClick} 
+                    className="cta-button cta-secondary"
+                    disabled={isLoggingIn}
+                  >
+                    {isLoggingIn ? 'Connecting...' : 'Login with Wallet'}
+                  </button>
+                  <button 
+                    type="button"
                     onClick={() => setLocation('/discover')} 
                     className="cta-button cta-secondary"
                   >
@@ -157,6 +233,14 @@ export default function Home() {
           </div>
         </section>
       </div>
+      
+      <WalletPickerModal 
+        isOpen={showWalletModal} 
+        onClose={() => {
+          setShowWalletModal(false);
+          setIsLoggingIn(false);
+        }}
+      />
     </>
   );
 }

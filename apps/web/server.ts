@@ -196,6 +196,28 @@ app.post('/api/rep/reserve', async (req, res) => {
   }
 });
 
+// Lookup wallet to check if it has a .rep name
+app.post('/api/rep/lookup-wallet', async (req, res) => {
+  try {
+    const walletAddress = String(req.body?.walletAddress || '');
+    
+    if (!isValidAddress(walletAddress)) {
+      return res.status(400).json({ ok: false, error: 'INVALID_WALLET_ADDRESS' });
+    }
+    
+    const reservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
+    
+    if (reservation.length === 0) {
+      return res.json({ ok: false, repName: null });
+    }
+    
+    res.json({ ok: true, repName: reservation[0].name });
+  } catch (error) {
+    console.error('Lookup wallet error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
+  }
+});
+
 // Auth Routes
 app.post('/api/auth/connect', async (req, res) => {
   try {
