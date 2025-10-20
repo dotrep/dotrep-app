@@ -35,7 +35,13 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 
 ### Authentication & Identity
 - **Web3 Integration**: Utilizes Wagmi v2 for wallet connections, supporting MetaMask and WalletConnect. Auto-reconnect and iframe detection are implemented.
-- **Claim Flow**: Currently API-based, reserving names and validating wallets off-chain, with future plans for blockchain integration.
+- **Claim Flow**: Production-ready wallet-first authentication with cryptographic signature verification. Users must connect wallet, sign a message proving ownership, and pass backend verification before claiming. Each wallet can only claim one .rep name (enforced at both application and database levels).
+- **Security Implementation**:
+  - **Exact Message Matching**: Backend reconstructs and validates exact message content (`Claim {name}.rep on Base\n\nWallet: {address}\nTimestamp: {timestamp}`)
+  - **Signature Verification**: Uses viem's `recoverMessageAddress` to cryptographically verify wallet ownership
+  - **Timestamp Freshness**: 5-minute window prevents replay attacks
+  - **Database Constraint**: Unique index `rep_reservations_wallet_unique` on `wallet_address` enforces one wallet = one .rep name
+  - **Multi-Layer Validation**: Format check → exact match → timestamp check → signature verification → duplicate check → database constraint
 
 ### File Storage & Vault System
 - **Encryption**: Client-side AES-GCM 256-bit encryption with a zero-knowledge server design.
