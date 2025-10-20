@@ -325,6 +325,10 @@ export default function ClaimFSN() {
   };
 
   const handleSmartCTA = () => {
+    // IMMEDIATE TEST - prove button clicks work
+    console.log('🔴 BUTTON CLICKED!', new Date().toISOString());
+    alert('Button click detected! Check console for details.');
+    
     console.log('[CLAIM DEBUG] Smart CTA clicked');
     console.log('[CLAIM DEBUG] isConnected:', isConnected);
     console.log('[CLAIM DEBUG] address:', address);
