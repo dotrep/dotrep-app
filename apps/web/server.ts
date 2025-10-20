@@ -1,4 +1,6 @@
 import express from 'express';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import { createServer as createViteServer } from 'vite';
 import { db } from './shared/db.js';
 import { repReservations, fsnMessages, contacts, vaultItems, chatHistory, users, fsnDomains, walletAddresses, transactions } from './shared/schema.js';
@@ -9,8 +11,36 @@ import multer from 'multer';
 import OpenAI from 'openai';
 import { verifyWalletSignature } from './lib/verifySignature.js';
 
+declare module 'express-session' {
+  interface SessionData {
+    userId: string;
+    walletAddress: string;
+    repName: string;
+  }
+}
+
 const app = express();
 app.use(express.json());
+
+// Session setup with PostgreSQL storage
+const PgSession = connectPgSimple(session);
+app.use(
+  session({
+    store: new PgSession({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || 'rep-platform-secret-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    },
+  })
+);
 
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -152,9 +182,93 @@ app.post('/api/rep/reserve', async (req, res) => {
       balance: '0.0',
     }).onConflictDoNothing();
     
+    // Auto-create session after successful claim
+    req.session.userId = reservationId;
+    req.session.walletAddress = walletAddress;
+    req.session.repName = name;
+    
+    console.log('[CLAIM] Session created for:', name);
+    
     res.json({ ok: true, name, walletAddress, status: 'RESERVED', reservationId });
   } catch (error) {
     console.error('Reserve name error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
+  }
+});
+
+// Auth Routes
+app.post('/api/auth/connect', async (req, res) => {
+  try {
+    const walletAddress = String(req.body?.walletAddress || '');
+    const message = String(req.body?.message || '');
+    const signature = String(req.body?.signature || '');
+    
+    if (!isValidAddress(walletAddress)) {
+      return res.status(400).json({ ok: false, error: 'INVALID_WALLET_ADDRESS' });
+    }
+    
+    if (!message || !signature) {
+      return res.status(401).json({ ok: false, error: 'SIGNATURE_REQUIRED' });
+    }
+    
+    // Verify signature
+    const isValidSignature = await verifyWalletSignature(message, signature, walletAddress);
+    if (!isValidSignature) {
+      console.error('[AUTH] Signature verification failed for wallet:', walletAddress);
+      return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
+    }
+    
+    // Check if wallet has a .rep name
+    const reservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
+    if (reservation.length === 0) {
+      return res.status(404).json({ ok: false, error: 'NO_REP_NAME' });
+    }
+    
+    const { id, name } = reservation[0];
+    
+    // Create session
+    req.session.userId = id;
+    req.session.walletAddress = walletAddress;
+    req.session.repName = name;
+    
+    console.log('[AUTH] Session created for:', name);
+    
+    res.json({ ok: true, userId: id, walletAddress, repName: name });
+  } catch (error) {
+    console.error('Auth connect error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
+  }
+});
+
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    if (!req.session.userId || !req.session.walletAddress || !req.session.repName) {
+      return res.status(401).json({ ok: false, error: 'NOT_AUTHENTICATED' });
+    }
+    
+    res.json({
+      ok: true,
+      userId: req.session.userId,
+      walletAddress: req.session.walletAddress,
+      repName: req.session.repName,
+    });
+  } catch (error) {
+    console.error('Auth me error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
+  }
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('[AUTH] Logout error:', err);
+        return res.status(500).json({ ok: false, error: 'LOGOUT_FAILED' });
+      }
+      res.json({ ok: true });
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
     res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
   }
 });
