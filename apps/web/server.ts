@@ -7,6 +7,7 @@ import { PinataSDK } from 'pinata';
 import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
+import { verifyWalletSignature } from './lib/verifySignature.js';
 
 const app = express();
 app.use(express.json());
@@ -53,6 +54,8 @@ app.post('/api/rep/reserve', async (req, res) => {
   try {
     const name = String(req.body?.name || '').toLowerCase();
     const walletAddress = String(req.body?.walletAddress || '');
+    const message = String(req.body?.message || '');
+    const signature = String(req.body?.signature || '');
     
     if (!isValidName(name)) {
       return res.status(400).json({ ok: false, error: 'INVALID_NAME' });
@@ -67,9 +70,56 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'WALLET_NOT_CONNECTED' });
     }
     
+    // CRITICAL: Verify wallet signature to prove ownership
+    if (!message || !signature) {
+      return res.status(401).json({ ok: false, error: 'SIGNATURE_REQUIRED' });
+    }
+    
+    // Extract timestamp from message to validate structure
+    // Expected format: "Claim {name}.rep on Base\n\nWallet: {address}\nTimestamp: {timestamp}"
+    const timestampMatch = message.match(/Timestamp: (\d+)/);
+    if (!timestampMatch) {
+      console.error('[CLAIM] Message missing timestamp');
+      return res.status(401).json({ ok: false, error: 'INVALID_MESSAGE_FORMAT' });
+    }
+    
+    const timestamp = timestampMatch[1];
+    const expectedMessage = `Claim ${name}.rep on Base\n\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
+    
+    // EXACT message match to prevent manipulation
+    if (message !== expectedMessage) {
+      console.error('[CLAIM] Message does not match expected format');
+      console.error('[CLAIM] Expected:', expectedMessage);
+      console.error('[CLAIM] Received:', message);
+      return res.status(401).json({ ok: false, error: 'INVALID_MESSAGE_CONTENT' });
+    }
+    
+    // Optional: Check timestamp freshness (5 minutes)
+    const now = Date.now();
+    const messageAge = now - parseInt(timestamp);
+    if (messageAge > 300000 || messageAge < 0) {
+      console.error('[CLAIM] Message timestamp too old or in future');
+      return res.status(401).json({ ok: false, error: 'MESSAGE_EXPIRED' });
+    }
+    
+    const isValidSignature = await verifyWalletSignature(message, signature, walletAddress);
+    if (!isValidSignature) {
+      console.error('[CLAIM] Signature verification failed for wallet:', walletAddress);
+      return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
+    }
+    
+    console.log('[CLAIM] Signature verified successfully for wallet:', walletAddress);
+    
+    // Check if name is already reserved
     const existing = await db.select().from(repReservations).where(eq(repReservations.name, name)).limit(1);
     if (existing.length > 0) {
       return res.status(409).json({ ok: false, error: 'ALREADY_RESERVED' });
+    }
+    
+    // CRITICAL: Enforce one wallet = one .rep name
+    const walletHasReservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
+    if (walletHasReservation.length > 0) {
+      return res.status(409).json({ ok: false, error: 'WALLET_HAS_RESERVATION', existingName: walletHasReservation[0].name });
     }
     
     const reservationId = `rid_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;

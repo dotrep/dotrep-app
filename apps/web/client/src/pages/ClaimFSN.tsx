@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAccount, useSwitchChain } from 'wagmi';
+import { useAccount, useSwitchChain, useSignMessage } from 'wagmi';
 import { networkChain } from '../config/wagmi';
 import { useLocation } from 'wouter';
 import { WalletPickerModal } from '../components/WalletPickerModal';
@@ -199,6 +199,7 @@ export default function ClaimFSN() {
 
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
   const isValid = nameRegex.test(name);
@@ -282,10 +283,32 @@ export default function ClaimFSN() {
 
     setIsReserving(true);
     try {
+      // STEP 1: Request wallet signature to prove ownership
+      const message = `Claim ${name}.rep on Base\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      
+      let signature;
+      try {
+        signature = await signMessageAsync({ message });
+      } catch (signError: any) {
+        toast({
+          title: "Signature Required",
+          description: "You must sign the message to claim your .rep name",
+          variant: "destructive",
+        });
+        setIsReserving(false);
+        return;
+      }
+
+      // STEP 2: Send signed message to backend for verification
       const response = await fetch('/api/rep/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, walletAddress: address }),
+        body: JSON.stringify({ 
+          name, 
+          walletAddress: address,
+          message,
+          signature
+        }),
       });
 
       const result = await response.json();
@@ -307,9 +330,18 @@ export default function ClaimFSN() {
           setLocation(`/wallet`);
         }, 500);
       } else {
+        let errorMessage = 'Failed to reserve name';
+        if (result.error === 'ALREADY_RESERVED') {
+          errorMessage = 'This name is already taken';
+        } else if (result.error === 'INVALID_SIGNATURE') {
+          errorMessage = 'Signature verification failed';
+        } else if (result.error === 'WALLET_HAS_RESERVATION') {
+          errorMessage = `Your wallet already has a .rep name: ${result.existingName || 'existing'}.rep`;
+        }
+        
         toast({
           title: "Reservation Failed",
-          description: result.error === 'ALREADY_RESERVED' ? 'This name is already taken' : 'Failed to reserve name',
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -395,20 +427,21 @@ export default function ClaimFSN() {
     }
 
     if (isAvailable === true) {
-      // CRITICAL: Button must be DISABLED when wallet not connected
       const walletNotConnected = !isConnected || !address;
       
+      // If wallet not connected, show ENABLED button that opens wallet modal
       if (walletNotConnected) {
         return (
           <button
-            style={styles.connectButtonDisabled}
-            disabled
+            style={styles.connectButton}
+            onClick={handleSmartCTA}
           >
             Connect Wallet to Claim
           </button>
         );
       }
       
+      // Wallet connected, show claim button
       return (
         <button
           style={isReserving ? styles.connectButtonDisabled : styles.connectButton}
