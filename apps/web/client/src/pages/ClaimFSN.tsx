@@ -395,6 +395,20 @@ export default function ClaimFSN() {
     }
 
     if (isAvailable === true) {
+      // CRITICAL: Button must be DISABLED when wallet not connected
+      const walletNotConnected = !isConnected || !address;
+      
+      if (walletNotConnected) {
+        return (
+          <button
+            style={styles.connectButtonDisabled}
+            disabled
+          >
+            Connect Wallet to Claim
+          </button>
+        );
+      }
+      
       return (
         <button
           style={isReserving ? styles.connectButtonDisabled : styles.connectButton}

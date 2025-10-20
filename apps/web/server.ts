@@ -62,6 +62,11 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'INVALID_WALLET_ADDRESS' });
     }
     
+    // CRITICAL: Reject if wallet address not provided (prevents bypass)
+    if (!walletAddress || walletAddress === '' || walletAddress === '0x0000000000000000000000000000000000000000') {
+      return res.status(401).json({ ok: false, error: 'WALLET_NOT_CONNECTED' });
+    }
+    
     const existing = await db.select().from(repReservations).where(eq(repReservations.name, name)).limit(1);
     if (existing.length > 0) {
       return res.status(409).json({ ok: false, error: 'ALREADY_RESERVED' });
