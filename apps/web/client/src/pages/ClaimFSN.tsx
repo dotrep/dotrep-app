@@ -60,6 +60,8 @@ const styles = {
     gap: '24px',
     maxWidth: '500px',
     width: '100%',
+    position: 'relative' as const,
+    zIndex: 10,
   },
   claimTitle: {
     fontSize: '48px',
@@ -155,6 +157,9 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     outline: 'none',
+    position: 'relative' as const,
+    zIndex: 10,
+    pointerEvents: 'auto' as const,
   },
   connectButtonDisabled: {
     width: '100%',
