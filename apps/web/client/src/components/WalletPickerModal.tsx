@@ -7,10 +7,9 @@ interface WalletPickerModalProps {
 }
 
 export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
+  // All hooks must be called before any early returns (React rules of hooks)
   const { connectors, connect, isPending, isSuccess } = useConnect();
-
-  if (!isOpen) return null;
-
+  
   // Auto-close modal when connection is successful
   React.useEffect(() => {
     if (isSuccess && isOpen) {
@@ -18,6 +17,8 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
       setTimeout(() => onClose(), 500); // Small delay to show success state
     }
   }, [isSuccess, isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   const coinbaseConnector = connectors.find((c: any) => 
     c.id.toLowerCase().includes('coinbase') || 
