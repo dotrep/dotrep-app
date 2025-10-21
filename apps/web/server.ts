@@ -10,30 +10,35 @@ import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
 
-// Inline signature verification to avoid ESM/CJS import issues
-async function verifyWalletSignature(
+// Inline signature verification using CommonJS require to avoid tsx ESM issues
+function verifyWalletSignature(
   message: string,
   signature: string,
   expectedAddress: string
 ): Promise<boolean> {
-  try {
-    // Dynamic import viem at runtime
-    const viem = await import('viem');
-    const recoveredAddress = await viem.recoverMessageAddress({
-      message,
-      signature: signature as `0x${string}`,
-    });
-    
-    console.log('[VERIFY] Message:', message);
-    console.log('[VERIFY] Signature:', signature);
-    console.log('[VERIFY] Expected address:', expectedAddress);
-    console.log('[VERIFY] Recovered address:', recoveredAddress);
-    
-    return recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
-  } catch (error) {
-    console.error('[VERIFY] Signature verification failed:', error);
-    return false;
-  }
+  return new Promise(async (resolve) => {
+    try {
+      // Use require instead of import to avoid tsx module resolution issues
+      const { recoverMessageAddress } = require('viem');
+      
+      const recoveredAddress = await recoverMessageAddress({
+        message,
+        signature: signature as `0x${string}`,
+      });
+      
+      console.log('[VERIFY] Message:', message);
+      console.log('[VERIFY] Signature:', signature);
+      console.log('[VERIFY] Expected address:', expectedAddress);
+      console.log('[VERIFY] Recovered address:', recoveredAddress);
+      
+      const isValid = recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
+      console.log('[VERIFY] Signature valid:', isValid);
+      resolve(isValid);
+    } catch (error) {
+      console.error('[VERIFY] Signature verification error:', error);
+      resolve(false);
+    }
+  });
 }
 
 declare module 'express-session' {
@@ -149,12 +154,30 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'INVALID_MESSAGE_CONTENT' });
     }
     
-    // Optional: Check timestamp freshness (5 minutes)
+    // Check timestamp freshness (10 minutes to account for clock skew)
     const now = Date.now();
-    const messageAge = now - parseInt(timestamp);
-    if (messageAge > 300000 || messageAge < 0) {
-      console.error('[CLAIM] Message timestamp too old or in future');
-      return res.status(401).json({ ok: false, error: 'MESSAGE_EXPIRED' });
+    const messageTimestamp = parseInt(timestamp);
+    const messageAge = now - messageTimestamp;
+    const maxAge = 10 * 60 * 1000; // 10 minutes
+    const maxFuture = 5 * 60 * 1000; // 5 minutes in future allowed for clock skew
+    
+    console.log('[CLAIM] Timestamp validation:', {
+      now,
+      messageTimestamp,
+      messageAge,
+      maxAge,
+      isExpired: messageAge > maxAge,
+      isTooFarInFuture: messageAge < -maxFuture
+    });
+    
+    if (messageAge > maxAge) {
+      console.error('[CLAIM] Message timestamp expired (older than 10 minutes)');
+      return res.status(401).json({ ok: false, error: 'MESSAGE_EXPIRED', details: 'Please try signing again' });
+    }
+    
+    if (messageAge < -maxFuture) {
+      console.error('[CLAIM] Message timestamp too far in future');
+      return res.status(401).json({ ok: false, error: 'MESSAGE_TIMESTAMP_INVALID', details: 'System clock error' });
     }
     
     const isValidSignature = await verifyWalletSignature(message, signature, walletAddress);
