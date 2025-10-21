@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAccount, useSwitchChain, useSignMessage } from 'wagmi';
+import { useAccount, useSwitchChain, useSignMessage, useDisconnect } from 'wagmi';
 import { networkChain } from '../config/wagmi';
 import { useLocation } from 'wouter';
 import { WalletPickerModal } from '../components/WalletPickerModal';
@@ -184,6 +184,33 @@ const styles = {
     height: 'auto',
     maxWidth: '100%',
   },
+  walletStatus: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    padding: '12px 16px',
+    background: 'rgba(0, 212, 170, 0.1)',
+    border: '1px solid rgba(0, 212, 170, 0.3)',
+    borderRadius: '8px',
+    marginBottom: '8px',
+  },
+  walletAddress: {
+    fontSize: '14px',
+    color: '#00d4aa',
+    fontWeight: 600,
+  },
+  disconnectButton: {
+    padding: '6px 12px',
+    fontSize: '13px',
+    fontWeight: 600,
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: '#f1f5f9',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
 };
 
 export default function ClaimFSN() {
@@ -200,6 +227,7 @@ export default function ClaimFSN() {
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { signMessageAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
   const isValid = nameRegex.test(name);
@@ -506,6 +534,26 @@ export default function ClaimFSN() {
       <div style={styles.claimContainer}>
         <div style={styles.claimContent}>
           <h1 style={styles.claimTitle}>Reserve your.rep</h1>
+          
+          {isConnected && address && (
+            <div style={styles.walletStatus}>
+              <div style={styles.walletAddress}>
+                Connected: {address.slice(0, 6)}...{address.slice(-4)}
+              </div>
+              <button 
+                style={styles.disconnectButton}
+                onClick={() => {
+                  disconnect();
+                  toast({
+                    title: "Wallet Disconnected",
+                    description: "You can now connect a different wallet",
+                  });
+                }}
+              >
+                Switch Wallet
+              </button>
+            </div>
+          )}
           
           <p style={styles.claimRules}>
             3-32 characters, lowercase letters/numbers/hyphens<br />
