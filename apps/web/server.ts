@@ -295,11 +295,18 @@ app.post('/api/auth/connect', async (req, res) => {
     }
     
     // Verify signature
-    const isValidSignature = await verifyWalletSignature(message, signature, walletAddress);
+    const { ok: isValidSignature, address: normalizedAddress } = await verifyWalletSignature({
+      address: walletAddress,
+      message,
+      signature: signature as `0x${string}`,
+    });
+    
     if (!isValidSignature) {
       console.error('[AUTH] Signature verification failed for wallet:', walletAddress);
       return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
     }
+    
+    console.log('[AUTH] Signature verified successfully for wallet:', normalizedAddress);
     
     // Check if wallet has a .rep name
     const reservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
