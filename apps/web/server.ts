@@ -9,7 +9,32 @@ import { PinataSDK } from 'pinata';
 import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
-import { verifyWalletSignature } from './lib/verifySignature.js';
+
+// Inline signature verification to avoid ESM/CJS import issues
+async function verifyWalletSignature(
+  message: string,
+  signature: string,
+  expectedAddress: string
+): Promise<boolean> {
+  try {
+    // Dynamic import viem at runtime
+    const viem = await import('viem');
+    const recoveredAddress = await viem.recoverMessageAddress({
+      message,
+      signature: signature as `0x${string}`,
+    });
+    
+    console.log('[VERIFY] Message:', message);
+    console.log('[VERIFY] Signature:', signature);
+    console.log('[VERIFY] Expected address:', expectedAddress);
+    console.log('[VERIFY] Recovered address:', recoveredAddress);
+    
+    return recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
+  } catch (error) {
+    console.error('[VERIFY] Signature verification failed:', error);
+    return false;
+  }
+}
 
 declare module 'express-session' {
   interface SessionData {
