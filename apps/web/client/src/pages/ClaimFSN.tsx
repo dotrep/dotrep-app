@@ -325,8 +325,17 @@ export default function ClaimFSN() {
       let signature;
       try {
         console.log('[CLAIM] Calling signMessageAsync...');
+        toast({
+          title: "Sign the Message",
+          description: "Please approve the signature request in your wallet",
+        });
         signature = await signMessageAsync({ message });
         console.log('[CLAIM] ✓ Signature received:', signature);
+        
+        toast({
+          title: "Verifying Signature...",
+          description: "Please wait while we verify your signature",
+        });
       } catch (signError: any) {
         console.error('[CLAIM] ✗ Signature failed:', signError);
         toast({
@@ -375,16 +384,33 @@ export default function ClaimFSN() {
         }, 500);
       } else {
         let errorMessage = 'Failed to reserve name';
+        let errorTitle = 'Reservation Failed';
+        
         if (result.error === 'ALREADY_RESERVED') {
           errorMessage = 'This name is already taken';
         } else if (result.error === 'INVALID_SIGNATURE') {
-          errorMessage = 'Signature verification failed';
+          errorTitle = 'Signature Verification Failed';
+          errorMessage = 'The wallet signature could not be verified. Please try again.';
+        } else if (result.error === 'MESSAGE_EXPIRED') {
+          errorTitle = 'Signature Expired';
+          errorMessage = 'The signature took too long. Please try signing again.';
+        } else if (result.error === 'MESSAGE_TIMESTAMP_INVALID') {
+          errorTitle = 'Clock Error';
+          errorMessage = 'System clock appears incorrect. Please check your device time.';
         } else if (result.error === 'WALLET_HAS_RESERVATION') {
-          errorMessage = `Your wallet already has a .rep name: ${result.existingName || 'existing'}.rep`;
+          errorTitle = 'Wallet Already Has Name';
+          errorMessage = `Your wallet already owns ${result.existingName || 'a'}.rep`;
+        } else if (result.error === 'SIGNATURE_REQUIRED') {
+          errorTitle = 'Signature Required';
+          errorMessage = 'Please sign the message to claim your .rep name';
+        } else if (result.details) {
+          errorMessage = result.details;
         }
         
+        console.error('[CLAIM] Server returned error:', result.error, errorMessage);
+        
         toast({
-          title: "Reservation Failed",
+          title: errorTitle,
           description: errorMessage,
           variant: "destructive",
         });
