@@ -1,0 +1,144 @@
+Finish Zora-style single-action claim: one button → connect/switch/sign/reserve → /wallet (reuse existing API + wallet code)
+
+HARD GUARDRAILS (do NOT violate)
+
+Do not change any visuals (layout, spacing, fonts, colors, images).
+
+Do not add/remove elements except the wallet picker modal (uses existing modal component/style if present).
+
+Reuse our existing functions in projects/api/* and projects/web/*; do NOT reimplement API or wallet logic.
+
+No alerts; use our existing toast/snackbar.
+
+REUSE THESE (must import)
+
+Availability + Reserve client: projects/api/rep/*
+
+Connect & ensure-Base helpers: projects/web/wallet/*
+
+Toasts + Modal UI: projects/web/ui/* (or equivalent already in repo)
+
+BUTTON BEHAVIOR (exact labels)
+
+Primary CTA (Home → /claim link; on /claim it’s stateful):
+
+“Check availability” — invalid/empty (disabled)
+
+“Checking…” — debounce 300ms
+
+“Name is taken” — disabled
+
+“Claim `yourname.rep`” — available (single entry point that triggers the picker & full flow)
+
+If already connected on Base, bypass modal and reserve immediately.
+
+If connected on wrong chain, switch to Base first, then reserve.
+
+Remove any separate “Connect” buttons from /claim; this primary CTA handles the entire flow.
+
+WALLET PICKER MODAL (one place, re-usable)
+
+Open on click of “Claim `yourname.rep`” only when not yet connected on Base.
+
+Title: Choose a wallet
+Caption: Built on Base — we’ll switch automatically.
+
+Option A (recommended): Coinbase Wallet
+
+If window.ethereum?.isCoinbaseWallet → run our connect() then ensureBase(8453) (no deep link).
+
+Else if mobile AND no injected provider → deep link to current URL:
+
+location.href = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`
+
+
+Option B: Other wallets (WalletConnect)
+
+Use WC v2 with our projectId, chains [8453], and methods incl. wallet_switchEthereumChain.
+
+Desktop → QR; Mobile → deep link; if injected provider exists, prefer injected.
+
+Important: Keep the modal open until connect() resolves; then auto-advance the flow (don’t require a 2nd click).
+
+SINGLE-CLICK FLOW (one promise chain)
+
+Implement a single function the CTA uses (names are illustrative—reuse your own):
+
+onClaimClick(name):
+  assert validate(name) && available(name) === true
+  if (isConnectedOnBase()) return reserveAndGo(name)
+
+  setInFlight(true)
+  try:
+    await connectViaPicker()            // Coinbase or WC; handle mobile deep links
+    await ensureBase(8453)              // switch/add Base
+    // Optional: sign challenge (SIWE) if our repo has it
+    await reserveAndGo(name)            // calls existing reserve(), then redirect
+  catch (e):
+    toast.error(readableError(e))
+  finally:
+    setInFlight(false)
+
+
+reserveAndGo(name) must:
+
+Grab the active address via our wallet util.
+
+Call existing reserve(name,address) client.
+
+Persist { name, reservationId, address } to localStorage.
+
+location.href = "/wallet?name=<name>&rid=<id>".
+
+No intermediate clicks. The same user gesture drives connect → switch → (sign) → reserve.
+
+MOBILE BEHAVIOR (why your wallet “wasn’t detected”)
+
+If mobile and no injected provider (!window.ethereum), the Coinbase option must use the deep-link URL above.
+
+Keep WalletConnect as fallback (MetaMask, Rainbow, etc.).
+
+If injected exists (inside wallet browser), skip deep links; use connect() directly.
+
+HEADER “SIGNED-IN” STATE (all pages)
+
+When connected, replace “Connect wallet” with a pill: yourname.rep • 0xAb…1234 (or ENS).
+
+Click → route to /wallet.
+
+Autoreconnect on load: if a previous session exists, reconnect silently and set connected/onBase flags.
+
+Persistence keys (use these):
+rep:lastName, rep:reservationId, rep:address, rep:connected (boolean)
+
+ERROR HANDLING (don’t regress UX)
+
+One in-flight guard so CTA can’t be spam-clicked.
+
+All errors → single toast; do not reset the form or lose the typed name.
+
+Availability/network errors show inline status under the input (don’t open modals).
+
+ACCEPTANCE (the agent must verify)
+
+Valid, available name → pressing “Claim `name.rep`” opens picker; choosing wallet auto-connects, auto-switches to Base, auto-reserves, and redirects to /wallet—no second click anywhere.
+
+Coinbase in-app browser: detects injected provider; connects without deep link.
+
+Mobile Safari/Chrome (no provider): Coinbase option deep-links into CB Wallet; WC option works for MetaMask.
+
+Desktop MetaMask: injected works; WC QR works.
+
+If already connected on Base, clicking “Claim `name.rep`” reserves immediately (no modal).
+
+/wallet shows {name}.rep, short address, success state; header pill displays; refresh preserves state via localStorage.
+
+Visuals unchanged (diff should only touch logic + new modal).
+
+WHEN DONE (required hand-off)
+
+Post the list of files changed + one-line summary per file.
+
+Confirm the 7 acceptance checks passed.
+
+Paste the WalletConnect v2 config used (projectId, chains, methods) and the exact function used to deep-link Coinbase.
