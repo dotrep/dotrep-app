@@ -10,15 +10,24 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
   // All hooks must be called before any early returns (React rules of hooks)
   const { connectors, connect, isPending, isSuccess } = useConnect();
   
-  // Check if MetaMask/injected provider is actually installed
+  // Check if wallets are actually installed
   const [hasMetaMask, setHasMetaMask] = React.useState(false);
+  const [hasCoinbase, setHasCoinbase] = React.useState(false);
   
   React.useEffect(() => {
     // Check if window.ethereum exists (means MetaMask or similar is installed)
     const isMetaMaskInstalled = typeof window !== 'undefined' && 
       (window as any).ethereum !== undefined;
     setHasMetaMask(isMetaMaskInstalled);
+    
+    // Check if Coinbase Wallet is installed
+    const isCoinbaseInstalled = typeof window !== 'undefined' && 
+      ((window as any).ethereum?.isCoinbaseWallet || 
+       (window as any).coinbaseWalletExtension !== undefined);
+    setHasCoinbase(isCoinbaseInstalled || isMetaMaskInstalled); // Coinbase can also use injected
+    
     console.log('[WALLET] MetaMask installed:', isMetaMaskInstalled);
+    console.log('[WALLET] Coinbase installed:', isCoinbaseInstalled);
     console.log('[WALLET] window.ethereum:', (window as any).ethereum);
   }, []);
   
@@ -123,10 +132,12 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
             <button
               style={styles.walletButton}
               onClick={() => {
-                if (!coinbaseConnector.ready) {
-                  window.open('https://www.coinbase.com/wallet/downloads', '_blank');
-                } else {
+                // If Coinbase is installed (even if locked), try to connect
+                if (hasCoinbase) {
                   handleConnect(coinbaseConnector, 'Coinbase Wallet');
+                } else {
+                  // Only open install page if truly not installed
+                  window.open('https://www.coinbase.com/wallet/downloads', '_blank');
                 }
               }}
               disabled={isPending}
@@ -135,7 +146,7 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>Coinbase Wallet</div>
                 <div style={styles.walletDescription}>
-                  {!coinbaseConnector.ready ? '👆 Click to install' : 'Browser extension or mobile app'}
+                  {hasCoinbase ? 'Browser extension or mobile app' : '👆 Click to install'}
                 </div>
               </div>
             </button>
