@@ -20,6 +20,10 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
 
   if (!isOpen) return null;
 
+  const injectedConnector = connectors.find((c: any) => 
+    c.id === 'injected' || c.type === 'injected'
+  );
+  
   const coinbaseConnector = connectors.find((c: any) => 
     c.id.toLowerCase().includes('coinbase') || 
     c.name.toLowerCase().includes('coinbase')
@@ -49,6 +53,20 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
         </div>
         
         <div style={styles.walletList}>
+          {injectedConnector && (
+            <button
+              style={styles.walletButton}
+              onClick={() => handleConnect(injectedConnector, 'MetaMask')}
+              disabled={isPending}
+            >
+              <div style={styles.walletIcon}>🦊</div>
+              <div style={styles.walletInfo}>
+                <div style={styles.walletName}>MetaMask</div>
+                <div style={styles.walletDescription}>Browser extension wallet</div>
+              </div>
+            </button>
+          )}
+
           {coinbaseConnector && (
             <button
               style={styles.walletButton}
