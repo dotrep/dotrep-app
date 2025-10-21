@@ -270,8 +270,12 @@ export default function ClaimFSN() {
   }, [name]);
 
   const handleReserve = async () => {
+    console.log('[CLAIM] handleReserve called');
+    console.log('[CLAIM] isConnected:', isConnected, 'address:', address, 'isReserving:', isReserving);
+    
     // Triple validation: isConnecting check, address existence, and actual value
     if (!isConnected || !address || isReserving) {
+      console.log('[CLAIM] Validation failed - showing wallet modal');
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet to claim a .rep name",
@@ -284,12 +288,19 @@ export default function ClaimFSN() {
     setIsReserving(true);
     try {
       // STEP 1: Request wallet signature to prove ownership
-      const message = `Claim ${name}.rep on Base\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      const timestamp = Date.now();
+      const message = `Claim ${name}.rep on Base\n\nWallet: ${address}\nTimestamp: ${timestamp}`;
+      
+      console.log('[CLAIM] Step 1: Requesting signature');
+      console.log('[CLAIM] Message to sign:', message);
       
       let signature;
       try {
+        console.log('[CLAIM] Calling signMessageAsync...');
         signature = await signMessageAsync({ message });
+        console.log('[CLAIM] ✓ Signature received:', signature);
       } catch (signError: any) {
+        console.error('[CLAIM] ✗ Signature failed:', signError);
         toast({
           title: "Signature Required",
           description: "You must sign the message to claim your .rep name",
@@ -300,6 +311,9 @@ export default function ClaimFSN() {
       }
 
       // STEP 2: Send signed message to backend for verification
+      console.log('[CLAIM] Step 2: Sending to backend');
+      console.log('[CLAIM] Payload:', { name, walletAddress: address, hasMessage: !!message, hasSignature: !!signature });
+      
       const response = await fetch('/api/rep/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -311,7 +325,9 @@ export default function ClaimFSN() {
         }),
       });
 
+      console.log('[CLAIM] Response status:', response.status);
       const result = await response.json();
+      console.log('[CLAIM] Response data:', result);
 
       if (result.ok) {
         const rid = result.reservationId || Math.random().toString(36).substring(2, 15);
