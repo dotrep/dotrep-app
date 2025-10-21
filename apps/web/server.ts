@@ -9,37 +9,7 @@ import { PinataSDK } from 'pinata';
 import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
-
-// Inline signature verification using CommonJS require to avoid tsx ESM issues
-function verifyWalletSignature(
-  message: string,
-  signature: string,
-  expectedAddress: string
-): Promise<boolean> {
-  return new Promise(async (resolve) => {
-    try {
-      // Use require instead of import to avoid tsx module resolution issues
-      const { recoverMessageAddress } = require('viem');
-      
-      const recoveredAddress = await recoverMessageAddress({
-        message,
-        signature: signature as `0x${string}`,
-      });
-      
-      console.log('[VERIFY] Message:', message);
-      console.log('[VERIFY] Signature:', signature);
-      console.log('[VERIFY] Expected address:', expectedAddress);
-      console.log('[VERIFY] Recovered address:', recoveredAddress);
-      
-      const isValid = recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
-      console.log('[VERIFY] Signature valid:', isValid);
-      resolve(isValid);
-    } catch (error) {
-      console.error('[VERIFY] Signature verification error:', error);
-      resolve(false);
-    }
-  });
-}
+import { verifyWalletSignature } from './lib/verifySignature.js';
 
 declare module 'express-session' {
   interface SessionData {
@@ -180,13 +150,18 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'MESSAGE_TIMESTAMP_INVALID', details: 'System clock error' });
     }
     
-    const isValidSignature = await verifyWalletSignature(message, signature, walletAddress);
+    const { ok: isValidSignature, address: normalizedAddress } = await verifyWalletSignature({
+      address: walletAddress,
+      message,
+      signature: signature as `0x${string}`,
+    });
+    
     if (!isValidSignature) {
       console.error('[CLAIM] Signature verification failed for wallet:', walletAddress);
       return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
     }
     
-    console.log('[CLAIM] Signature verified successfully for wallet:', walletAddress);
+    console.log('[CLAIM] Signature verified successfully for wallet:', normalizedAddress);
     
     // Check if name is already reserved
     const existing = await db.select().from(repReservations).where(eq(repReservations.name, name)).limit(1);
