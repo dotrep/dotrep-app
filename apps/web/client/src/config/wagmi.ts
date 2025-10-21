@@ -18,10 +18,13 @@ const connectors = [
     metadata: {
       name: '.rep Platform',
       description: 'Claim your onchain reputation on Base',
-      url: 'https://rep.network',
+      url: typeof window !== 'undefined' ? window.location.origin : 'https://rep.network',
       icons: ['https://rep.network/icon.png'],
     },
     showQrModal: true,
+    qrModalOptions: {
+      themeMode: 'dark',
+    },
   }),
 ];
 

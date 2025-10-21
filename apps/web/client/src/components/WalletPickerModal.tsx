@@ -85,14 +85,20 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
           {injectedConnector && (
             <button
               style={styles.walletButton}
-              onClick={() => handleConnect(injectedConnector, 'MetaMask')}
+              onClick={() => {
+                if (!injectedConnector.ready) {
+                  window.open('https://metamask.io/download/', '_blank');
+                } else {
+                  handleConnect(injectedConnector, 'MetaMask');
+                }
+              }}
               disabled={isPending}
             >
               <div style={styles.walletIcon}>🦊</div>
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>MetaMask</div>
                 <div style={styles.walletDescription}>
-                  Browser extension wallet {!injectedConnector.ready && '(not installed)'}
+                  {!injectedConnector.ready ? '👆 Click to install' : 'Browser extension wallet'}
                 </div>
               </div>
             </button>
@@ -101,14 +107,20 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
           {coinbaseConnector && (
             <button
               style={styles.walletButton}
-              onClick={() => handleConnect(coinbaseConnector, 'Coinbase Wallet')}
+              onClick={() => {
+                if (!coinbaseConnector.ready) {
+                  window.open('https://www.coinbase.com/wallet/downloads', '_blank');
+                } else {
+                  handleConnect(coinbaseConnector, 'Coinbase Wallet');
+                }
+              }}
               disabled={isPending}
             >
               <div style={styles.walletIcon}>🔵</div>
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>Coinbase Wallet</div>
                 <div style={styles.walletDescription}>
-                  Browser extension or mobile app {!coinbaseConnector.ready && '(not installed)'}
+                  {!coinbaseConnector.ready ? '👆 Click to install' : 'Browser extension or mobile app'}
                 </div>
               </div>
             </button>
