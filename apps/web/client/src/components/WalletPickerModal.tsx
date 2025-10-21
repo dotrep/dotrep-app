@@ -10,6 +10,18 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
   // All hooks must be called before any early returns (React rules of hooks)
   const { connectors, connect, isPending, isSuccess } = useConnect();
   
+  // Check if MetaMask/injected provider is actually installed
+  const [hasMetaMask, setHasMetaMask] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Check if window.ethereum exists (means MetaMask or similar is installed)
+    const isMetaMaskInstalled = typeof window !== 'undefined' && 
+      (window as any).ethereum !== undefined;
+    setHasMetaMask(isMetaMaskInstalled);
+    console.log('[WALLET] MetaMask installed:', isMetaMaskInstalled);
+    console.log('[WALLET] window.ethereum:', (window as any).ethereum);
+  }, []);
+  
   // Debug: Log all connectors whenever modal opens
   React.useEffect(() => {
     if (isOpen) {
@@ -86,10 +98,13 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
             <button
               style={styles.walletButton}
               onClick={() => {
-                if (!injectedConnector.ready) {
-                  window.open('https://metamask.io/download/', '_blank');
-                } else {
+                // If MetaMask is installed (even if locked), try to connect
+                // This will trigger the unlock popup
+                if (hasMetaMask) {
                   handleConnect(injectedConnector, 'MetaMask');
+                } else {
+                  // Only open install page if truly not installed
+                  window.open('https://metamask.io/download/', '_blank');
                 }
               }}
               disabled={isPending}
@@ -98,7 +113,7 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>MetaMask</div>
                 <div style={styles.walletDescription}>
-                  {!injectedConnector.ready ? '👆 Click to install' : 'Browser extension wallet'}
+                  {hasMetaMask ? 'Browser extension wallet' : '👆 Click to install'}
                 </div>
               </div>
             </button>
