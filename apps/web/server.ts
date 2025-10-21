@@ -62,6 +62,44 @@ const openai = new OpenAI({
 const isValidName = (name) => typeof name === 'string' && /^[a-z][a-z0-9-]{2,31}$/.test(name);
 const isValidAddress = (addr) => typeof addr === 'string' && /^0x[a-fA-F0-9]{40}$/.test(addr);
 
+// Test endpoint to verify signature verification works
+app.post('/api/_verifyTest', async (req, res) => {
+  try {
+    const { address, message, signature } = req.body;
+    
+    if (!address || !message || !signature) {
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'Missing required fields: address, message, signature' 
+      });
+    }
+    
+    console.log('[VERIFY_TEST] Testing signature verification');
+    console.log('[VERIFY_TEST] Address:', address);
+    console.log('[VERIFY_TEST] Message:', message);
+    console.log('[VERIFY_TEST] Signature:', signature);
+    
+    const { ok, address: normalizedAddress } = await verifyWalletSignature({
+      address,
+      message,
+      signature: signature as `0x${string}`,
+    });
+    
+    if (!ok) {
+      console.log('[VERIFY_TEST] ✗ Signature verification failed');
+      return res.status(401).json({ ok: false, error: 'Bad signature' });
+    }
+    
+    console.log('[VERIFY_TEST] ✓ Signature verified successfully');
+    console.log('[VERIFY_TEST] Normalized address:', normalizedAddress);
+    
+    res.json({ ok: true, address: normalizedAddress, message: 'Signature verified successfully' });
+  } catch (error) {
+    console.error('[VERIFY_TEST] Error:', error);
+    res.status(500).json({ ok: false, error: 'Server error', details: error.message });
+  }
+});
+
 app.get('/api/rep/check', async (req, res) => {
   try {
     const name = String(req.query.name || '').toLowerCase();
