@@ -40,8 +40,7 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
           id: c.id,
           name: c.name,
           type: c.type,
-          ready: c.ready,
-          connector: c
+          ready: c.ready
         });
       });
     }
