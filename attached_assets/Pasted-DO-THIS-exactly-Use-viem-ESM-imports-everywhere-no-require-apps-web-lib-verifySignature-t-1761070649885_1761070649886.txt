@@ -1,0 +1,65 @@
+DO THIS (exactly):
+
+Use viem ESM imports everywhere (no require):
+
+// apps/web/lib/verifySignature.ts
+import { verifyMessage, getAddress } from 'viem';
+
+export async function verifyWalletSignature(params: {
+  address: string; message: string; signature: `0x${string}`;
+}) {
+  const addr = getAddress(params.address); // checksum-normalize
+  const ok = await verifyMessage({
+    address: addr,
+    message: params.message,
+    signature: params.signature,
+  });
+  return { ok, address: addr };
+}
+
+
+Call it from your server route (don’t dynamic-import, don’t swap libraries):
+
+// apps/web/server.ts (or your API handler)
+import { verifyWalletSignature } from '../lib/verifySignature.js'; // adjust path
+
+export default async function POST(req: Request) {
+  const { address, message, signature } = await req.json();
+  const { ok, address: norm } = await verifyWalletSignature({ address, message, signature });
+  if (!ok) return new Response(JSON.stringify({ ok:false, error:'Bad signature' }), { status: 401 });
+  // proceed with your reserve/activate logic...
+  return new Response(JSON.stringify({ ok:true, address: norm }), { status: 200 });
+}
+
+
+Ensure ESM settings are consistent:
+
+package.json in the app that runs this code has "type": "module".
+
+tsconfig.json has "module": "esnext" and "moduleResolution": "nodenext".
+
+If you run with tsx, keep tsx apps/web/server.ts (no --cjs flags).
+
+Remove any CommonJS usage that caused the error (e.g., const viem = require('viem')) and any fallback dynamic imports.
+
+DON’T DO:
+
+Don’t “try 5 strategies”; don’t switch to ethers; don’t mix CJS and ESM.
+
+Quick test (agent must run):
+
+Add a temp route /api/_verifyTest that calls verifyWalletSignature with a known message/signature from your wallet.
+
+curl it; expect { ok: true }.
+
+Then run the actual claim/login flow: sign → server verifies → continue.
+
+Acceptance:
+
+Build runs with no ESM/CJS errors.
+
+Signing with the connected wallet verifies (200), a wrong address/signature fails (401).
+
+Claim flow calls this verifier (no second click), and redirect to /wallet still works.
+
+If viem still errors after this, the only safe fallback is ethers.verifyMessage in the same helper file—but don’t do that unless this exact ESM import path fails.

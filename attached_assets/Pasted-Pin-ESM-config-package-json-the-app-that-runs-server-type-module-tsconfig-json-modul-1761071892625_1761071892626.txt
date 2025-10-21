@@ -1,0 +1,61 @@
+Pin ESM config
+
+package.json (the app that runs server): "type": "module"
+
+tsconfig.json: "module": "esnext", either "moduleResolution": "nodenext" (Node-style ESM) or "bundler" (if Vite/Next handles it).
+
+Import path endings in ESM TS
+
+When using "nodenext", imports to local files must end with .js even in TS:
+import { verifyWalletSignature } from '../lib/verifySignature.js'
+
+Single helper using viem ESM
+
+*Single helper using viem ESM
+
+// apps/web/lib/verifySignature.ts
+import { verifyMessage, getAddress } from 'viem';
+
+export async function verifyWalletSignature({
+  address, message, signature,
+}: { address: string; message: string; signature: `0x${string}` }) {
+  const addr = getAddress(address);           // checksum normalize
+  const ok = await verifyMessage({ address: addr, message, signature });
+  return { ok, address: addr };
+}
+
+
+*Server route uses the helper (no require, no dynamic import)
+
+// apps/web/server.ts (or your API handler)
+import { verifyWalletSignature } from './lib/verifySignature.js'; // adjust path
+
+export async function POST(req: Request) {
+  const { address, message, signature } = await req.json();
+  const { ok, address: norm } = await verifyWalletSignature({ address, message, signature });
+  if (!ok) return new Response(JSON.stringify({ ok:false, error:'Bad signature' }), { status: 401 });
+  return new Response(JSON.stringify({ ok:true, address: norm }), { status: 200 });
+}
+
+
+Gotchas that usually break this (avoid them)
+
+Mixed CJS/ESM anywhere (e.g., require('viem') in an ESM file) → remove all require.
+
+Mismatched message: the wallet must sign the exact message you send to the server; trim/whitespace or different nonce = fail. Store it client-side and send verbatim.
+
+Wrong import resolution: If you use "nodenext", keep the .js suffix in imports, or TypeScript will compile but Node will throw at runtime.
+
+Different signing method: verifyMessage is for EIP-191 personal_sign; if you switch to SIWE later, use the siwe lib’s verify or keep the same raw message across client/server.
+
+Mini acceptance checklist (have Replit AI run these)
+
+ESM compile/run: no ERR_REQUIRE_ESM or module resolution errors.
+
+Happy path: sign a known message in the UI → /api/_verifyTest (temporary) returns { ok:true }.
+
+Bad sig test: change one char in signature → returns 401.
+
+Claim flow: connect → ensure Base → sign (if you use SIWE) → verify → reserve → redirect /wallet.
+
+No UI regressions: only logic + the test endpoint added (and later removed).
