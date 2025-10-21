@@ -10,6 +10,22 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
   // All hooks must be called before any early returns (React rules of hooks)
   const { connectors, connect, isPending, isSuccess } = useConnect();
   
+  // Debug: Log all connectors whenever modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log('[WALLET] Modal opened, available connectors:', connectors.length);
+      connectors.forEach((c: any, idx: number) => {
+        console.log(`[WALLET] Connector ${idx}:`, {
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          ready: c.ready,
+          connector: c
+        });
+      });
+    }
+  }, [isOpen, connectors]);
+  
   // Auto-close modal when connection is successful
   React.useEffect(() => {
     if (isSuccess && isOpen) {
@@ -36,11 +52,18 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
 
   const handleConnect = async (connector: any, walletName: string) => {
     try {
-      console.log(`[WALLET] Attempting to connect via ${walletName}`);
-      await connect({ connector });
+      console.log(`[WALLET] Attempting to connect via ${walletName}`, {
+        connectorId: connector.id,
+        connectorType: connector.type,
+        connectorReady: connector.ready,
+      });
+      const result = await connect({ connector });
+      console.log(`[WALLET] Connect result:`, result);
       // Modal will auto-close via useEffect when isSuccess becomes true
     } catch (error) {
-      console.error('[WALLET] Connect error:', error);
+      console.error(`[WALLET] Connect error for ${walletName}:`, error);
+      // Show user-friendly error
+      alert(`Failed to connect ${walletName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -53,6 +76,12 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
         </div>
         
         <div style={styles.walletList}>
+          {connectors.length === 0 && (
+            <div style={styles.noConnectors}>
+              ⚠️ No wallets detected. Please install MetaMask or Coinbase Wallet extension.
+            </div>
+          )}
+          
           {injectedConnector && (
             <button
               style={styles.walletButton}
@@ -62,7 +91,9 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
               <div style={styles.walletIcon}>🦊</div>
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>MetaMask</div>
-                <div style={styles.walletDescription}>Browser extension wallet</div>
+                <div style={styles.walletDescription}>
+                  Browser extension wallet {!injectedConnector.ready && '(not installed)'}
+                </div>
               </div>
             </button>
           )}
@@ -76,7 +107,9 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
               <div style={styles.walletIcon}>🔵</div>
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>Coinbase Wallet</div>
-                <div style={styles.walletDescription}>Browser extension or mobile app</div>
+                <div style={styles.walletDescription}>
+                  Browser extension or mobile app {!coinbaseConnector.ready && '(not installed)'}
+                </div>
               </div>
             </button>
           )}
@@ -90,10 +123,17 @@ export function WalletPickerModal({ isOpen, onClose }: WalletPickerModalProps) {
               <div style={styles.walletIcon}>🔗</div>
               <div style={styles.walletInfo}>
                 <div style={styles.walletName}>WalletConnect</div>
-                <div style={styles.walletDescription}>Scan QR with mobile wallet</div>
+                <div style={styles.walletDescription}>
+                  Scan QR with mobile wallet {!walletConnectConnector.ready && '(not ready)'}
+                </div>
               </div>
             </button>
           )}
+          
+          {/* Debug info */}
+          <div style={styles.debugInfo}>
+            Debug: {connectors.length} connector(s) available
+          </div>
         </div>
 
         {isPending && (
@@ -195,5 +235,22 @@ const styles = {
     color: '#00d4aa',
     marginTop: '16px',
     fontSize: '14px',
+  },
+  noConnectors: {
+    textAlign: 'center' as const,
+    padding: '32px 20px',
+    color: '#ff6b6b',
+    fontSize: '14px',
+    background: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: '8px',
+  },
+  debugInfo: {
+    marginTop: '16px',
+    padding: '8px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '6px',
+    fontSize: '12px',
+    color: '#94a3b8',
+    textAlign: 'center' as const,
   },
 };
