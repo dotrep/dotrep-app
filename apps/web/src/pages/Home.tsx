@@ -55,7 +55,7 @@ export default function Home() {
       if (!checkData.ok || !checkData.repName) {
         alert(`No .rep name found for this wallet. Please claim one first!`);
         setIsLoggingIn(false);
-        setLocation('/claim');
+        window.location.href = '/claim';
         return;
       }
 
@@ -77,7 +77,7 @@ export default function Home() {
       const authData = await authRes.json();
       
       if (authData.ok) {
-        setLocation('/rep-dashboard');
+        window.location.href = '/rep-dashboard';
       } else {
         alert('Login failed: ' + (authData.error || 'Unknown error'));
         setIsLoggingIn(false);

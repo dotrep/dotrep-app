@@ -785,7 +785,7 @@ export default function ClaimFSN() {
               </div>
               <button
                 style={styles.connectButton}
-                onClick={() => setLocation('/rep-dashboard')}
+                onClick={() => window.location.href = '/rep-dashboard'}
               >
                 Go to Dashboard
               </button>
