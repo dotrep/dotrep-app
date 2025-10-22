@@ -438,19 +438,36 @@ app.post('/api/auth/connect', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'SIGNATURE_REQUIRED' });
     }
     
-    // Verify signature
-    const { ok: isValidSignature, address: normalizedAddress } = await verifyWalletSignature({
-      address: walletAddress,
+    console.log('[AUTH CONNECT] Verifying signature for wallet:', walletAddress);
+    
+    // Normalize signature
+    const normalizedSignature = signature.startsWith('0x') ? signature : `0x${signature}`;
+    
+    // Detect signature type for logging
+    let sigType = 'EOA (ECDSA)';
+    if (normalizedSignature.endsWith('6492649264926492649264926492649264926492649264926492649264926492')) {
+      sigType = 'EIP-6492 (Undeployed Smart Wallet)';
+    } else if (normalizedSignature.length > 200) {
+      sigType = 'EIP-1271 (Deployed Smart Wallet)';
+    }
+    console.log('[AUTH CONNECT] Signature type detected:', sigType);
+    console.log('[AUTH CONNECT] Signature length:', normalizedSignature.length);
+    
+    // Verify signature using viem's built-in support for EOA, ERC-1271, and ERC-6492
+    console.log('[AUTH CONNECT] Verifying with viem publicClient (supports EOA/ERC-1271/ERC-6492)...');
+    const isValid = await baseClient.verifyMessage({
+      address: walletAddress as `0x${string}`,
       message,
-      signature: signature as `0x${string}`,
+      signature: normalizedSignature as `0x${string}`,
     });
     
-    if (!isValidSignature) {
-      console.error('[AUTH] Signature verification failed for wallet:', walletAddress);
+    if (!isValid) {
+      console.error('[AUTH CONNECT] ✗ Signature verification failed for wallet:', walletAddress);
       return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
     }
     
-    console.log('[AUTH] Signature verified successfully for wallet:', normalizedAddress);
+    console.log('[AUTH CONNECT] ✓ Signature verified successfully');
+    console.log('[AUTH CONNECT] Verified as:', sigType);
     
     // Check if wallet has a .rep name
     const reservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
@@ -465,11 +482,11 @@ app.post('/api/auth/connect', async (req, res) => {
     req.session.walletAddress = walletAddress;
     req.session.repName = name;
     
-    console.log('[AUTH] Session created for:', name);
+    console.log('[AUTH CONNECT] Session created for:', name);
     
     res.json({ ok: true, userId: id, walletAddress, repName: name });
   } catch (error) {
-    console.error('Auth connect error:', error);
+    console.error('[AUTH CONNECT] Error:', error);
     res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
   }
 });
