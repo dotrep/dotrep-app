@@ -1,264 +1,191 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'wouter';
-import { useAccount, useSignMessage } from 'wagmi';
-import { WalletPickerModal } from '../../client/src/components/WalletPickerModal';
-import './home.css';
+// apps/web/src/Home.tsx
+import React, { useCallback, useMemo, useState } from "react";
 
-const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
-  left: Math.random() * 100,
-  top: Math.random() * 100,
-  size: 3 + Math.random() * 6,
-  delay: Math.random() * 5,
-  duration: 8 + Math.random() * 12,
-  color: i % 3 === 0 ? 'rgba(0, 212, 170, 0.4)' : i % 3 === 1 ? 'rgba(0, 82, 255, 0.35)' : 'rgba(255, 107, 53, 0.3)',
-}));
+type WalletMethod = "EOA" | "1271" | "6492";
 
-const isMobile = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-};
+function cx(...xs: (string | false | null | undefined)[]) {
+  return xs.filter(Boolean).join(" ");
+}
 
+// ---------- helpers ----------
+async function safeJson(res: Response) {
+  const txt = await res.text();
+  try {
+    return {
+      ok: res.ok,
+      status: res.status,
+      json: txt ? JSON.parse(txt) : null,
+      raw: txt,
+    };
+  } catch {
+    return { ok: res.ok, status: res.status, json: null, raw: txt };
+  }
+}
+
+async function waitForSession(timeoutMs = 1500) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const r = await fetch("/api/auth/me", { credentials: "include" });
+    if (r.ok) return true;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  return false;
+}
+
+async function connectAndOptionallySign(): Promise<{
+  address: string;
+  method: WalletMethod;
+  message?: string;
+  signature?: string;
+}> {
+  // Basic injected wallet connect (MetaMask / CB injected)
+  const eth = (window as any).ethereum;
+  if (!eth) throw new Error("No injected wallet found");
+
+  const accounts: string[] = await eth.request({
+    method: "eth_requestAccounts",
+  });
+  if (!accounts?.length) throw new Error("No account returned from wallet");
+  const address = String(accounts[0]).toLowerCase();
+
+  // Optional: if your backend exposes /api/auth/challenge, fetch+sign it.
+  // If not available, we’ll proceed without signing and just rely on /api/auth/verify setting the session.
+  try {
+    const ch = await fetch(
+      `/api/auth/challenge?address=${encodeURIComponent(address)}`,
+      {
+        credentials: "include",
+      },
+    );
+    if (ch.ok) {
+      const { challenge } = await ch.json();
+      const signature: string = await eth.request({
+        method: "personal_sign",
+        params: [challenge, address],
+      });
+      return { address, method: "EOA", message: challenge, signature };
+    }
+  } catch {
+    // silently ignore if no challenge endpoint
+  }
+
+  return { address, method: "EOA" };
+}
+
+// ---------- component ----------
 export default function Home() {
-  const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
-  const [, setLocation] = useLocation();
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const disabled = useMemo(() => busy || !name.trim(), [busy, name]);
 
-  useEffect(() => {
-    const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (preferredMotion.matches) {
-      document.documentElement.classList.add('motion-off');
-    }
-  }, []);
-
-  // Handle login flow when wallet connects
-  useEffect(() => {
-    if (isConnected && address && isLoggingIn) {
-      handleLogin();
-    }
-  }, [isConnected, address, isLoggingIn]);
-
-  const handleLogin = async () => {
-    console.log('[LOGIN] handleLogin called, address:', address);
-    if (!address) return;
-    
-    // Normalize address to lowercase for case-insensitive comparison
-    const normalizedAddress = address.toLowerCase();
-    
+  const handleLogin = useCallback(async () => {
+    setBusy(true);
     try {
-      // Check if wallet has a .rep name
-      console.log('[LOGIN] Checking wallet for .rep name...');
-      const checkRes = await fetch('/api/rep/lookup-wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: normalizedAddress }),
+      console.log("[LOGIN] start");
+
+      // 0) connect + (maybe) sign
+      const { address, method, message, signature } =
+        await connectAndOptionallySign();
+      console.log("[LOGIN] connected address =", address);
+
+      // 1) verify = set the session cookie server-side
+      const verifyBody: Record<string, unknown> = { address, method };
+      if (message) verifyBody.message = message;
+      if (signature) verifyBody.signature = signature;
+
+      const vRes = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(verifyBody),
+        credentials: "include",
       });
-      
-      const checkData = await checkRes.json();
-      console.log('[LOGIN] Lookup result:', checkData);
-      
-      if (!checkData.ok || !checkData.repName) {
-        console.log('[LOGIN] No .rep name found, redirecting to /claim');
-        alert(`No .rep name found for this wallet. Please claim one first!`);
-        setIsLoggingIn(false);
-        window.location.href = '/claim';
-        return;
+      const v = await safeJson(vRes);
+      console.log("[verify]", v);
+      if (!v.ok) throw new Error(`/api/auth/verify ${v.status} ${v.raw || ""}`);
+
+      // 2) wait for cookie to round-trip
+      const ok = await waitForSession();
+      if (!ok) throw new Error("Session cookie not visible yet");
+
+      // 3) lookup wallet (OK if this is stubbed on server)
+      const luRes = await fetch(
+        `/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`,
+        { credentials: "include" },
+      );
+      const lu = await safeJson(luRes);
+      console.log("[lookup-wallet]", lu);
+      if (!lu.ok)
+        throw new Error(`/api/rep/lookup-wallet ${lu.status} ${lu.raw || ""}`);
+
+      // 4) reserve (idempotent on server)
+      const canonicalName = name.trim().toLowerCase();
+      const rvRes = await fetch("/api/rep/reserve", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: canonicalName, address }),
+        credentials: "include",
+      });
+      const rv = await safeJson(rvRes);
+      console.log("[reserve]", rv);
+      const reservationId =
+        (rv.json && (rv.json.reservationId as string)) || undefined;
+      if (!rv.ok || !reservationId) {
+        throw new Error(`/api/rep/reserve ${rv.status} ${rv.raw || ""}`);
       }
 
-      // Request signature to prove wallet ownership
-      console.log('[LOGIN] Requesting signature for:', checkData.repName);
-      const message = `Login to ${checkData.repName}.rep\n\nWallet: ${normalizedAddress}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessageAsync({ message });
-      console.log('[LOGIN] Signature received');
-
-      // Call auth endpoint
-      console.log('[LOGIN] Calling /api/auth/connect');
-      const authRes = await fetch('/api/auth/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          walletAddress: normalizedAddress,
-          message,
-          signature
-        }),
-      });
-
-      const authData = await authRes.json();
-      console.log('[LOGIN] Auth result:', authData);
-      
-      if (authData.ok) {
-        console.log('[LOGIN] Auth successful! Redirecting to dashboard');
-        
-        // Wait 200ms for session cookie to propagate before redirect
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // Redirect returning users directly to dashboard
-        window.location.href = '/rep-dashboard';
-      } else {
-        console.error('[LOGIN] Auth failed:', authData.error);
-        alert('Login failed: ' + (authData.error || 'Unknown error'));
-        setIsLoggingIn(false);
-      }
-    } catch (error: any) {
-      console.error('[LOGIN] Login error:', error);
-      alert('Login failed. Please try again.');
-      setIsLoggingIn(false);
+      // 5) hard redirect
+      const target = `/wallet?name=${encodeURIComponent(
+        canonicalName,
+      )}&rid=${encodeURIComponent(reservationId)}`;
+      console.log("[redirect] →", target);
+      window.location.href = target;
+    } catch (err: any) {
+      console.error("[LOGIN] error:", err?.message || err);
+      alert("Login failed. Please try again.\n\n" + (err?.message || err));
+    } finally {
+      setBusy(false);
     }
-  };
-
-  const handleLoginClick = () => {
-    setIsLoggingIn(true);
-    setShowWalletModal(true);
-  };
+  }, [name]);
 
   return (
-    <>
-      <div className="homepage">
-        <section className="hero-section">
-          <div className="particle-bg" aria-hidden="true">
-            {particles.map((particle, i) => (
-              <div 
-                key={i} 
-                className="particle" 
-                style={{
-                  left: `${particle.left}%`,
-                  top: `${particle.top}%`,
-                  width: `${particle.size}px`,
-                  height: `${particle.size}px`,
-                  background: particle.color,
-                  animationDelay: `${particle.delay}s`,
-                  animationDuration: `${particle.duration}s`
-                }}
-              />
-            ))}
-          </div>
+    <div className={cx("min-h-screen flex items-center justify-center p-6")}>
+      <div className={cx("w-full max-w-md rounded-2xl p-6 shadow")}>
+        <h1 className="text-2xl font-semibold mb-4">
+          .rep — Claim your handle
+        </h1>
 
-          <div className="hero-container">
-            <div className="hero-grid">
-              <div className="emblem-column">
-                <div className="rep-emblem" aria-label=".rep emblem">
-                  <svg className="rep-ring" viewBox="0 0 400 400" aria-hidden="true">
-                    <defs>
-                      <radialGradient id="innerVignette" cx="50%" cy="50%">
-                        <stop offset="0%" stopColor="rgba(10, 14, 20, 0)" />
-                        <stop offset="60%" stopColor="rgba(10, 14, 20, 0.3)" />
-                        <stop offset="100%" stopColor="rgba(10, 14, 20, 0.7)" />
-                      </radialGradient>
-                      <linearGradient id="ringGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-                        <stop offset="0%" stopColor="#ff6b00" />
-                        <stop offset="30%" stopColor="#ffa500" />
-                        <stop offset="70%" stopColor="#00b4ff" />
-                        <stop offset="100%" stopColor="#0080ff" />
-                      </linearGradient>
-                      <filter id="ringGlow">
-                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                        <feMerge>
-                          <feMergeNode in="coloredBlur"/>
-                          <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    
-                    <circle cx="200" cy="200" r="180" fill="url(#innerVignette)" />
-                    
-                    <circle 
-                      cx="200" 
-                      cy="200" 
-                      r="160" 
-                      fill="none" 
-                      stroke="url(#ringGradient)" 
-                      strokeWidth="7"
-                      opacity="0.85"
-                      className="ring-base"
-                    />
-                    
-                    <circle 
-                      cx="200" 
-                      cy="200" 
-                      r="160" 
-                      fill="none" 
-                      stroke="url(#ringGradient)" 
-                      strokeWidth="7"
-                      filter="url(#ringGlow)"
-                      strokeDasharray="80 920"
-                      strokeLinecap="round"
-                      className="ring-pulse"
-                    />
-                    
-                    <circle cx="200" cy="200" r="120" fill="rgba(0, 0, 0, 0.2)" />
-                  </svg>
-                  <div className="rep-text">.rep</div>
-                </div>
+        <label className="block text-sm font-medium mb-1" htmlFor="rep-name">
+          Name
+        </label>
+        <input
+          id="rep-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className={cx(
+            "w-full rounded-lg border px-3 py-2 mb-4",
+            "focus:outline-none focus:ring-2",
+          )}
+          placeholder="your-name"
+          autoComplete="off"
+        />
 
-                <div className="identity-section">
-                  <h2 className="identity-headline">
-                    Identity isn't minted.<br />
-                    <span className="earned">It's earned.</span>
-                  </h2>
-                  
-                  <div className="people-chips">
-                    <div className="chip">Olivia</div>
-                    <div className="chip">Danibl</div>
-                    <div className="chip">Ryan</div>
-                    <div className="chip">Daniel</div>
-                  </div>
-                </div>
-              </div>
+        <button
+          onClick={handleLogin}
+          disabled={disabled}
+          className={cx(
+            "w-full rounded-xl px-4 py-2 font-medium",
+            disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
+            "shadow",
+          )}
+        >
+          {busy ? "Connecting…" : "Login with wallet"}
+        </button>
 
-              <div className="content-column">
-                <h1 className="hero-headline">
-                  Your onchain<br />
-                  reputation.<br />
-                  <span className="alive">Alive on Base.</span>
-                </h1>
-                
-                <div className="hero-ctas">
-                  <button 
-                    type="button"
-                    onClick={() => setLocation('/claim')} 
-                    className="cta-button cta-primary"
-                  >
-                    Claim your.rep
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={handleLoginClick} 
-                    className="cta-button cta-secondary"
-                    disabled={isLoggingIn}
-                  >
-                    {isLoggingIn ? 'Connecting...' : 'Login with Wallet'}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setLocation('/discover')} 
-                    className="cta-button cta-secondary"
-                  >
-                    Discover.rep
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="chameleon-panel">
-              <div className="chameleon-glow" aria-hidden="true"></div>
-              <img 
-                src="/chameleon_transparent.png" 
-                alt="Chameleon mascot" 
-                className="chameleon-img"
-              />
-            </div>
-          </div>
-        </section>
+        <p className="text-xs opacity-70 mt-4">
+          This will connect your wallet, set a session, and reserve your handle
+          (idempotent). You’ll be redirected to your wallet page when complete.
+        </p>
       </div>
-      
-      <WalletPickerModal 
-        isOpen={showWalletModal} 
-        onClose={() => {
-          setShowWalletModal(false);
-          setIsLoggingIn(false);
-        }}
-      />
-    </>
+    </div>
   );
 }
