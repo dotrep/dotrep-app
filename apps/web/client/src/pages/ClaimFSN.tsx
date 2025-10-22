@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useAccount, useSwitchChain, useSignMessage, useDisconnect } from 'wagmi';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useAccount, useSwitchChain, useSignMessage, useDisconnect, useConnect, useConnectors } from 'wagmi';
 import { networkChain } from '../config/wagmi';
 import { useLocation } from 'wouter';
 import { WalletPickerModal } from '../components/WalletPickerModal';
 import { toast } from '../hooks/use-toast';
 import { SEOHead } from '../components/SEOHead';
+import { canonicalize, isValidName as validateName } from '../../../shared/validate';
+import { ensureBase } from '../lib/ensureBase';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
   left: Math.random() * 100,
@@ -223,11 +225,15 @@ export default function ClaimFSN() {
   const [error, setError] = useState('');
   const [isReserving, setIsReserving] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [claimStatus, setClaimStatus] = useState<string>('');
+  const inFlightRef = useRef(false);
 
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
+  const { connect } = useConnect();
+  const connectors = useConnectors();
 
   const nameRegex = /^[a-z][a-z0-9-]{2,31}$/;
   const isValid = nameRegex.test(name);
@@ -297,169 +303,268 @@ export default function ClaimFSN() {
     return () => clearTimeout(timer);
   }, [name]);
 
-  const handleReserve = async () => {
-    console.log('[CLAIM] handleReserve called');
-    console.log('[CLAIM] isConnected:', isConnected, 'address:', address, 'isReserving:', isReserving);
-    
-    // Triple validation: isConnecting check, address existence, and actual value
-    if (!isConnected || !address || isReserving) {
-      console.log('[CLAIM] Validation failed - showing wallet modal');
-      toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your wallet to claim a .rep name",
-        variant: "destructive",
-      });
-      setShowWalletModal(true);
-      return;
-    }
-
-    setIsReserving(true);
-    try {
-      // STEP 1: Request wallet signature to prove ownership
-      const timestamp = Date.now();
-      const message = `Claim ${name}.rep on Base\n\nWallet: ${address}\nTimestamp: ${timestamp}`;
+  // Mobile deep-link resume logic
+  useEffect(() => {
+    const handleResume = async () => {
+      const pendingName = localStorage.getItem('rep:pendingName');
+      const intent = localStorage.getItem('rep:intent');
       
-      console.log('[CLAIM] Step 1: Requesting signature');
-      console.log('[CLAIM] Message to sign:', message);
-      
-      let signature;
-      try {
-        console.log('[CLAIM] Calling signMessageAsync...');
-        toast({
-          title: "Sign the Message",
-          description: "Please approve the signature request in your wallet",
-        });
-        signature = await signMessageAsync({ message });
-        console.log('[CLAIM] ✓ Signature received:', signature);
+      if (pendingName && intent === 'claim' && isConnected && address) {
+        console.log('[RESUME] Detected pending claim for:', pendingName);
+        console.log('[RESUME] Wallet reconnected, resuming flow...');
         
-        toast({
-          title: "Verifying Signature...",
-          description: "Please wait while we verify your signature",
-        });
-      } catch (signError: any) {
-        console.error('[CLAIM] ✗ Signature failed:', signError);
-        toast({
-          title: "Signature Required",
-          description: "You must sign the message to claim your .rep name",
-          variant: "destructive",
-        });
-        setIsReserving(false);
-        return;
+        // Clear pending state
+        localStorage.removeItem('rep:intent');
+        
+        // Resume from challenge step (skip connect)
+        try {
+          await resumeClaimFromChallenge(pendingName, address);
+        } catch (err) {
+          console.error('[RESUME] Resume failed:', err);
+          localStorage.removeItem('rep:pendingName');
+        }
       }
+    };
+    
+    // Run on mount
+    handleResume();
+    
+    // Run on visibility change (mobile return from wallet)
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        handleResume();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [isConnected, address]);
 
-      // STEP 2: Send signed message to backend for verification
-      console.log('[CLAIM] Step 2: Sending to backend');
-      console.log('[CLAIM] Payload:', { name, walletAddress: address, hasMessage: !!message, hasSignature: !!signature });
+  // Resume claim from challenge step (for mobile deep-link return)
+  const resumeClaimFromChallenge = async (nameToResume: string, walletAddress: string) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    setIsReserving(true);
+    
+    try {
+      console.log('[ATOMIC-RESUME] Starting from challenge step');
+      setClaimStatus('Getting challenge...');
       
-      const response = await fetch('/api/rep/reserve', {
+      const canonical = canonicalize(nameToResume);
+      
+      // Step 3: GET challenge
+      const challengeRes = await fetch(`/api/auth/challenge?name=${encodeURIComponent(canonical)}&address=${encodeURIComponent(walletAddress)}`);
+      const challenge = await challengeRes.json();
+      
+      if (!challenge.ok) {
+        throw new Error(challenge.error || 'Failed to get challenge');
+      }
+      
+      console.log('[ATOMIC-RESUME] ✓ Challenge received');
+      setClaimStatus('Signing message...');
+      
+      // Step 4: Sign exact message
+      const signature = await signMessageAsync({ message: challenge.message });
+      console.log('[ATOMIC-RESUME] ✓ Message signed');
+      
+      setClaimStatus('Verifying signature...');
+      
+      // Step 5: Verify
+      const verifyRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name, 
-          walletAddress: address,
-          message,
+        body: JSON.stringify({
+          address: walletAddress,
+          message: challenge.message,
+          nonce: challenge.nonce,
+          expiresAt: challenge.expiresAt,
+          mac: challenge.mac,
           signature
         }),
       });
-
-      console.log('[CLAIM] Response status:', response.status);
-      const result = await response.json();
-      console.log('[CLAIM] Response data:', result);
-
-      if (result.ok) {
-        const rid = result.reservationId || Math.random().toString(36).substring(2, 15);
-        
-        // Store reservation data before redirect
-        localStorage.setItem('rep:lastName', name);
-        localStorage.setItem('rep:address', address);
-        localStorage.setItem('rep:reservationId', rid);
-        localStorage.setItem('rep:connected', 'true');
-        localStorage.removeItem('rep:linked');
-        
-        toast({
-          title: "Name Reserved! 🎉",
-          description: `You've successfully reserved ${name}.rep`,
-        });
-
-        // Hard redirect to /wallet immediately (no setTimeout, no router state)
-        window.location.assign(`/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(rid)}`);
-      } else {
-        let errorMessage = 'Failed to reserve name';
-        let errorTitle = 'Reservation Failed';
-        
-        if (result.error === 'ALREADY_RESERVED') {
-          errorMessage = 'This name is already taken';
-        } else if (result.error === 'INVALID_SIGNATURE') {
-          errorTitle = 'Signature Verification Failed';
-          errorMessage = 'The wallet signature could not be verified. Please try again.';
-        } else if (result.error === 'MESSAGE_EXPIRED') {
-          errorTitle = 'Signature Expired';
-          errorMessage = 'The signature took too long. Please try signing again.';
-        } else if (result.error === 'MESSAGE_TIMESTAMP_INVALID') {
-          errorTitle = 'Clock Error';
-          errorMessage = 'System clock appears incorrect. Please check your device time.';
-        } else if (result.error === 'WALLET_HAS_RESERVATION') {
-          errorTitle = 'Wallet Already Has Name';
-          errorMessage = `Your wallet already owns ${result.existingName || 'a'}.rep`;
-        } else if (result.error === 'SIGNATURE_REQUIRED') {
-          errorTitle = 'Signature Required';
-          errorMessage = 'Please sign the message to claim your .rep name';
-        } else if (result.details) {
-          errorMessage = result.details;
-        }
-        
-        console.error('[CLAIM] Server returned error:', result.error, errorMessage);
-        
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-          variant: "destructive",
-        });
+      
+      const verifyResult = await verifyRes.json();
+      
+      if (!verifyResult.ok) {
+        throw new Error(verifyResult.error || 'Verification failed');
       }
+      
+      console.log('[ATOMIC-RESUME] ✓ Signature verified');
+      setClaimStatus('Reserving name...');
+      
+      // Step 6: Reserve (idempotent)
+      const reserveRes = await fetch('/api/rep/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: canonical, address: walletAddress }),
+      });
+      
+      const reserveResult = await reserveRes.json();
+      
+      if (!reserveResult.ok || !reserveResult.reservationId) {
+        throw new Error(reserveResult.error || 'Reserve failed');
+      }
+      
+      console.log('[ATOMIC-RESUME] ✓ Name reserved:', reserveResult.reservationId);
+      
+      // Step 7: Persist & redirect
+      localStorage.setItem('rep:lastName', canonical);
+      localStorage.setItem('rep:reservationId', reserveResult.reservationId);
+      localStorage.setItem('rep:address', walletAddress);
+      localStorage.removeItem('rep:pendingName');
+      
+      toast({
+        title: "Name Claimed! 🎉",
+        description: `Successfully claimed ${canonical}.rep`,
+      });
+      
+      window.location.assign(`/wallet?name=${encodeURIComponent(canonical)}&rid=${encodeURIComponent(reserveResult.reservationId)}`);
     } catch (err: any) {
+      console.error('[ATOMIC-RESUME] Error:', err);
       toast({
-        title: "Reservation Failed",
-        description: err.message || "Failed to reserve name. Please try again.",
+        title: "Claim Failed",
+        description: err.message || 'Could not complete claim. Please try again.',
         variant: "destructive",
       });
-    } finally {
       setIsReserving(false);
+      inFlightRef.current = false;
     }
   };
 
-  const handleSmartCTA = () => {
-    console.log('[CLAIM] Button clicked - checking wallet connection');
-    console.log('[CLAIM] isConnected:', isConnected);
-    console.log('[CLAIM] address:', address);
-    console.log('[CLAIM] chain:', chain);
+  // Main atomic claim handler
+  const handleAtomicClaim = async () => {
+    if (inFlightRef.current) {
+      console.log('[ATOMIC] Already in flight, ignoring click');
+      return;
+    }
     
-    // Layer 1: Check wallet connection status AND address value
-    if (!isConnected || !address) {
-      console.log('[CLAIM] No wallet connected - opening WalletPickerModal');
+    inFlightRef.current = true;
+    setIsReserving(true);
+    setClaimStatus('');
+    
+    try {
+      const canonical = canonicalize(name);
+      
+      if (!validateName(canonical)) {
+        throw new Error('Invalid name format');
+      }
+      
+      console.log('[ATOMIC] Step 1: Connect wallet');
+      setClaimStatus('Connecting wallet...');
+      
+      // Store pending intent for mobile deep-link resume
+      localStorage.setItem('rep:pendingName', canonical);
+      localStorage.setItem('rep:intent', 'claim');
+      
+      // Step 1: Connect if not already connected
+      if (!isConnected || !address) {
+        console.log('[ATOMIC] Wallet not connected, showing modal');
+        setClaimStatus('');
+        setIsReserving(false);
+        inFlightRef.current = false;
+        setShowWalletModal(true);
+        return;
+      }
+      
+      const walletAddress = address;
+      console.log('[ATOMIC] ✓ Wallet already connected:', address);
+      
+      // Step 2: Ensure Base network
+      console.log('[ATOMIC] Step 2: Ensure Base network');
+      setClaimStatus('Switching to Base...');
+      
+      await ensureBase();
+      console.log('[ATOMIC] ✓ On Base network');
+      
+      // Step 3: GET challenge
+      console.log('[ATOMIC] Step 3: Get HMAC challenge');
+      setClaimStatus('Getting challenge...');
+      
+      const challengeRes = await fetch(`/api/auth/challenge?name=${encodeURIComponent(canonical)}&address=${encodeURIComponent(walletAddress)}`);
+      const challenge = await challengeRes.json();
+      
+      if (!challenge.ok) {
+        throw new Error(challenge.error || 'Failed to get challenge');
+      }
+      
+      console.log('[ATOMIC] ✓ Challenge received');
+      
+      // Step 4: Sign exact message
+      console.log('[ATOMIC] Step 4: Sign message');
+      setClaimStatus('Signing message...');
+      
+      const signature = await signMessageAsync({ message: challenge.message });
+      console.log('[ATOMIC] ✓ Message signed');
+      
+      // Step 5: Verify signature
+      console.log('[ATOMIC] Step 5: Verify signature');
+      setClaimStatus('Verifying signature...');
+      
+      const verifyRes = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: walletAddress,
+          message: challenge.message,
+          nonce: challenge.nonce,
+          expiresAt: challenge.expiresAt,
+          mac: challenge.mac,
+          signature
+        }),
+      });
+      
+      const verifyResult = await verifyRes.json();
+      
+      if (!verifyResult.ok) {
+        throw new Error(verifyResult.error || 'Verification failed');
+      }
+      
+      console.log('[ATOMIC] ✓ Signature verified');
+      
+      // Step 6: Reserve (idempotent)
+      console.log('[ATOMIC] Step 6: Reserve name');
+      setClaimStatus('Reserving name...');
+      
+      const reserveRes = await fetch('/api/rep/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: canonical, address: walletAddress }),
+      });
+      
+      const reserveResult = await reserveRes.json();
+      
+      if (!reserveResult.ok || !reserveResult.reservationId) {
+        throw new Error(reserveResult.error || reserveResult.details || 'Reserve failed');
+      }
+      
+      console.log('[ATOMIC] ✓ Name reserved:', reserveResult.reservationId);
+      
+      // Step 7: Persist & redirect
+      console.log('[ATOMIC] Step 7: Redirect');
+      localStorage.setItem('rep:lastName', canonical);
+      localStorage.setItem('rep:reservationId', reserveResult.reservationId);
+      localStorage.setItem('rep:address', walletAddress);
+      localStorage.removeItem('rep:pendingName');
+      
       toast({
-        title: "Wallet Required",
-        description: "Connect your Coinbase Wallet to claim your .rep name",
+        title: "Name Claimed! 🎉",
+        description: `Successfully claimed ${canonical}.rep`,
+      });
+      
+      window.location.assign(`/wallet?name=${encodeURIComponent(canonical)}&rid=${encodeURIComponent(reserveResult.reservationId)}`);
+    } catch (err: any) {
+      console.error('[ATOMIC] Error:', err);
+      toast({
+        title: "Claim Failed",
+        description: err.message || 'Could not complete claim. Please try again.',
         variant: "destructive",
       });
-      setShowWalletModal(true);
-      return;
+      setIsReserving(false);
+      setClaimStatus('');
+      inFlightRef.current = false;
     }
-
-    // Layer 2: Check network - must be on Base
-    if (chain?.id !== networkChain.id) {
-      console.log('[CLAIM] Wrong network - switching to Base');
-      toast({
-        title: "Wrong Network",
-        description: "Switching to Base network...",
-      });
-      switchChain({ chainId: networkChain.id });
-      return;
-    }
-
-    // Layer 3: All validations passed, proceed to reservation
-    console.log('[CLAIM] All checks passed - proceeding to reserve name');
-    handleReserve();
   };
+
 
   const renderButton = () => {
     if (!showInput) {
@@ -503,24 +608,33 @@ export default function ClaimFSN() {
       // If wallet not connected, show ENABLED button that opens wallet modal
       if (walletNotConnected) {
         return (
-          <button
-            style={styles.connectButton}
-            onClick={handleSmartCTA}
-          >
-            Connect Wallet to Claim
-          </button>
+          <>
+            <button
+              style={styles.connectButton}
+              onClick={() => setShowWalletModal(true)}
+            >
+              Connect Wallet to Claim
+            </button>
+          </>
         );
       }
       
-      // Wallet connected, show claim button
+      // Wallet connected, show atomic claim button
       return (
-        <button
-          style={isReserving ? styles.connectButtonDisabled : styles.connectButton}
-          onClick={handleSmartCTA}
-          disabled={isReserving}
-        >
-          {isReserving ? 'Reserving...' : `Claim ${name}.rep`}
-        </button>
+        <>
+          <button
+            style={isReserving ? styles.connectButtonDisabled : styles.connectButton}
+            onClick={handleAtomicClaim}
+            disabled={isReserving}
+          >
+            {isReserving ? (claimStatus || 'Processing...') : `Claim ${name}.rep`}
+          </button>
+          {claimStatus && (
+            <div style={{ fontSize: '14px', color: '#00d4aa', marginTop: '8px' }}>
+              {claimStatus}
+            </div>
+          )}
+        </>
       );
     }
 
