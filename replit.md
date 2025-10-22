@@ -35,7 +35,9 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
   - **API Server**: Express on port 9000 (console output) - handles /api/* requests
   - **Vite Dev Server**: Port 5000 (webview output) - proxies /api/* to port 9000
   - This architecture ensures same-origin cookies work reliably without CORS issues
+  - **IMPORTANT**: Vite uses `vite.config.mjs` (not `.ts`). Proxy config: `'/api': { target: 'http://localhost:9000' }`
 - **Session Management**: In-memory sessions using express-session with sameSite: 'lax' cookies, 7-day duration. Session stores { address, method, ts }.
+- **API Endpoint Pattern**: `/api/rep/check` - Real-time name availability checking with database lookup
 
 ### Data Architecture
 - **Database**: Production PostgreSQL database using Drizzle ORM located in `apps/web/db/`
