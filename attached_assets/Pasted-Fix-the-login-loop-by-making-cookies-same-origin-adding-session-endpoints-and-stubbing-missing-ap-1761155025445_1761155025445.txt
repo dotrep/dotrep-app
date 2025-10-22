@@ -1,0 +1,485 @@
+Fix the login loop by making cookies same-origin, adding session endpoints, and stubbing missing /api/rep/* routes—without changing my UI.
+
+1) Replace apps/web/server.ts with EXACTLY this:
+import express from 'express';
+import session from 'express-session';
+
+const USE_CROSS_ORIGIN = false; // Vite proxy keeps same-origin
+
+const app = express();
+app.set('trust proxy', 1);
+app.use(express.json());
+
+app.use(
+  session({
+    name: 'rep.sid',
+    secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      path: '/',
+      sameSite: (USE_CROSS_ORIGIN ? 'none' : 'lax') as 'lax' | 'none',
+      secure: USE_CROSS_ORIGIN ? true : process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  })
+);
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: { address: string; method: 'EOA' | '1271' | '6492' | 'UNKNOWN'; ts: number };
+  }
+}
+
+// Auth endpoints
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const { address, method } = req.body ?? {};
+    if (!address) return res.status(400).json({ ok: false, error: 'missing_address' });
+    req.session.user = { address: String(address).toLowerCase(), method: (method as any) || 'EOA', ts: Date.now() };
+    await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
+    return res.json({ ok: true });
+  } catch (e:any) {
+    console.error('[verify] error', e);
+    return res.status(500).json({ ok: false, error: 'verify_failed' });
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const u = req.session?.user;
+  if (u?.address) return res.json({ ok: true, user: u });
+  return res.status(401).json({ ok: false });
+});
+
+// Temporary stubs (stop 404s)
+app.get('/api/rep/lookup-wallet', (req, res) => {
+  const address = req.query.address?.toString().toLowerCase();
+  res.json({ ok: true, walletFound: !!address, address, reservationId: address ? 'stub-' + Math.random().toString(36).slice(2,8) : undefined });
+});
+
+app.post('/api/rep/reserve', (req, res) => {
+  const name = String(req.body?.name || '').trim().toLowerCase();
+  const address = String(req.body?.address || '').toLowerCase();
+  if (!name || !address) return res.status(400).json({ ok:false, error:'missing_name_or_address' });
+  const id = 'stub-' + Buffer.from(`${name}:${address}`).toString('base64').slice(0,10);
+  res.json({ ok:true, reservationId:id, name, address });
+});
+
+app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
+
+export default app;
+
+if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
+  const port = Number(process.env.PORT || 9000);
+  app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
+}
+
+2) Ensure apps/web/vite.config.ts proxies /api to the API:
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+})
+
+3) Add a logic-only helper (keep my design intact):
+
+Create apps/web/src/loginFlow.ts:
+
+type WalletMethod = 'EOA'|'1271'|'6492';
+
+async function safeJson(res: Response) {
+  const txt = await res.text();
+  try { return { ok: res.ok, status: res.status, json: txt ? JSON.parse(txt) : null, raw: txt }; }
+  catch { return { ok: res.ok, status: res.status, json: null, raw: txt }; }
+}
+
+async function waitForSession(timeoutMs = 1500) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    if (r.ok) return true;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  return false;
+}
+
+async function connectWallet(): Promise<{ address: string; method: WalletMethod; message?: string; signature?: string; }> {
+  const eth = (window as any).ethereum;
+  if (!eth) throw new Error('No injected wallet found');
+  const [addr0] = await eth.request({ method: 'eth_requestAccounts' });
+  const address = String(addr0).toLowerCase();
+  try {
+    const ch = await fetch(`/api/auth/challenge?address=${encodeURIComponent(address)}`, { credentials:'include' });
+    if (ch.ok) {
+      const { challenge } = await ch.json();
+      const signature: string = await eth.request({ method: 'personal_sign', params: [challenge, address] });
+      return { address, method: 'EOA', message: challenge, signature };
+    }
+  } catch {}
+  return { address, method: 'EOA' };
+}
+
+export async function startLogin(inputName: string) {
+  const name = inputName.trim().toLowerCase();
+  if (!name) throw new Error('Please enter a name');
+
+  const { address, method, message, signature } = await connectWallet();
+
+  const body: Record<string, unknown> = { address, method };
+  if (message) body.message = message;
+  if (signature) body.signature = signature;
+
+  const vRes = await fetch('/api/auth/verify', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include',
+  });
+  const v = await safeJson(vRes);
+  if (!v.ok) throw new Error(`/api/auth/verify ${v.status} ${v.raw || ''}`);
+
+  if (!(await waitForSession())) throw new Error('Session cookie not visible yet');
+
+  const luRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`, { credentials: 'include' });
+  const lu = await safeJson(luRes);
+  if (!lu.ok) throw new Error(`/api/rep/lookup-wallet ${lu.status} ${lu.raw || ''}`);
+
+  const rvRes = await fetch('/api/rep/reserve', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name, address }),
+    credentials: 'include',
+  });
+  const rv = await safeJson(rvRes);
+  const reservationId = rv.json?.reservationId as string | undefined;
+  if (!rv.ok || !reservationId) throw new Error(`/api/rep/reserve ${rv.status} ${rv.raw || ''}`);
+
+  window.location.href = `/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(reservationId)}`;
+}
+
+4) Wire my existing CTA (don’t change layout/styles)
+
+In my restored Home.tsx, import and call the helper on click:
+
+import { startLogin } from './loginFlow';
+
+// inside my component:
+<YourFancyButton onClick={async () => {
+  try { await startLogin(name /* or your input state */); }
+  catch (e:any) { alert(e?.message ?? 'Login failed'); }
+}}>
+  Claim / Login
+</YourFancyButton>
+
+
+(If my button/variable names differ, adapt the call but keep logic identical.)
+
+5) Run both processes
+
+Terminal A (API): npx tsx apps/web/server.ts
+
+Terminal B (UI): pnpm --filter web dev
+Open the Vite URL (port 5173). Keep using relative /api/* calls (proxy = same-origin cookies).
+
+6) Acceptance checks (must pass)
+
+POST /api/auth/verify → 200 and Response Headers include Set-Cookie: rep.sid=….
+
+GET /api/auth/me (right after) → 200 and Request Headers include Cookie: rep.sid=….
+
+GET /api/rep/lookup-wallet → 200 JSON (no 404).
+
+POST /api/rep/reserve → 200 JSON with reservationId.
+
+App hard-redirects to /wallet?name=&rid= (or dashboard) without looping.
+
+If any call isn’t 200, log its endpoint + status + body and fix just that step. Do not change UI.
+
+“remove stubs & wire a real Postgres DB” checklist, tight and copy-pasteable.
+
+TL;DR
+
+Create a reservations table (lowercased columns + uniqueness).
+
+Swap stub routes with DB-backed logic (idempotent reserve).
+
+(Optional) move express-session to Postgres so logins survive restarts.
+
+0) Prereqs (one-time)
+
+Make sure you have a Postgres URL (e.g. Neon/Supabase/Railway):
+
+DATABASE_URL=postgres://user:pass@host:5432/dbname
+SESSION_SECRET=change-me
+
+
+Put these in your Replit secrets or .env.
+
+You already have the needed deps in apps/web/package.json:
+
+pg, drizzle-orm, drizzle-kit
+
+connect-pg-simple (for optional session store)
+
+1) Drizzle config
+
+Create apps/web/drizzle.config.ts:
+
+import 'dotenv/config'
+import type { Config } from 'drizzle-kit'
+
+export default {
+  schema: './db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+} satisfies Config
+
+2) Drizzle schema
+
+Create apps/web/db/schema.ts:
+
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+
+// Use text id with server-side default UUID (pgcrypto required)
+export const reservations = pgTable('reservations', {
+  id: text('id').primaryKey().default(sql`gen_random_uuid()::text`),
+  name: text('name').notNull(),
+  nameLower: text('name_lower').notNull(),
+  address: text('address').notNull(),
+  addressLower: text('address_lower').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+})
+
+3) DB client
+
+Create apps/web/db/client.ts:
+
+import 'dotenv/config'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { Pool } from 'pg'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+export const db = drizzle(pool)
+
+export async function closeDb() {
+  await pool.end()
+}
+
+4) Migration (SQL)
+
+Create apps/web/drizzle/001_init.sql:
+
+-- enable uuid via pgcrypto (or adjust if using uuid-ossp)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name text NOT NULL,
+  name_lower text NOT NULL,
+  address text NOT NULL,
+  address_lower text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Uniqueness: name_lower unique, and each (address_lower, name_lower) pair unique
+CREATE UNIQUE INDEX IF NOT EXISTS ux_res_name_lower ON reservations (name_lower);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_res_addr_name ON reservations (address_lower, name_lower);
+
+
+Run the migration:
+
+# from repo root
+pnpm --filter web run db:push   # if this runs drizzle-kit push
+# OR, if you prefer raw psql, run the SQL against your DB
+
+
+If db:push doesn’t apply raw .sql, you can configure drizzle to generate migrations; but the above is the minimal SQL that works everywhere.
+
+5) Shared validators
+
+Create apps/web/lib/repValidation.ts:
+
+export const canonicalizeName = (s: string) => s.trim().toLowerCase()
+export const toLowerAddress  = (a: string) => String(a).toLowerCase()
+
+export const isValidName = (s: string) => /^[a-z0-9][a-z0-9-]{1,30}$/.test(canonicalizeName(s))
+
+6) Replace stub routes with real DB logic
+
+Open apps/web/server.ts and:
+
+Add imports near the top:
+
+import { db } from './db/client.js'
+import { reservations } from './db/schema.js'
+import { eq, and } from 'drizzle-orm'
+import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js'
+
+
+Replace the two stub handlers with these implementations:
+
+// GET /api/rep/lookup-wallet?address=0x...
+app.get('/api/rep/lookup-wallet', async (req, res) => {
+  try {
+    const address = toLowerAddress(String(req.query.address || ''))
+    if (!address) return res.json({ ok: true, walletFound: false })
+
+    const [row] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, address))
+      .limit(1)
+
+    if (!row) return res.json({ ok: true, walletFound: false })
+
+    return res.json({
+      ok: true,
+      walletFound: true,
+      address: row.address,
+      reservationId: row.id,
+      name: row.name,
+    })
+  } catch (e:any) {
+    console.error('[lookup-wallet] error', e)
+    res.status(500).json({ ok: false, error: 'server_error' })
+  }
+})
+
+// POST /api/rep/reserve  { name, address }
+app.post('/api/rep/reserve', async (req, res) => {
+  try {
+    const name = canonicalizeName(String(req.body?.name || ''))
+    const address = toLowerAddress(String(req.body?.address || ''))
+
+    if (!name || !address || !isValidName(name)) {
+      return res.status(400).json({ ok: false, error: 'invalid_input' })
+    }
+
+    // Name already exists?
+    const [existingByName] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.nameLower, name))
+      .limit(1)
+
+    if (existingByName) {
+      // If it's owned by the same address → idempotent success
+      if (existingByName.addressLower === address) {
+        return res.json({
+          ok: true,
+          reservationId: existingByName.id,
+          name: existingByName.name,
+          address: existingByName.address,
+          idempotent: true,
+        })
+      }
+      // Owned by someone else
+      return res.status(409).json({ ok: false, error: 'name_taken' })
+    }
+
+    // Insert new reservation
+    const [created] = await db
+      .insert(reservations)
+      .values({
+        name,
+        nameLower: name,
+        address,
+        addressLower: address,
+      })
+      .returning()
+
+    return res.json({
+      ok: true,
+      reservationId: created.id,
+      name: created.name,
+      address: created.address,
+      idempotent: false,
+    })
+  } catch (e:any) {
+    console.error('[reserve] error', e)
+    res.status(500).json({ ok: false, error: 'server_error' })
+  }
+})
+
+
+(Leave your /api/auth/verify and /api/auth/me as-is.)
+
+7) (Optional) Persist sessions in Postgres
+
+So sessions survive server restarts.
+
+In apps/web/server.ts (top):
+
+import pgSession from 'connect-pg-simple'
+import { Pool } from 'pg'
+
+
+Replace your current app.use(session(...)) with:
+
+const PgSession = pgSession(session)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+
+app.use(
+  session({
+    store: new PgSession({
+      pool,
+      tableName: 'user_sessions', // will auto-create if missing
+      createTableIfMissing: true,
+    }),
+    name: 'rep.sid',
+    secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  })
+)
+
+8) Run & test
+
+Terminal A (API):
+
+npx tsx apps/web/server.ts
+
+
+Terminal B (Vite UI):
+
+pnpm --filter web dev
+
+
+Acceptance (DevTools → Network):
+
+/api/auth/verify → 200 + Set-Cookie
+
+/api/auth/me → 200 + Cookie
+
+/api/rep/lookup-wallet → 200 { ok:true, walletFound: ... }
+
+/api/rep/reserve → 200 { ok:true, reservationId } or 409 name_taken
+
+Hard redirect to /wallet?name=&rid= without looping.
+
+Server restarts: still logged in if you enabled the Postgres session store
