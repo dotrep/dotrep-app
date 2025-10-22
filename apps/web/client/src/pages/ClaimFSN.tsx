@@ -437,7 +437,7 @@ export default function ClaimFSN() {
       }
       
       console.log('[ATOMIC-RESUME] ✓ Signature verified');
-      setClaimStatus('Claiming name...');
+      setClaimStatus('Reserving name...');
       
       // Step 6: Reserve (idempotent)
       const reserveRes = await fetch('/api/rep/reserve', {
@@ -452,7 +452,7 @@ export default function ClaimFSN() {
         throw new Error(reserveResult.error || 'Reserve failed');
       }
       
-      console.log('[ATOMIC-RESUME] ✓ Name claimed:', reserveResult.reservationId);
+      console.log('[ATOMIC-RESUME] ✓ Name reserved:', reserveResult.reservationId);
       
       // Step 7: Persist & redirect
       localStorage.setItem('rep:lastName', canonical);
@@ -574,7 +574,7 @@ export default function ClaimFSN() {
       
       // Step 6: Reserve (idempotent)
       console.log('[ATOMIC] Step 6: Reserve name');
-      setClaimStatus('Claiming name...');
+      setClaimStatus('Reserving name...');
       
       const reserveRes = await fetch('/api/rep/reserve', {
         method: 'POST',
@@ -593,7 +593,7 @@ export default function ClaimFSN() {
         throw new Error(reserveResult.details || reserveResult.error || 'Reserve failed');
       }
       
-      console.log('[ATOMIC] ✓ Name claimed:', reserveResult.reservationId);
+      console.log('[ATOMIC] ✓ Name reserved:', reserveResult.reservationId);
       
       // Step 7: Persist & redirect
       console.log('[ATOMIC] Step 7: Redirect');
@@ -629,7 +629,7 @@ export default function ClaimFSN() {
           style={styles.connectButton}
           onClick={() => setShowInput(true)}
         >
-          Claim your .rep
+          Reserve your .rep
         </button>
       );
     }
@@ -705,7 +705,7 @@ export default function ClaimFSN() {
     <>
       <SEOHead
         title="Claim your .rep name - .rep Platform"
-        description="Claim your soulbound .rep name on Base blockchain. 3-32 characters, lowercase letters/numbers/hyphens."
+        description="Reserve your soulbound .rep name on Base blockchain. 3-32 characters, lowercase letters/numbers/hyphens."
         ogImage="/og-claim.png"
         path="/claim"
       />
@@ -730,7 +730,7 @@ export default function ClaimFSN() {
 
       <div style={styles.claimContainer}>
         <div style={styles.claimContent}>
-          <h1 style={styles.claimTitle}>Claim your.rep</h1>
+          <h1 style={styles.claimTitle}>Reserve your.rep</h1>
           
           {isConnected && address && (
             <div style={styles.walletStatus}>
