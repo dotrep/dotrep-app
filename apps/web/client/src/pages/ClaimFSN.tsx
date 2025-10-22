@@ -785,7 +785,16 @@ export default function ClaimFSN() {
               </div>
               <button
                 style={styles.connectButton}
-                onClick={() => window.location.href = '/rep-dashboard'}
+                onClick={() => {
+                  console.log('[NAVIGATION] Go to Dashboard button clicked!');
+                  try {
+                    console.log('[NAVIGATION] Attempting redirect to /rep-dashboard');
+                    window.location.href = '/rep-dashboard';
+                  } catch (error) {
+                    console.error('[NAVIGATION] Error redirecting:', error);
+                    alert('Navigation failed: ' + error);
+                  }
+                }}
               >
                 Go to Dashboard
               </button>

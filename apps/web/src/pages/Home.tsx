@@ -40,10 +40,12 @@ export default function Home() {
   }, [isConnected, address, isLoggingIn]);
 
   const handleLogin = async () => {
+    console.log('[LOGIN] handleLogin called, address:', address);
     if (!address) return;
     
     try {
       // Check if wallet has a .rep name
+      console.log('[LOGIN] Checking wallet for .rep name...');
       const checkRes = await fetch('/api/rep/lookup-wallet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,8 +53,10 @@ export default function Home() {
       });
       
       const checkData = await checkRes.json();
+      console.log('[LOGIN] Lookup result:', checkData);
       
       if (!checkData.ok || !checkData.repName) {
+        console.log('[LOGIN] No .rep name found, redirecting to /claim');
         alert(`No .rep name found for this wallet. Please claim one first!`);
         setIsLoggingIn(false);
         window.location.href = '/claim';
@@ -60,10 +64,13 @@ export default function Home() {
       }
 
       // Request signature to prove wallet ownership
+      console.log('[LOGIN] Requesting signature for:', checkData.repName);
       const message = `Login to ${checkData.repName}.rep\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
       const signature = await signMessageAsync({ message });
+      console.log('[LOGIN] Signature received');
 
       // Call auth endpoint
+      console.log('[LOGIN] Calling /api/auth/connect');
       const authRes = await fetch('/api/auth/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,15 +82,23 @@ export default function Home() {
       });
 
       const authData = await authRes.json();
+      console.log('[LOGIN] Auth result:', authData);
       
       if (authData.ok) {
-        window.location.href = '/rep-dashboard';
+        console.log('[LOGIN] Auth successful! Redirecting to /rep-dashboard');
+        try {
+          window.location.href = '/rep-dashboard';
+        } catch (navError) {
+          console.error('[LOGIN] Navigation error:', navError);
+          alert('Navigation failed: ' + navError);
+        }
       } else {
+        console.error('[LOGIN] Auth failed:', authData.error);
         alert('Login failed: ' + (authData.error || 'Unknown error'));
         setIsLoggingIn(false);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('[LOGIN] Login error:', error);
       alert('Login failed. Please try again.');
       setIsLoggingIn(false);
     }
