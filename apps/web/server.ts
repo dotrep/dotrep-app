@@ -10,6 +10,9 @@ import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
 import { verifyWalletSignature } from './lib/verifySignature.js';
+import { canonicalize, isValidName as validateName } from './shared/validate.js';
+import crypto from 'crypto';
+import { verifyMessage } from 'viem';
 
 declare module 'express-session' {
   interface SessionData {
@@ -61,6 +64,128 @@ const openai = new OpenAI({
 
 const isValidName = (name) => typeof name === 'string' && /^[a-z][a-z0-9-]{2,31}$/.test(name);
 const isValidAddress = (addr) => typeof addr === 'string' && /^0x[a-fA-F0-9]{40}$/.test(addr);
+
+// HMAC secret for challenge verification
+const HMAC_SECRET = process.env.HMAC_SECRET || process.env.SESSION_SECRET || 'rep-platform-hmac-secret-change-in-production';
+
+// Helper function to compute HMAC for challenge verification
+function computeHMAC(message: string, nonce: string, address: string, expiresAt: number): string {
+  const payload = `${message}|${nonce}|${address.toLowerCase()}|${expiresAt}`;
+  return crypto.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');
+}
+
+// GET /api/auth/challenge - Generate HMAC challenge for claim flow
+app.get('/api/auth/challenge', async (req, res) => {
+  try {
+    const name = canonicalize(String(req.query.name || ''));
+    const address = String(req.query.address || '').toLowerCase();
+    
+    console.log('[CHALLENGE] Request:', { name, address });
+    
+    if (!validateName(name)) {
+      return res.status(400).json({ ok: false, error: 'INVALID_NAME' });
+    }
+    
+    if (!isValidAddress(address)) {
+      return res.status(400).json({ ok: false, error: 'INVALID_ADDRESS' });
+    }
+    
+    // Build exact message string
+    const message = `Claim ${name}.rep on Base\n\nWallet: ${address}\nNonce: {NONCE}`;
+    
+    // Generate cryptographically secure nonce
+    const nonce = crypto.randomUUID();
+    
+    // Set expiry to 10 minutes from now
+    const expiresAt = Date.now() + (10 * 60 * 1000);
+    
+    // Compute HMAC for verification
+    const mac = computeHMAC(message, nonce, address, expiresAt);
+    
+    // Replace {NONCE} placeholder with actual nonce in message
+    const finalMessage = message.replace('{NONCE}', nonce);
+    
+    console.log('[CHALLENGE] Generated:', {
+      nonce,
+      expiresAt: new Date(expiresAt).toISOString(),
+      mac: mac.substring(0, 16) + '...'
+    });
+    
+    res.json({
+      ok: true,
+      message: finalMessage,
+      nonce,
+      expiresAt,
+      mac
+    });
+  } catch (error) {
+    console.error('[CHALLENGE] Error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR', details: error.message });
+  }
+});
+
+// POST /api/auth/verify - Verify wallet signature with HMAC challenge
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const { address, message, nonce, expiresAt, mac, signature } = req.body;
+    
+    console.log('[VERIFY] Request:', {
+      address,
+      nonce,
+      expiresAt,
+      hasMessage: !!message,
+      hasSignature: !!signature,
+      hasMac: !!mac
+    });
+    
+    if (!address || !message || !nonce || !expiresAt || !mac || !signature) {
+      return res.status(400).json({
+        ok: false,
+        error: 'MISSING_FIELDS',
+        details: 'address, message, nonce, expiresAt, mac, and signature are required'
+      });
+    }
+    
+    // Normalize address to lowercase
+    const normalizedAddress = address.toLowerCase();
+    
+    // Check TTL - must not be expired
+    const now = Date.now();
+    if (now > expiresAt) {
+      console.error('[VERIFY] Challenge expired:', { now, expiresAt, diff: now - expiresAt });
+      return res.status(401).json({ ok: false, error: 'CHALLENGE_EXPIRED' });
+    }
+    
+    // Recompute HMAC and verify it matches
+    const expectedMac = computeHMAC(message.replace(new RegExp(`Nonce: ${nonce}`), 'Nonce: {NONCE}'), nonce, normalizedAddress, expiresAt);
+    
+    if (mac !== expectedMac) {
+      console.error('[VERIFY] HMAC mismatch');
+      return res.status(401).json({ ok: false, error: 'INVALID_CHALLENGE' });
+    }
+    
+    console.log('[VERIFY] HMAC verified, checking signature...');
+    
+    // Verify wallet signature using viem
+    try {
+      const recoveredAddress = await verifyMessage({
+        address: normalizedAddress as `0x${string}`,
+        message,
+        signature: signature as `0x${string}`,
+      });
+      
+      console.log('[VERIFY] ✓ Signature verified successfully');
+      
+      res.json({ ok: true, address: normalizedAddress });
+    } catch (signatureError) {
+      console.error('[VERIFY] ✗ Signature verification failed:', signatureError);
+      return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
+    }
+  } catch (error) {
+    console.error('[VERIFY] Error:', error);
+    res.status(500).json({ ok: false, error: 'SERVER_ERROR', details: error.message });
+  }
+});
 
 // Test endpoint to verify signature verification works
 app.post('/api/_verifyTest', async (req, res) => {
@@ -120,122 +245,95 @@ app.get('/api/rep/check', async (req, res) => {
 
 app.post('/api/rep/reserve', async (req, res) => {
   try {
-    const name = String(req.body?.name || '').toLowerCase();
-    const walletAddress = String(req.body?.walletAddress || '');
-    const message = String(req.body?.message || '');
-    const signature = String(req.body?.signature || '');
+    const name = canonicalize(String(req.body?.name || ''));
+    const address = String(req.body?.address || '').toLowerCase();
     
-    if (!isValidName(name)) {
+    console.log('[RESERVE] Request:', { name, address });
+    
+    if (!validateName(name)) {
       return res.status(400).json({ ok: false, error: 'INVALID_NAME' });
     }
     
-    if (!isValidAddress(walletAddress)) {
-      return res.status(400).json({ ok: false, error: 'INVALID_WALLET_ADDRESS' });
+    if (!isValidAddress(address)) {
+      return res.status(400).json({ ok: false, error: 'INVALID_ADDRESS' });
     }
     
-    // CRITICAL: Reject if wallet address not provided (prevents bypass)
-    if (!walletAddress || walletAddress === '' || walletAddress === '0x0000000000000000000000000000000000000000') {
-      return res.status(401).json({ ok: false, error: 'WALLET_NOT_CONNECTED' });
+    // IDEMPOTENT: Check if this exact {name, address} already exists
+    const existingReservation = await db.select()
+      .from(repReservations)
+      .where(and(
+        eq(repReservations.name, name),
+        eq(repReservations.walletAddress, address)
+      ))
+      .limit(1);
+    
+    if (existingReservation.length > 0) {
+      // Same name + address = return existing reservation (idempotent)
+      console.log('[RESERVE] Returning existing reservation:', existingReservation[0].id);
+      return res.json({
+        ok: true,
+        reservationId: existingReservation[0].id,
+        message: 'Reservation already exists'
+      });
     }
     
-    // CRITICAL: Verify wallet signature to prove ownership
-    if (!message || !signature) {
-      return res.status(401).json({ ok: false, error: 'SIGNATURE_REQUIRED' });
+    // Check if name is taken by a different wallet
+    const nameReservedByOther = await db.select()
+      .from(repReservations)
+      .where(eq(repReservations.name, name))
+      .limit(1);
+    
+    if (nameReservedByOther.length > 0 && nameReservedByOther[0].walletAddress !== address) {
+      console.log('[RESERVE] Name taken by different wallet');
+      return res.status(409).json({
+        ok: false,
+        error: 'NAME_TAKEN',
+        details: 'This name is already claimed by another wallet'
+      });
     }
     
-    // Extract timestamp from message to validate structure
-    // Expected format: "Claim {name}.rep on Base\n\nWallet: {address}\nTimestamp: {timestamp}"
-    const timestampMatch = message.match(/Timestamp: (\d+)/);
-    if (!timestampMatch) {
-      console.error('[CLAIM] Message missing timestamp');
-      return res.status(401).json({ ok: false, error: 'INVALID_MESSAGE_FORMAT' });
+    // Check if wallet has a different name
+    const walletHasDifferentName = await db.select()
+      .from(repReservations)
+      .where(eq(repReservations.walletAddress, address))
+      .limit(1);
+    
+    if (walletHasDifferentName.length > 0 && walletHasDifferentName[0].name !== name) {
+      console.log('[RESERVE] Wallet has different name:', walletHasDifferentName[0].name);
+      return res.status(409).json({
+        ok: false,
+        error: 'WALLET_HAS_NAME',
+        existingName: walletHasDifferentName[0].name,
+        details: `Your wallet already owns ${walletHasDifferentName[0].name}.rep`
+      });
     }
     
-    const timestamp = timestampMatch[1];
-    const expectedMessage = `Claim ${name}.rep on Base\n\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
-    
-    // EXACT message match to prevent manipulation
-    if (message !== expectedMessage) {
-      console.error('[CLAIM] Message does not match expected format');
-      console.error('[CLAIM] Expected:', expectedMessage);
-      console.error('[CLAIM] Received:', message);
-      return res.status(401).json({ ok: false, error: 'INVALID_MESSAGE_CONTENT' });
-    }
-    
-    // Check timestamp freshness (10 minutes to account for clock skew)
-    const now = Date.now();
-    const messageTimestamp = parseInt(timestamp);
-    const messageAge = now - messageTimestamp;
-    const maxAge = 10 * 60 * 1000; // 10 minutes
-    const maxFuture = 5 * 60 * 1000; // 5 minutes in future allowed for clock skew
-    
-    console.log('[CLAIM] Timestamp validation:', {
-      now,
-      messageTimestamp,
-      messageAge,
-      maxAge,
-      isExpired: messageAge > maxAge,
-      isTooFarInFuture: messageAge < -maxFuture
-    });
-    
-    if (messageAge > maxAge) {
-      console.error('[CLAIM] Message timestamp expired (older than 10 minutes)');
-      return res.status(401).json({ ok: false, error: 'MESSAGE_EXPIRED', details: 'Please try signing again' });
-    }
-    
-    if (messageAge < -maxFuture) {
-      console.error('[CLAIM] Message timestamp too far in future');
-      return res.status(401).json({ ok: false, error: 'MESSAGE_TIMESTAMP_INVALID', details: 'System clock error' });
-    }
-    
-    const { ok: isValidSignature, address: normalizedAddress } = await verifyWalletSignature({
-      address: walletAddress,
-      message,
-      signature: signature as `0x${string}`,
-    });
-    
-    if (!isValidSignature) {
-      console.error('[CLAIM] Signature verification failed for wallet:', walletAddress);
-      return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
-    }
-    
-    console.log('[CLAIM] Signature verified successfully for wallet:', normalizedAddress);
-    
-    // Check if name is already reserved
-    const existing = await db.select().from(repReservations).where(eq(repReservations.name, name)).limit(1);
-    if (existing.length > 0) {
-      return res.status(409).json({ ok: false, error: 'ALREADY_RESERVED' });
-    }
-    
-    // CRITICAL: Enforce one wallet = one .rep name
-    const walletHasReservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
-    if (walletHasReservation.length > 0) {
-      return res.status(409).json({ ok: false, error: 'WALLET_HAS_RESERVATION', existingName: walletHasReservation[0].name });
-    }
-    
+    // Create new reservation
     const reservationId = `rid_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    
+    console.log('[RESERVE] Creating new reservation:', reservationId);
     
     await db.insert(repReservations).values({
       id: reservationId,
       name,
-      walletAddress,
+      walletAddress: address,
       linked: false,
     });
 
     await db.insert(users).values({
-      address: walletAddress,
+      address,
       name,
       streak: 0,
       xpMirror: 0,
     }).onConflictDoNothing();
 
     await db.insert(fsnDomains).values({
-      address: walletAddress,
+      address,
       name,
     }).onConflictDoNothing();
 
     await db.insert(walletAddresses).values({
-      ownerAddress: walletAddress,
+      ownerAddress: address,
       fsnName: name,
       blockchain: 'base',
       label: 'Main Wallet',
@@ -245,12 +343,12 @@ app.post('/api/rep/reserve', async (req, res) => {
     
     // Auto-create session after successful claim
     req.session.userId = reservationId;
-    req.session.walletAddress = walletAddress;
+    req.session.walletAddress = address;
     req.session.repName = name;
     
-    console.log('[CLAIM] Session created for:', name);
+    console.log('[RESERVE] Session created for:', name);
     
-    res.json({ ok: true, name, walletAddress, status: 'RESERVED', reservationId });
+    res.json({ ok: true, reservationId });
   } catch (error) {
     console.error('Reserve name error:', error);
     res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
