@@ -231,7 +231,6 @@ app.post('/api/auth/verify', async (req, res) => {
     
     // Debug: Log signature details
     console.log('[VERIFY] Signature debug:', {
-      raw: signature,
       type: typeof signature,
       length: signature?.length,
       hasPrefix: signature?.startsWith('0x'),
@@ -239,51 +238,64 @@ app.post('/api/auth/verify', async (req, res) => {
       last10: signature?.substring(signature.length - 10)
     });
     
-    // Normalize signature: ensure 0x prefix and proper length
+    // Normalize signature: ensure 0x prefix
     let normalizedSignature = signature;
-    
-    // Add 0x prefix if missing
     if (!normalizedSignature.startsWith('0x')) {
       normalizedSignature = '0x' + normalizedSignature;
     }
     
-    // Validate signature length (should be 132: 0x + 130 hex chars)
-    if (normalizedSignature.length !== 132) {
-      console.error('[VERIFY] Invalid signature length:', {
-        expected: 132,
-        actual: normalizedSignature.length,
-        signature: normalizedSignature
-      });
-      return res.status(401).json({ 
-        ok: false, 
-        error: 'INVALID_SIGNATURE_FORMAT',
-        details: `Signature must be 132 characters (0x + 130 hex), got ${normalizedSignature.length}`
-      });
-    }
+    // Detect wallet type and choose verification method
+    const isSmartWalletSig = isSmartWallet(normalizedSignature);
     
-    console.log('[VERIFY] Normalized signature:', {
-      length: normalizedSignature.length,
-      first10: normalizedSignature.substring(0, 10),
-      last10: normalizedSignature.substring(normalizedSignature.length - 10)
-    });
+    console.log('[VERIFY] Wallet type:', isSmartWalletSig ? 'Smart Wallet (EIP-1271)' : 'Traditional EOA');
     
-    // Verify wallet signature using viem
+    // Verify signature based on wallet type
     try {
-      const isValid = await verifyMessage({
-        address: normalizedAddress as `0x${string}`,
-        message,
-        signature: normalizedSignature as `0x${string}`,
-      });
+      let isValid = false;
       
-      console.log('[VERIFY] ✓ Signature verified successfully, isValid:', isValid);
+      if (isSmartWalletSig) {
+        // Smart wallet: Use EIP-1271 contract verification
+        console.log('[VERIFY] Using EIP-1271 verification for smart wallet');
+        isValid = await verifySmartWalletSignature(normalizedAddress, message, normalizedSignature);
+      } else {
+        // Traditional EOA: Use standard ECDSA verification
+        console.log('[VERIFY] Using standard ECDSA verification for EOA');
+        
+        // Validate signature length for EOA (should be 132: 0x + 130 hex chars)
+        if (normalizedSignature.length !== 132) {
+          console.error('[VERIFY] Invalid EOA signature length:', {
+            expected: 132,
+            actual: normalizedSignature.length
+          });
+          return res.status(401).json({ 
+            ok: false, 
+            error: 'INVALID_SIGNATURE_FORMAT',
+            details: `EOA signature must be 132 characters (0x + 130 hex), got ${normalizedSignature.length}`
+          });
+        }
+        
+        isValid = await verifyMessage({
+          address: normalizedAddress as `0x${string}`,
+          message,
+          signature: normalizedSignature as `0x${string}`,
+        });
+      }
       
+      if (!isValid) {
+        console.error('[VERIFY] ✗ Signature verification failed');
+        return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
+      }
+      
+      console.log('[VERIFY] ✓ Signature verified successfully');
       res.json({ ok: true, address: normalizedAddress });
+      
     } catch (signatureError) {
-      console.error('[VERIFY] ✗ Signature verification failed:', signatureError);
+      console.error('[VERIFY] ✗ Signature verification error:', signatureError);
       console.error('[VERIFY] Failed with:', {
         address: normalizedAddress,
         messageLength: message.length,
-        signatureLength: normalizedSignature.length
+        signatureLength: normalizedSignature.length,
+        isSmartWallet: isSmartWalletSig
       });
       return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
     }
