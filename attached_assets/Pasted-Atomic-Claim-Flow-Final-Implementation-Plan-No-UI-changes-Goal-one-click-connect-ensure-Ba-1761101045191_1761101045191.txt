@@ -1,0 +1,153 @@
+Atomic Claim Flow – Final Implementation Plan (No UI changes)
+
+Goal (one click): connect → ensure Base (switch→add fallback) → GET challenge → sign → POST verify → POST reserve → hard redirect.
+
+⸻
+
+0) Ground rules (apply throughout)
+	•	Do not modify visuals or layout.
+	•	ESM only (import from viem/wagmi)—never require() and never manual personal_sign.
+	•	Hard redirects only: window.location.assign(...) (no timers).
+	•	Add an inFlight guard + disable CTA while running.
+	•	Log each hop (connect, switch, challenge, sign, verify, reserve, redirect).
+
+⸻
+
+1) Dependencies & config (in /web)
+	•	Ensure viem, wagmi, @walletconnect/* are installed in the web package and imported via ESM.
+	•	WalletConnect v2 config must include:
+	•	projectId: "<YOUR_WC_ID>"
+	•	chains: [8453] (Base)
+	•	preferInjected: true
+	•	metadata: { name: ".rep", description: "Claim .rep", url: "<your replit URL>", icons: ["<logo url>"] }
+	•	optionalMethods: ['personal_sign','eth_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain']
+
+⸻
+
+2) Shared validation (new file)
+
+Create api/rep/validate.ts (and import in web):
+	•	export const canonicalize = (s: string) => s.trim().toLowerCase()
+	•	export const isValidName = (s: string) => /* your existing rules (3–32, a–z, 0–9, hyphen, starts with letter) */
+
+Use this same validator on both client and server.
+
+⸻
+
+3) Server challenge + verify (in /api)
+
+Endpoints (stateless, idempotent):
+	1.	GET /api/auth/challenge?name&address
+	•	Build exact message string (use your existing builder).
+	•	Create nonce = crypto.randomUUID() (or 128-bit random).
+	•	expiresAt = now + 10m.
+	•	mac = HMAC(secret, message|nonce|address|expiresAt).
+	•	Return { message, nonce, expiresAt, mac }.
+	2.	POST /api/auth/verify
+	•	Expect { address, message, nonce, expiresAt, mac, signature }.
+	•	Recompute HMAC; check TTL; addresses normalized to lowercase.
+	•	viem.verifyMessage({ address, message, signature }).
+	•	Return { ok:true } on success.
+	3.	POST /api/rep/reserve
+	•	Idempotent: same {name,address} returns the same reservationId.
+	•	Return { ok:true, reservationId }.
+
+⸻
+
+4) Base enforcement util (in /web)
+
+Implement ensureBase(8453) once and reuse:
+
+await eth.request({ method: 'wallet_switchEthereumChain', params:[{ chainId:'0x2105' }] })
+  .catch(async (e:any) => {
+    if (e?.code === 4902) {
+      await eth.request({ method:'wallet_addEthereumChain', params:[{
+        chainId:'0x2105', chainName:'Base',
+        nativeCurrency:{ name:'Ether', symbol:'ETH', decimals:18 },
+        rpcUrls:['https://mainnet.base.org'],
+        blockExplorerUrls:['https://basescan.org']
+      }]});
+      await new Promise(r=>setTimeout(r,300)); // mobile settle
+      await eth.request({ method:'wallet_switchEthereumChain', params:[{ chainId:'0x2105' }] });
+    } else { throw e; }
+  });
+
+5) Mobile deep-link resume (in /web)
+	•	Before opening any wallet deep-link:
+localStorage.setItem('rep:pendingName', name); localStorage.setItem('rep:intent','claim');
+	•	On mount and on visibilitychange, if wallet is connected and rep:pendingName exists → resume the flow from “GET challenge”.
+
+Heuristic: If window.ethereum?.isCoinbaseWallet → connect via injected (no deep link). Otherwise allow WalletConnect v2; for Coinbase Wallet from a normal browser, deep-link.
+
+⸻
+
+6) Single atomic handler (replace current CTA logic; keep UI)
+
+Pseudocode (use your existing utils; no timers):
+
+let inFlight = false;
+
+async function handleAtomicClaim(nameRaw: string) {
+  if (inFlight) return; inFlight = true; disableCTA(true);
+  try {
+    const name = canonicalize(nameRaw);
+    if (!isValidName(name)) throw new Error('Invalid name');
+
+    // 1) Connect (prefer injected if Coinbase in-app; else WC v2)
+    await wallet.autoConnectBest(); // reuse your picker/logic
+
+    // 2) Ensure Base
+    await wallet.ensureBase(8453);
+
+    const address = (await wallet.getAddress()).toLowerCase();
+
+    // 3) Challenge
+    const ch = await getJSON(`/api/auth/challenge?name=${name}&address=${address}`);
+
+    // 4) Sign EXACT message string
+    const signature = await wallet.signMessage(ch.message);
+
+    // 5) Verify
+    const ver = await postJSON('/api/auth/verify', { address, message: ch.message, nonce: ch.nonce, expiresAt: ch.expiresAt, mac: ch.mac, signature });
+    if (!ver?.ok) throw new Error('Verify failed');
+
+    // 6) Reserve (idempotent)
+    const res = await postJSON('/api/rep/reserve', { name, address });
+    if (!res?.ok || !res?.reservationId) throw new Error('Reserve failed');
+
+    // 7) Persist + redirect
+    localStorage.setItem('rep:lastName', name);
+    localStorage.setItem('rep:reservationId', res.reservationId);
+    localStorage.setItem('rep:address', address);
+    localStorage.removeItem('rep:pendingName');
+
+    await modal.close?.();
+    window.location.assign(`/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(res.reservationId)}`);
+  } catch (e) {
+    console.error('[claim atomic] error', e);
+    toast.error('Could not complete claim. Please try again.');
+  } finally {
+    disableCTA(false); inFlight = false;
+  }
+}
+
+7) /wallet hydration (in /web)
+	•	Read name/rid from URL or localStorage fallback.
+	•	Show name.rep • 0xAb…1234 from stored address.
+	•	If nothing found, link back to /claim.
+
+⸻
+
+✅ Definition of Done (must pass all)
+	1.	One click completes end-to-end on:
+	•	Desktop MetaMask
+	•	Coinbase in-app (injected)
+	•	Mobile Safari → Coinbase Wallet deep-link
+	•	Mobile MetaMask via WalletConnect v2
+	2.	Returning from a mobile wallet auto-resumes and finishes.
+	3.	Server returns the same reservationId for the same {name,address} (idempotent).
+	4.	No UI/visual diffs; only logic changed.
+	5.	No loops/hangs; no setTimeout redirects; exact challenge message is signed/verified.
+	6.	Console logs show: connect → base → challenge → sign → verify → reserve → redirect.
+
+Convert the claim CTA into a single atomic click that performs connect → Base switch (with add fallback) → server HMAC challenge → viem/wagmi signMessage of the exact string → server verify → idempotent reserve → hard redirect to /wallet, with mobile deep-link resume and complete WalletConnect v2 for 8453. No UI changes. Implement as specified and ensure all Definition-of-Done tests pass.
