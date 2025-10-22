@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { startLogin } from '../loginFlow';
+import { useAccount, useConnect, useSignMessage } from 'wagmi';
 import { canonicalizeName, isValidName } from '../../lib/repValidation';
 import './claim.css';
 
@@ -20,6 +20,9 @@ const isMobile = () => {
 export default function Claim() {
   const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
   const [, setLocation] = useLocation();
+  const { address, isConnected } = useAccount();
+  const { connectAsync, connectors } = useConnect();
+  const { signMessageAsync } = useSignMessage();
   const [name, setName] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -102,7 +105,78 @@ export default function Claim() {
     setError('');
 
     try {
-      await startLogin(canonicalName);
+      // Step 1: Connect wallet if not connected
+      let currentAddress: string | undefined = address;
+      
+      if (!isConnected || !currentAddress) {
+        const connector = connectors.find(c => c.name === 'Coinbase Wallet') || connectors[0];
+        if (!connector) throw new Error('No wallet connector available');
+        
+        const result = await connectAsync({ connector });
+        currentAddress = result.accounts[0] as string;
+        
+        if (!currentAddress) throw new Error('Wallet connected but no address returned');
+      }
+      
+      if (!currentAddress) throw new Error('No wallet address found');
+
+      // Step 2: Request server-issued challenge nonce
+      const challengeRes = await fetch('/api/auth/challenge', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!challengeRes.ok) {
+        throw new Error('Failed to get authentication challenge');
+      }
+      
+      const { nonce, timestamp } = await challengeRes.json();
+      
+      if (!nonce) throw new Error('No nonce received from server');
+
+      // Step 3: Sign challenge message with nonce to prove wallet ownership
+      const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${currentAddress.toLowerCase()}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+      
+      const signature = await signMessageAsync({ message: challengeMessage });
+      
+      if (!signature) throw new Error('Signature required to verify wallet ownership');
+
+      // Step 4: Create session with verified signature
+      const verifyRes = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ 
+          address: currentAddress.toLowerCase(), 
+          message: challengeMessage,
+          signature,
+          nonce,
+          method: 'EOA' 
+        }),
+        credentials: 'include',
+      });
+
+      if (!verifyRes.ok) {
+        const errorData = await verifyRes.json();
+        throw new Error(errorData.error || 'Failed to verify wallet ownership');
+      }
+
+      // Step 3: Reserve name
+      const reserveRes = await fetch('/api/rep/reserve', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: canonicalName }),
+        credentials: 'include',
+      });
+
+      const reserveData = await reserveRes.json();
+      
+      if (!reserveRes.ok || !reserveData.reservationId) {
+        throw new Error(reserveData.error || 'Failed to reserve name');
+      }
+
+      // Step 4: Redirect to wallet page
+      setLocation(`/wallet?name=${encodeURIComponent(canonicalName)}&rid=${encodeURIComponent(reserveData.reservationId)}`);
+      
     } catch (err: any) {
       console.error('[CLAIM] Error:', err);
       setError(err.message || 'Failed to claim name. Please try again.');

@@ -17,6 +17,7 @@ export default defineConfig({
     allowedHosts: ['.replit.dev', 'localhost'],
     hmr: {
       protocol: "wss",
+      host: process.env.REPLIT_DEV_DOMAIN || 'localhost',
       clientPort: 443,
     },
     proxy: {

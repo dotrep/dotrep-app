@@ -1,6 +1,8 @@
 import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
+import crypto from 'crypto';
+import { verifyMessage } from 'viem';
 import { db } from './db/client.js';
 import { reservations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
@@ -32,14 +34,79 @@ app.use(
 declare module 'express-session' {
   interface SessionData {
     user?: { address: string; method: 'EOA' | '1271' | '6492' | 'UNKNOWN'; ts: number };
+    challenge?: { nonce: string; timestamp: number };
   }
 }
 
 // Auth endpoints
+app.get('/api/auth/challenge', async (req, res) => {
+  try {
+    // Generate a cryptographically random nonce
+    const nonce = crypto.randomBytes(32).toString('hex');
+    const timestamp = Date.now();
+    
+    // Store in session
+    req.session.challenge = { nonce, timestamp };
+    await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
+    
+    return res.json({ ok: true, nonce, timestamp });
+  } catch (e: any) {
+    console.error('[challenge] error', e);
+    return res.status(500).json({ ok: false, error: 'challenge_failed' });
+  }
+});
+
 app.post('/api/auth/verify', async (req, res) => {
   try {
-    const { address, method } = req.body ?? {};
+    const { address, message, signature, nonce, method } = req.body ?? {};
+    
     if (!address) return res.status(400).json({ ok: false, error: 'missing_address' });
+    if (!message) return res.status(400).json({ ok: false, error: 'missing_message' });
+    if (!signature) return res.status(400).json({ ok: false, error: 'missing_signature' });
+    if (!nonce) return res.status(400).json({ ok: false, error: 'missing_nonce' });
+    
+    // Validate nonce exists in session
+    const storedChallenge = req.session.challenge;
+    if (!storedChallenge) {
+      console.error('[verify] No challenge found in session');
+      return res.status(401).json({ ok: false, error: 'no_challenge' });
+    }
+    
+    // Validate nonce matches
+    if (storedChallenge.nonce !== nonce) {
+      console.error('[verify] Nonce mismatch');
+      return res.status(401).json({ ok: false, error: 'invalid_nonce' });
+    }
+    
+    // Validate challenge freshness (5 minute expiration)
+    const CHALLENGE_EXPIRY_MS = 5 * 60 * 1000;
+    if (Date.now() - storedChallenge.timestamp > CHALLENGE_EXPIRY_MS) {
+      console.error('[verify] Challenge expired');
+      return res.status(401).json({ ok: false, error: 'challenge_expired' });
+    }
+    
+    // Verify the message includes the nonce
+    if (!message.includes(nonce)) {
+      console.error('[verify] Message does not contain nonce');
+      return res.status(401).json({ ok: false, error: 'nonce_not_in_message' });
+    }
+    
+    // Verify signature matches the address (proof of wallet ownership)
+    const isValid = await verifyMessage({
+      address: address as `0x${string}`,
+      message,
+      signature: signature as `0x${string}`,
+    });
+    
+    if (!isValid) {
+      console.error('[verify] Invalid signature for address:', address);
+      return res.status(401).json({ ok: false, error: 'invalid_signature' });
+    }
+    
+    // Clear the challenge to prevent replay (single-use nonce)
+    delete req.session.challenge;
+    
+    // Signature verified - create session
     req.session.user = { address: String(address).toLowerCase(), method: (method as any) || 'EOA', ts: Date.now() };
     await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
     return res.json({ ok: true });
