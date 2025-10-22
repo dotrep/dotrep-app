@@ -369,9 +369,11 @@ export default function ClaimFSN() {
       if (result.ok) {
         const rid = result.reservationId || Math.random().toString(36).substring(2, 15);
         
+        // Store reservation data before redirect
         localStorage.setItem('rep:lastName', name);
         localStorage.setItem('rep:address', address);
         localStorage.setItem('rep:reservationId', rid);
+        localStorage.setItem('rep:connected', 'true');
         localStorage.removeItem('rep:linked');
         
         toast({
@@ -379,9 +381,8 @@ export default function ClaimFSN() {
           description: `You've successfully reserved ${name}.rep`,
         });
 
-        setTimeout(() => {
-          setLocation(`/rep-dashboard`);
-        }, 500);
+        // Hard redirect to /wallet immediately (no setTimeout, no router state)
+        window.location.assign(`/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(rid)}`);
       } else {
         let errorMessage = 'Failed to reserve name';
         let errorTitle = 'Reservation Failed';
