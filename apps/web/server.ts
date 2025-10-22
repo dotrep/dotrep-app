@@ -1,14 +1,22 @@
 import express from 'express';
 import session from 'express-session';
+import cors from 'cors';
 import { db } from './db/client.js';
 import { reservations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 
-const USE_CROSS_ORIGIN = false; // Vite proxy keeps same-origin
+const USE_CROSS_ORIGIN = true; // Enable CORS for Vite dev server
 
 const app = express();
 app.set('trust proxy', 1);
+
+// CORS configuration for Vite dev server on port 5000
+app.use(cors({
+  origin: 'http://localhost:5000',
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.use(

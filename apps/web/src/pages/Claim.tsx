@@ -60,7 +60,9 @@ export default function Claim() {
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/rep/check?name=${encodeURIComponent(canonicalName)}`);
+        const response = await fetch(`http://localhost:9000/api/rep/check?name=${encodeURIComponent(canonicalName)}`, {
+          credentials: 'include',
+        });
         const result = await response.json();
         
         if (result.ok) {
