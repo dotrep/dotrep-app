@@ -1,5 +1,9 @@
 import express from 'express';
 import session from 'express-session';
+import { db } from './db/client.js';
+import { reservations } from './db/schema.js';
+import { eq, and } from 'drizzle-orm';
+import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 
 const USE_CROSS_ORIGIN = false; // Vite proxy keeps same-origin
 
@@ -49,18 +53,105 @@ app.get('/api/auth/me', (req, res) => {
   return res.status(401).json({ ok: false });
 });
 
-// Temporary stubs (stop 404s)
-app.get('/api/rep/lookup-wallet', (req, res) => {
-  const address = req.query.address?.toString().toLowerCase();
-  res.json({ ok: true, walletFound: !!address, address, reservationId: address ? 'stub-' + Math.random().toString(36).slice(2,8) : undefined });
-});
+// GET /api/rep/lookup-wallet?address=0x...
+app.get('/api/rep/lookup-wallet', async (req, res) => {
+  try {
+    // Get address from session if authenticated, otherwise from query
+    const queryAddress = toLowerAddress(String(req.query.address || ''))
+    const sessionAddress = req.session?.user?.address
+    const address = sessionAddress || queryAddress
+    
+    if (!address) return res.json({ ok: true, walletFound: false })
 
-app.post('/api/rep/reserve', (req, res) => {
-  const name = String(req.body?.name || '').trim().toLowerCase();
-  const address = String(req.body?.address || '').toLowerCase();
-  if (!name || !address) return res.status(400).json({ ok:false, error:'missing_name_or_address' });
-  const id = 'stub-' + Buffer.from(`${name}:${address}`).toString('base64').slice(0,10);
-  res.json({ ok:true, reservationId:id, name, address });
+    const [row] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, address))
+      .limit(1)
+
+    if (!row) return res.json({ ok: true, walletFound: false })
+
+    return res.json({
+      ok: true,
+      walletFound: true,
+      address: row.address,
+      reservationId: row.id,
+      name: row.name,
+    })
+  } catch (e:any) {
+    console.error('[lookup-wallet] error', e)
+    res.status(500).json({ ok: false, error: 'server_error' })
+  }
+})
+
+// POST /api/rep/reserve  { name, address }
+app.post('/api/rep/reserve', async (req, res) => {
+  try {
+    // CRITICAL: Enforce session-based authentication
+    const sessionAddress = req.session?.user?.address
+    if (!sessionAddress) {
+      return res.status(401).json({ ok: false, error: 'unauthorized' })
+    }
+
+    const name = canonicalizeName(String(req.body?.name || ''))
+    
+    // Use session address, ignore any address from request body
+    const address = sessionAddress
+
+    if (!name || !isValidName(name)) {
+      return res.status(400).json({ ok: false, error: 'invalid_input' })
+    }
+
+    // Name already exists?
+    const [existingByName] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.nameLower, name))
+      .limit(1)
+
+    if (existingByName) {
+      // If it's owned by the same address → idempotent success
+      if (existingByName.addressLower === address) {
+        return res.json({
+          ok: true,
+          reservationId: existingByName.id,
+          name: existingByName.name,
+          address: existingByName.address,
+        })
+      }
+      // Otherwise, name taken
+      return res.status(409).json({ ok: false, error: 'name_taken' })
+    }
+
+    // Insert new reservation - catch unique constraint violations
+    try {
+      const [created] = await db
+        .insert(reservations)
+        .values({
+          name,
+          nameLower: name,
+          address,
+          addressLower: address,
+        })
+        .returning()
+
+      return res.json({
+        ok: true,
+        reservationId: created.id,
+        name: created.name,
+        address: created.address,
+      })
+    } catch (insertError: any) {
+      // Handle unique constraint violations from race conditions
+      if (insertError.code === '23505') { // PostgreSQL unique violation
+        return res.status(409).json({ ok: false, error: 'name_taken' })
+      }
+      throw insertError
+    }
+  } catch (e: any) {
+    console.error('[reserve] error', e)
+    res.status(500).json({ ok: false, error: 'server_error' })
+  }
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
