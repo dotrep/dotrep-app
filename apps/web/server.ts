@@ -9,6 +9,7 @@ import { PinataSDK } from 'pinata';
 import { Blob } from 'buffer';
 import multer from 'multer';
 import OpenAI from 'openai';
+import cors from 'cors';
 import { verifyWalletSignature } from './lib/verifySignature.js';
 import { canonicalize, isValidName as validateName } from './shared/validate.js';
 import crypto from 'crypto';
@@ -24,6 +25,13 @@ declare module 'express-session' {
 }
 
 const app = express();
+
+// Enable CORS for external browser access
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Session setup with PostgreSQL storage
