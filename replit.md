@@ -28,33 +28,45 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 - **Web3 Integration**: Uses Wagmi v2 and Viem for blockchain interactions, configured for Base Mainnet (8453). Wallet connection supports injected providers and WalletConnect, with auto-reconnect logic and iframe detection for Replit compatibility.
 - **Component Design**: Functional React components, inline SVG for graphics, CSS keyframes for animations, and client-side state management.
 
-### Backend Architecture (apps/api)
-- **Technology Stack**: Express.js TypeScript server running via tsx, integrated with Vite in middleware mode for development.
-- **API Design**: RESTful endpoints for `.rep` names, wallet management, messaging, vault storage, and AI chat. All endpoints persist to PostgreSQL via Drizzle ORM.
-- **Server Configuration**: Single server on port 5000 (apps/web/server.ts); HMR is disabled in development for stability in the Replit environment.
-- **Session Management**: PostgreSQL-backed sessions using express-session + connect-pg-simple with 7-day session duration and secure cookie settings.
+### Backend Architecture (apps/web)
+- **Technology Stack**: Express.js TypeScript server running via tsx on port 9000.
+- **API Design**: RESTful endpoints for authentication and `.rep` name reservations. All endpoints persist to PostgreSQL via Drizzle ORM.
+- **Server Configuration**: Dual-process setup for same-origin cookie support:
+  - **API Server**: Express on port 9000 (console output) - handles /api/* requests
+  - **Vite Dev Server**: Port 5000 (webview output) - proxies /api/* to port 9000
+  - This architecture ensures same-origin cookies work reliably without CORS issues
+- **Session Management**: In-memory sessions using express-session with sameSite: 'lax' cookies, 7-day duration. Session stores { address, method, ts }.
 
 ### Data Architecture
-- **Database**: Production PostgreSQL database using Drizzle ORM. Schema includes tables for users, FSN domains, wallet addresses, transactions, messages, contacts, vault items, and chat history.
-- **Name Registry**: `.rep` name reservations stored in PostgreSQL with conflict handling and automatic wallet provisioning.
-- **Data Flow**: All mock data replaced with real database operations - claim flow creates user + domain + wallet records; dashboard tabs query live PostgreSQL data.
+- **Database**: Production PostgreSQL database using Drizzle ORM located in `apps/web/db/`
+- **Name Registry**: `.rep` name reservations stored in `reservations` table with:
+  - Text UUID primary key (gen_random_uuid)
+  - Lowercase name and address fields for case-insensitive matching
+  - Unique indexes on name_lower and (address_lower, name_lower) pair
+  - Idempotent reserve logic: same wallet can re-claim same name
+  - 409 conflicts on duplicate names or race conditions
+- **Data Flow**: Authenticated claim flow creates reservation records tied to session wallet address.
 
 ### Authentication & Identity
 - **Web3 Integration**: Utilizes Wagmi v2 for wallet connections, supporting MetaMask and WalletConnect. Auto-reconnect and iframe detection are implemented.
-- **Claim Flow**: Production-ready wallet-first authentication with cryptographic signature verification. Users must connect wallet, sign a message proving ownership, and pass backend verification before claiming. Each wallet can only claim one .rep name (enforced at both application and database levels).
-- **Session-Based Auth**: After claiming, users receive a 7-day PostgreSQL-backed session. Returning users can reconnect wallet to authenticate without re-claiming.
+- **Claim Flow**: Simplified wallet-first authentication using window.ethereum. Available helper: `apps/web/src/loginFlow.ts` with:
+  - `connectWallet()` - Requests wallet connection
+  - `waitForSession()` - Polls /api/auth/me until session exists
+  - `startLogin(name)` - Atomic flow: connect → verify → lookup → reserve → redirect
+- **Session-Based Auth**: After verification, users receive a 7-day in-memory session.
 - **Auth Routes**:
-  - `POST /api/auth/connect` - Verifies wallet signature and creates session for returning users
-  - `GET /api/auth/me` - Returns current session data (userId, walletAddress, repName)
-  - `POST /api/auth/logout` - Destroys session
-  - `GET /api/user/stats` - Returns pulse score, XP, signals, beacon status (session-protected)
+  - `POST /api/auth/verify` - Creates session with { address, method, ts }, returns 200 on success
+  - `GET /api/auth/me` - Returns current session data or 401 if unauthorized
+  - `GET /api/rep/lookup-wallet?address=0x...` - Finds existing reservations (prefers session address)
+  - `POST /api/rep/reserve { name }` - **Session-protected** - reserves name for session.user.address only
+  - `GET /api/health` - Health check endpoint
 - **Security Implementation**:
-  - **Exact Message Matching**: Backend reconstructs and validates exact message content (`Claim {name}.rep on Base\n\nWallet: {address}\nTimestamp: {timestamp}`)
-  - **Signature Verification**: Uses viem's `recoverMessageAddress` to cryptographically verify wallet ownership
-  - **Timestamp Freshness**: 5-minute window prevents replay attacks
-  - **Database Constraint**: Unique index `rep_reservations_wallet_unique` on `wallet_address` enforces one wallet = one .rep name
-  - **Multi-Layer Validation**: Format check → exact match → timestamp check → signature verification → duplicate check → database constraint
-  - **Session Security**: HttpOnly cookies, 7-day expiry, PostgreSQL persistence via connect-pg-simple
+  - **Session Enforcement**: /api/rep/reserve requires active session, ignores client-supplied address
+  - **Address Normalization**: All wallet addresses lowercased before storage/comparison
+  - **Database Constraints**: Unique indexes on name_lower and (address_lower, name_lower)
+  - **Idempotent Reserve**: Same wallet claiming same name returns existing reservation
+  - **Race Condition Handling**: PostgreSQL unique violations (23505) return 409 "name_taken"
+  - **Session Security**: HttpOnly cookies, sameSite: 'lax', 7-day expiry
 
 ### File Storage & Vault System
 - **Encryption**: Client-side AES-GCM 256-bit encryption with a zero-knowledge server design.
