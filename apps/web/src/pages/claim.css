@@ -1,0 +1,230 @@
+.claim-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.particle-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 20s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  25% { transform: translate(20px, -30px) scale(1.1); opacity: 0.5; }
+  50% { transform: translate(-15px, -50px) scale(0.9); opacity: 0.7; }
+  75% { transform: translate(-25px, -20px) scale(1.05); opacity: 0.4; }
+}
+
+.claim-container {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  width: 100%;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 40px;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #00d4aa;
+  border-color: #00d4aa;
+}
+
+.claim-content {
+  background: rgba(10, 14, 39, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 212, 170, 0.2);
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 
+    0 0 60px rgba(0, 212, 170, 0.15),
+    inset 0 0 60px rgba(0, 82, 255, 0.05);
+}
+
+.claim-title {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.claim-title .highlight {
+  background: linear-gradient(90deg, #00d4aa 0%, #0052ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.claim-subtitle {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0 0 40px 0;
+  text-align: center;
+}
+
+.claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(0, 212, 170, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  transition: all 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: #00d4aa;
+  box-shadow: 0 0 24px rgba(0, 212, 170, 0.3);
+}
+
+.name-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.name-input::placeholder {
+  color: #475569;
+}
+
+.input-suffix {
+  color: #00d4aa;
+  font-size: 24px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.status-checking {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.status-available {
+  color: #00d4aa;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-error {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+.claim-button {
+  width: 100%;
+  padding: 18px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.claim-button-active {
+  background: linear-gradient(135deg, #00d4aa 0%, #0052ff 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+}
+
+.claim-button-active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 170, 0.5);
+}
+
+.claim-button-active:active {
+  transform: translateY(0);
+}
+
+.claim-button-disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.claim-features {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.feature-icon {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .claim-content {
+    padding: 32px 24px;
+  }
+
+  .claim-title {
+    font-size: 36px;
+  }
+
+  .name-input,
+  .input-suffix {
+    font-size: 20px;
+  }
+
+  .claim-features {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+}
+
+.motion-off .particle {
+  animation: none !important;
+}

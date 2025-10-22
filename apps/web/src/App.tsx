@@ -6,7 +6,7 @@ import { wagmiConfig } from '../client/src/config/wagmi';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
-import ClaimFSN from "../client/src/pages/ClaimFSN";
+import Claim from "./pages/Claim";
 import Wallet from "./pages/Wallet";
 import { RepDashboard } from "../client/src/pages/RepDashboard";
 
@@ -19,8 +19,8 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/reserve" component={ClaimFSN} />
-            <Route path="/claim" component={ClaimFSN} />
+            <Route path="/reserve" component={Claim} />
+            <Route path="/claim" component={Claim} />
             <Route path="/discover" component={Discover} />
             <Route path="/wallet" component={Wallet} />
             <Route path="/rep-dashboard" component={RepDashboard} />
