@@ -12,7 +12,7 @@ import OpenAI from 'openai';
 import { verifyWalletSignature } from './lib/verifySignature.js';
 import { canonicalize, isValidName as validateName } from './shared/validate.js';
 import crypto from 'crypto';
-import { verifyMessage, createPublicClient, http, keccak256, toBytes } from 'viem';
+import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 
 declare module 'express-session' {
@@ -55,67 +55,12 @@ app.use((req, res, next) => {
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Create Base RPC client for EIP-1271 verification
+// Create Base RPC client for signature verification
+// This client is used by verifyMessage to handle EOA, ERC-1271, and ERC-6492 signatures
 const baseClient = createPublicClient({
   chain: base,
   transport: http()
 });
-
-// EIP-1271 magic value - returned by isValidSignature on success
-const EIP1271_MAGIC_VALUE = '0x1626ba7e';
-
-// Helper: Detect wallet type based on signature
-function isSmartWallet(signature: string): boolean {
-  // Smart wallets return much longer signatures (EIP-1271 format)
-  // Traditional EOA signatures are exactly 132 chars (0x + 130 hex)
-  return signature.length > 200;
-}
-
-// Helper: Verify EIP-1271 smart wallet signature
-async function verifySmartWalletSignature(
-  walletAddress: string,
-  message: string,
-  signature: string
-): Promise<boolean> {
-  try {
-    console.log('[EIP-1271] Verifying smart wallet signature');
-    
-    // Hash the message according to EIP-191 (personal_sign format)
-    const messagePrefix = '\x19Ethereum Signed Message:\n';
-    const messageWithPrefix = messagePrefix + message.length + message;
-    const messageHash = keccak256(toBytes(messageWithPrefix));
-    
-    console.log('[EIP-1271] Message hash:', messageHash);
-    
-    // Call isValidSignature(bytes32 hash, bytes signature) on the wallet contract
-    const result = await baseClient.readContract({
-      address: walletAddress as `0x${string}`,
-      abi: [
-        {
-          name: 'isValidSignature',
-          type: 'function',
-          stateMutability: 'view',
-          inputs: [
-            { name: '_hash', type: 'bytes32' },
-            { name: '_signature', type: 'bytes' }
-          ],
-          outputs: [{ name: 'magicValue', type: 'bytes4' }]
-        }
-      ],
-      functionName: 'isValidSignature',
-      args: [messageHash, signature as `0x${string}`]
-    });
-    
-    console.log('[EIP-1271] Contract returned:', result);
-    console.log('[EIP-1271] Expected magic value:', EIP1271_MAGIC_VALUE);
-    console.log('[EIP-1271] Match:', result === EIP1271_MAGIC_VALUE);
-    
-    return result === EIP1271_MAGIC_VALUE;
-  } catch (error) {
-    console.error('[EIP-1271] Verification failed:', error);
-    return false;
-  }
-}
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_API_KEY || '',
@@ -229,57 +174,39 @@ app.post('/api/auth/verify', async (req, res) => {
     
     console.log('[VERIFY] HMAC verified, checking signature...');
     
-    // Debug: Log signature details
-    console.log('[VERIFY] Signature debug:', {
-      type: typeof signature,
-      length: signature?.length,
-      hasPrefix: signature?.startsWith('0x'),
-      first10: signature?.substring(0, 10),
-      last10: signature?.substring(signature.length - 10)
-    });
-    
     // Normalize signature: ensure 0x prefix
     let normalizedSignature = signature;
     if (!normalizedSignature.startsWith('0x')) {
       normalizedSignature = '0x' + normalizedSignature;
     }
     
-    // Detect wallet type and choose verification method
-    const isSmartWalletSig = isSmartWallet(normalizedSignature);
-    
-    console.log('[VERIFY] Wallet type:', isSmartWalletSig ? 'Smart Wallet (EIP-1271)' : 'Traditional EOA');
-    
-    // Verify signature based on wallet type
-    try {
-      let isValid = false;
-      
-      if (isSmartWalletSig) {
-        // Smart wallet: Use EIP-1271 contract verification
-        console.log('[VERIFY] Using EIP-1271 verification for smart wallet');
-        isValid = await verifySmartWalletSignature(normalizedAddress, message, normalizedSignature);
+    // Detect signature type for logging
+    let signatureType = 'EOA (ECDSA)';
+    if (normalizedSignature.length > 200) {
+      // Check for EIP-6492 magic bytes at the end
+      if (normalizedSignature.endsWith('6492649264926492649264926492649264926492649264926492649264926492')) {
+        signatureType = 'EIP-6492 (Undeployed Smart Wallet)';
       } else {
-        // Traditional EOA: Use standard ECDSA verification
-        console.log('[VERIFY] Using standard ECDSA verification for EOA');
-        
-        // Validate signature length for EOA (should be 132: 0x + 130 hex chars)
-        if (normalizedSignature.length !== 132) {
-          console.error('[VERIFY] Invalid EOA signature length:', {
-            expected: 132,
-            actual: normalizedSignature.length
-          });
-          return res.status(401).json({ 
-            ok: false, 
-            error: 'INVALID_SIGNATURE_FORMAT',
-            details: `EOA signature must be 132 characters (0x + 130 hex), got ${normalizedSignature.length}`
-          });
-        }
-        
-        isValid = await verifyMessage({
-          address: normalizedAddress as `0x${string}`,
-          message,
-          signature: normalizedSignature as `0x${string}`,
-        });
+        signatureType = 'EIP-1271 (Deployed Smart Wallet)';
       }
+    }
+    
+    console.log('[VERIFY] Signature type detected:', signatureType);
+    console.log('[VERIFY] Signature length:', normalizedSignature.length);
+    
+    // Verify signature using viem's publicClient.verifyMessage
+    // This automatically handles:
+    // - EOA signatures (standard ECDSA)
+    // - ERC-1271 (deployed smart contract wallets)
+    // - ERC-6492 (undeployed smart contract wallets)
+    try {
+      console.log('[VERIFY] Verifying with viem publicClient (supports EOA/ERC-1271/ERC-6492)...');
+      
+      const isValid = await baseClient.verifyMessage({
+        address: normalizedAddress as `0x${string}`,
+        message,
+        signature: normalizedSignature as `0x${string}`,
+      });
       
       if (!isValid) {
         console.error('[VERIFY] ✗ Signature verification failed');
@@ -287,6 +214,7 @@ app.post('/api/auth/verify', async (req, res) => {
       }
       
       console.log('[VERIFY] ✓ Signature verified successfully');
+      console.log('[VERIFY] Verified as:', signatureType);
       res.json({ ok: true, address: normalizedAddress });
       
     } catch (signatureError) {
@@ -295,7 +223,7 @@ app.post('/api/auth/verify', async (req, res) => {
         address: normalizedAddress,
         messageLength: message.length,
         signatureLength: normalizedSignature.length,
-        isSmartWallet: isSmartWalletSig
+        signatureType
       });
       return res.status(401).json({ ok: false, error: 'INVALID_SIGNATURE' });
     }
