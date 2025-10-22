@@ -120,7 +120,20 @@ export default function Claim() {
       
       if (!currentAddress) throw new Error('No wallet address found');
 
-      // Step 2: Request server-issued challenge nonce
+      // Step 2: Check if wallet already has a .rep name (prevent duplicates)
+      const lookupRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(currentAddress.toLowerCase())}`, {
+        credentials: 'include',
+      });
+      
+      const lookupData = await lookupRes.json();
+      
+      if (lookupData.ok && lookupData.walletFound) {
+        // Wallet already has a name - redirect to wallet page
+        setLocation(`/wallet?name=${encodeURIComponent(lookupData.name)}&rid=${encodeURIComponent(lookupData.reservationId)}`);
+        return;
+      }
+
+      // Step 3: Request server-issued challenge nonce
       const challengeRes = await fetch('/api/auth/challenge', {
         method: 'GET',
         credentials: 'include',
@@ -134,14 +147,14 @@ export default function Claim() {
       
       if (!nonce) throw new Error('No nonce received from server');
 
-      // Step 3: Sign challenge message with nonce to prove wallet ownership
+      // Step 4: Sign challenge message with nonce to prove wallet ownership
       const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${currentAddress.toLowerCase()}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
       
       const signature = await signMessageAsync({ message: challengeMessage });
       
       if (!signature) throw new Error('Signature required to verify wallet ownership');
 
-      // Step 4: Create session with verified signature
+      // Step 5: Create session with verified signature
       const verifyRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -160,7 +173,7 @@ export default function Claim() {
         throw new Error(errorData.error || 'Failed to verify wallet ownership');
       }
 
-      // Step 3: Reserve name
+      // Step 6: Reserve name
       const reserveRes = await fetch('/api/rep/reserve', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -174,7 +187,7 @@ export default function Claim() {
         throw new Error(reserveData.error || 'Failed to reserve name');
       }
 
-      // Step 4: Redirect to wallet page
+      // Step 7: Redirect to wallet page
       setLocation(`/wallet?name=${encodeURIComponent(canonicalName)}&rid=${encodeURIComponent(reserveData.reservationId)}`);
       
     } catch (err: any) {

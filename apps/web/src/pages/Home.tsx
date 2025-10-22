@@ -49,16 +49,14 @@ export default function Home() {
     try {
       // Check if wallet has a .rep name
       console.log('[LOGIN] Checking wallet for .rep name...');
-      const checkRes = await fetch('/api/rep/lookup-wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: normalizedAddress }),
+      const checkRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(normalizedAddress)}`, {
+        credentials: 'include',
       });
       
       const checkData = await checkRes.json();
       console.log('[LOGIN] Lookup result:', checkData);
       
-      if (!checkData.ok || !checkData.repName) {
+      if (!checkData.ok || !checkData.walletFound) {
         console.log('[LOGIN] No .rep name found, redirecting to /claim');
         alert(`No .rep name found for this wallet. Please claim one first!`);
         setIsLoggingIn(false);
@@ -66,44 +64,58 @@ export default function Home() {
         return;
       }
 
+      // Request server-issued challenge nonce
+      console.log('[LOGIN] Requesting challenge nonce...');
+      const challengeRes = await fetch('/api/auth/challenge', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!challengeRes.ok) {
+        throw new Error('Failed to get authentication challenge');
+      }
+      
+      const { nonce, timestamp } = await challengeRes.json();
+      
+      if (!nonce) throw new Error('No nonce received from server');
+
       // Request signature to prove wallet ownership
-      console.log('[LOGIN] Requesting signature for:', checkData.repName);
-      const message = `Login to ${checkData.repName}.rep\n\nWallet: ${normalizedAddress}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessageAsync({ message });
+      console.log('[LOGIN] Requesting signature for:', checkData.name);
+      const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${normalizedAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+      const signature = await signMessageAsync({ message: challengeMessage });
       console.log('[LOGIN] Signature received');
 
-      // Call auth endpoint
-      console.log('[LOGIN] Calling /api/auth/connect');
-      const authRes = await fetch('/api/auth/connect', {
+      // Verify signature and create session
+      console.log('[LOGIN] Calling /api/auth/verify');
+      const authRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          walletAddress: normalizedAddress,
-          message,
-          signature
+          address: normalizedAddress,
+          message: challengeMessage,
+          signature,
+          nonce,
+          method: 'EOA'
         }),
+        credentials: 'include',
       });
 
-      const authData = await authRes.json();
-      console.log('[LOGIN] Auth result:', authData);
+      if (!authRes.ok) {
+        const errorData = await authRes.json();
+        throw new Error(errorData.error || 'Failed to verify wallet ownership');
+      }
       
-      if (authData.ok) {
-        console.log('[LOGIN] Auth successful! Redirecting to /wallet with name and rid');
-        
-        // Hard redirect to /wallet with name and reservation ID
-        if (checkData.reservationId) {
-          localStorage.setItem('rep:lastName', checkData.repName);
-          localStorage.setItem('rep:reservationId', checkData.reservationId);
-          localStorage.setItem('rep:address', normalizedAddress);
-          window.location.assign(`/wallet?name=${encodeURIComponent(checkData.repName)}&rid=${encodeURIComponent(checkData.reservationId)}`);
-        } else {
-          // Fallback to dashboard if no reservation ID
-          window.location.href = '/rep-dashboard';
-        }
+      console.log('[LOGIN] Auth successful! Redirecting to /wallet');
+      
+      // Hard redirect to /wallet with name and reservation ID
+      if (checkData.reservationId) {
+        localStorage.setItem('rep:lastName', checkData.name);
+        localStorage.setItem('rep:reservationId', checkData.reservationId);
+        localStorage.setItem('rep:address', normalizedAddress);
+        window.location.assign(`/wallet?name=${encodeURIComponent(checkData.name)}&rid=${encodeURIComponent(checkData.reservationId)}`);
       } else {
-        console.error('[LOGIN] Auth failed:', authData.error);
-        alert('Login failed: ' + (authData.error || 'Unknown error'));
-        setIsLoggingIn(false);
+        // Fallback to dashboard if no reservation ID
+        window.location.href = '/rep-dashboard';
       }
     } catch (error: any) {
       console.error('[LOGIN] Login error:', error);
