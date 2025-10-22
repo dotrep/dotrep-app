@@ -12,10 +12,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5001
-externalPort = 3001
-
-[[ports]]
 localPort = 24678
 externalPort = 5173
 
@@ -67,6 +63,10 @@ externalPort = 3002
 localPort = 44977
 externalPort = 8008
 
+[[ports]]
+localPort = 9000
+externalPort = 9000
+
 [agent]
 expertMode = true
 
@@ -80,16 +80,32 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Web App"
+args = "API Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Vite Dev"
 
 [[workflows.workflow]]
-name = "Web App"
+name = "API Server"
 author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd apps/web && npx tsx server.ts"
+waitForPort = 9000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Vite Dev"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/web && npm run dev"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
