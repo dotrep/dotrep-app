@@ -14,6 +14,9 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5000,
     strictPort: false,
+    hmr: {
+      clientPort: 443,
+    },
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',

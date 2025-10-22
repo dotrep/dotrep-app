@@ -26,9 +26,40 @@ declare module 'express-session' {
 
 const app = express();
 
-// Enable CORS for external browser access
+// Enable CORS only in development with restricted origins
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [] // No CORS in production - same origin only
+  : [
+      /^https:\/\/.*\.replit\.dev$/,  // Replit preview domains
+      /^https:\/\/.*\.repl\.co$/,      // Legacy Replit domains  
+      'http://localhost:5000',
+      'http://127.0.0.1:5000',
+    ];
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // In production, block all CORS (same-origin only)
+    if (process.env.NODE_ENV === 'production') {
+      return callback(new Error('CORS not allowed in production'));
+    }
+    
+    // In development, check whitelist
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      }
+      return allowed.test(origin);
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
   credentials: true,
 }));
 

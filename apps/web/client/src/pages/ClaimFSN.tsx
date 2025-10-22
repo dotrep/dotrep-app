@@ -226,6 +226,8 @@ export default function ClaimFSN() {
   const [isReserving, setIsReserving] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string>('');
+  const [existingRepName, setExistingRepName] = useState<string | null>(null);
+  const [isCheckingWallet, setIsCheckingWallet] = useState(false);
   const inFlightRef = useRef(false);
 
   const { address, isConnected, chain } = useAccount();
@@ -253,6 +255,40 @@ export default function ClaimFSN() {
       setShowInput(true);
     }
   }, []);
+
+  // Check if wallet already has a .rep name
+  useEffect(() => {
+    const checkWalletRepName = async () => {
+      if (!isConnected || !address) {
+        setExistingRepName(null);
+        return;
+      }
+
+      setIsCheckingWallet(true);
+      try {
+        const response = await fetch('/api/rep/lookup-wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: address }),
+        });
+        const result = await response.json();
+        
+        if (result.ok && result.repName) {
+          console.log('[WALLET CHECK] Wallet already has .rep name:', result.repName);
+          setExistingRepName(result.repName);
+        } else {
+          setExistingRepName(null);
+        }
+      } catch (err) {
+        console.error('[WALLET CHECK] Error checking wallet:', err);
+        setExistingRepName(null);
+      } finally {
+        setIsCheckingWallet(false);
+      }
+    };
+
+    checkWalletRepName();
+  }, [isConnected, address]);
 
   useEffect(() => {
     if (!name) {
@@ -546,7 +582,12 @@ export default function ClaimFSN() {
       const reserveResult = await reserveRes.json();
       
       if (!reserveResult.ok || !reserveResult.reservationId) {
-        throw new Error(reserveResult.error || reserveResult.details || 'Reserve failed');
+        // Handle wallet already has .rep name error
+        if (reserveResult.error === 'WALLET_HAS_NAME' && reserveResult.existingName) {
+          setExistingRepName(reserveResult.existingName);
+          throw new Error(`Your wallet already owns ${reserveResult.existingName}.rep`);
+        }
+        throw new Error(reserveResult.details || reserveResult.error || 'Reserve failed');
       }
       
       console.log('[ATOMIC] ✓ Name reserved:', reserveResult.reservationId);
@@ -713,40 +754,80 @@ export default function ClaimFSN() {
             Must start with a letter
           </p>
 
-          <div style={styles.claimSteps}>
-            <span style={showInput ? styles.stepActive : styles.step}>1 Claim</span>
-            <span style={styles.stepDot}>•</span>
-            <span style={styles.step}>2 Link</span>
-            <span style={styles.stepDot}>•</span>
-            <span style={styles.step}>3 Done</span>
-          </div>
-
-          {showInput && (
+          {/* Show existing .rep name if wallet already has one */}
+          {existingRepName ? (
             <>
-              <div style={styles.nameInputWrapper}>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  placeholder="yourname"
-                  style={styles.nameInput}
-                  autoFocus
-                />
-                <span style={styles.nameSuffix}>.rep</span>
+              <div style={{
+                ...styles.walletStatus,
+                flexDirection: 'column',
+                gap: '16px',
+                padding: '24px',
+                background: 'rgba(0, 212, 170, 0.15)',
+                border: '2px solid rgba(0, 212, 170, 0.4)',
+              }}>
+                <div style={{
+                  fontSize: '16px',
+                  color: '#94a3b8',
+                  textAlign: 'center',
+                }}>
+                  You already have a .rep name
+                </div>
+                <div style={{
+                  fontSize: '32px',
+                  fontWeight: 700,
+                  background: 'linear-gradient(90deg, #00d4aa 0%, #0052ff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textAlign: 'center',
+                }}>
+                  {existingRepName}.rep
+                </div>
+              </div>
+              <button
+                style={styles.connectButton}
+                onClick={() => setLocation('/rep-dashboard')}
+              >
+                Go to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={styles.claimSteps}>
+                <span style={showInput ? styles.stepActive : styles.step}>1 Claim</span>
+                <span style={styles.stepDot}>•</span>
+                <span style={styles.step}>2 Link</span>
+                <span style={styles.stepDot}>•</span>
+                <span style={styles.step}>3 Done</span>
               </div>
 
-              {name && (
-                <div style={styles.statusMessage}>
-                  {isChecking && <span style={styles.statusChecking}>Checking...</span>}
-                  {!isChecking && isAvailable === true && <span style={styles.statusAvailable}>✓ {name}.rep is available</span>}
-                  {!isChecking && isAvailable === false && <span style={styles.statusUnavailable}>✗ Name is taken</span>}
-                  {!isChecking && error && !isAvailable && <span style={styles.statusError}>{error}</span>}
-                </div>
+              {showInput && (
+                <>
+                  <div style={styles.nameInputWrapper}>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="yourname"
+                      style={styles.nameInput}
+                      autoFocus
+                    />
+                    <span style={styles.nameSuffix}>.rep</span>
+                  </div>
+
+                  {name && (
+                    <div style={styles.statusMessage}>
+                      {isChecking && <span style={styles.statusChecking}>Checking...</span>}
+                      {!isChecking && isAvailable === true && <span style={styles.statusAvailable}>✓ {name}.rep is available</span>}
+                      {!isChecking && isAvailable === false && <span style={styles.statusUnavailable}>✗ Name is taken</span>}
+                      {!isChecking && error && !isAvailable && <span style={styles.statusError}>{error}</span>}
+                    </div>
+                  )}
+                </>
               )}
+
+              {renderButton()}
             </>
           )}
-
-          {renderButton()}
         </div>
 
         {!isMobile() && (
