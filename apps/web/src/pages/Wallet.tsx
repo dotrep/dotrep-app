@@ -48,7 +48,7 @@ export default function Wallet() {
           </svg>
         </div>
         
-        <h1 className="wallet-title">Your .rep is reserved!</h1>
+        <h1 className="wallet-title">Your .rep is claimed!</h1>
         <p className="wallet-message">
           You've successfully claimed your onchain identity on Base.
         </p>

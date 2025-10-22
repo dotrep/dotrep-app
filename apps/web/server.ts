@@ -528,9 +528,18 @@ app.post('/api/auth/connect', async (req, res) => {
     req.session.walletAddress = walletAddress;
     req.session.repName = name;
     
-    console.log('[AUTH CONNECT] Session created for:', name);
+    console.log('[AUTH CONNECT] Session data set for:', name);
     
-    res.json({ ok: true, userId: id, walletAddress, repName: name });
+    // Explicitly save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('[AUTH CONNECT] Session save error:', err);
+        return res.status(500).json({ ok: false, error: 'SESSION_SAVE_FAILED' });
+      }
+      
+      console.log('[AUTH CONNECT] Session saved successfully for:', name);
+      res.json({ ok: true, userId: id, walletAddress, repName: name });
+    });
   } catch (error) {
     console.error('[AUTH CONNECT] Error:', error);
     res.status(500).json({ ok: false, error: 'SERVER_ERROR' });

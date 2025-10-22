@@ -88,18 +88,10 @@ export default function Home() {
       console.log('[LOGIN] Auth result:', authData);
       
       if (authData.ok) {
-        console.log('[LOGIN] Auth successful! Redirecting to /wallet with name and rid');
+        console.log('[LOGIN] Auth successful! Redirecting to dashboard');
         
-        // Hard redirect to /wallet with name and reservation ID
-        if (checkData.reservationId) {
-          localStorage.setItem('rep:lastName', checkData.repName);
-          localStorage.setItem('rep:reservationId', checkData.reservationId);
-          localStorage.setItem('rep:address', normalizedAddress);
-          window.location.assign(`/wallet?name=${encodeURIComponent(checkData.repName)}&rid=${encodeURIComponent(checkData.reservationId)}`);
-        } else {
-          // Fallback to dashboard if no reservation ID
-          window.location.href = '/rep-dashboard';
-        }
+        // Redirect returning users directly to dashboard
+        window.location.href = '/rep-dashboard';
       } else {
         console.error('[LOGIN] Auth failed:', authData.error);
         alert('Login failed: ' + (authData.error || 'Unknown error'));
@@ -224,7 +216,7 @@ export default function Home() {
                     onClick={() => setLocation('/claim')} 
                     className="cta-button cta-primary"
                   >
-                    Reserve your.rep
+                    Claim your.rep
                   </button>
                   <button 
                     type="button"
