@@ -90,6 +90,9 @@ export default function Home() {
       if (authData.ok) {
         console.log('[LOGIN] Auth successful! Redirecting to dashboard');
         
+        // Wait 200ms for session cookie to propagate before redirect
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         // Redirect returning users directly to dashboard
         window.location.href = '/rep-dashboard';
       } else {
