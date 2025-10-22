@@ -12,7 +12,8 @@ import OpenAI from 'openai';
 import { verifyWalletSignature } from './lib/verifySignature.js';
 import { canonicalize, isValidName as validateName } from './shared/validate.js';
 import crypto from 'crypto';
-import { verifyMessage } from 'viem';
+import { verifyMessage, createPublicClient, http, keccak256, toBytes } from 'viem';
+import { base } from 'viem/chains';
 
 declare module 'express-session' {
   interface SessionData {
@@ -53,6 +54,68 @@ app.use((req, res, next) => {
 });
 
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Create Base RPC client for EIP-1271 verification
+const baseClient = createPublicClient({
+  chain: base,
+  transport: http()
+});
+
+// EIP-1271 magic value - returned by isValidSignature on success
+const EIP1271_MAGIC_VALUE = '0x1626ba7e';
+
+// Helper: Detect wallet type based on signature
+function isSmartWallet(signature: string): boolean {
+  // Smart wallets return much longer signatures (EIP-1271 format)
+  // Traditional EOA signatures are exactly 132 chars (0x + 130 hex)
+  return signature.length > 200;
+}
+
+// Helper: Verify EIP-1271 smart wallet signature
+async function verifySmartWalletSignature(
+  walletAddress: string,
+  message: string,
+  signature: string
+): Promise<boolean> {
+  try {
+    console.log('[EIP-1271] Verifying smart wallet signature');
+    
+    // Hash the message according to EIP-191 (personal_sign format)
+    const messagePrefix = '\x19Ethereum Signed Message:\n';
+    const messageWithPrefix = messagePrefix + message.length + message;
+    const messageHash = keccak256(toBytes(messageWithPrefix));
+    
+    console.log('[EIP-1271] Message hash:', messageHash);
+    
+    // Call isValidSignature(bytes32 hash, bytes signature) on the wallet contract
+    const result = await baseClient.readContract({
+      address: walletAddress as `0x${string}`,
+      abi: [
+        {
+          name: 'isValidSignature',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [
+            { name: '_hash', type: 'bytes32' },
+            { name: '_signature', type: 'bytes' }
+          ],
+          outputs: [{ name: 'magicValue', type: 'bytes4' }]
+        }
+      ],
+      functionName: 'isValidSignature',
+      args: [messageHash, signature as `0x${string}`]
+    });
+    
+    console.log('[EIP-1271] Contract returned:', result);
+    console.log('[EIP-1271] Expected magic value:', EIP1271_MAGIC_VALUE);
+    console.log('[EIP-1271] Match:', result === EIP1271_MAGIC_VALUE);
+    
+    return result === EIP1271_MAGIC_VALUE;
+  } catch (error) {
+    console.error('[EIP-1271] Verification failed:', error);
+    return false;
+  }
+}
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_API_KEY || '',
