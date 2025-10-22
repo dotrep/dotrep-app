@@ -1,0 +1,53 @@
+Fix post-reserve redirect (single-click claim) — reuse existing API/wallet code
+
+DO NOT: change layout, styling, copy, or images. Only wire logic.
+
+USE EXISTING CODE FROM: projects/api/rep/* (availability/reserve), projects/web/wallet/* (connect, get address, ensure Base), existing toast/modal utils.
+
+TASKS
+	1.	In the /claim page component (e.g., ClaimFSN.tsx), make the primary CTA run one atomic async chain and then hard-redirect:
+	•	reserve(name,address) → check HTTP res.ok and JSON { ok:true, reservationId }.
+	•	Persist before navigating:
+localStorage.setItem('rep:lastName', name)
+localStorage.setItem('rep:reservationId', reservationId)
+localStorage.setItem('rep:address', activeAddress)
+localStorage.setItem('rep:connected','true')
+	•	Redirect immediately:
+window.location.assign(\/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(reservationId)}`)`.
+	2.	Add a simple in-flight guard so the CTA can’t be double-clicked. Remove any setTimeout redirects and router state hacks—no timeouts, no second click.
+	3.	Keep the existing stateful button labels; do not add new buttons or alter markup.
+	4.	/wallet should read name/rid from the URL or localStorage and hydrate the card; no visual changes.
+
+REFERENCE PATTERN (use your existing utils, do not reimplement):
+
+// inside ClaimFSN.tsx
+let inFlight = false;
+async function onClaim(name: string) {
+  if (inFlight) return; inFlight = true;
+  try {
+    const address = await wallet.getAddress(); // from projects/web/wallet/*
+    const res = await fetch('/api/rep/reserve', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, address })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json(); // { ok, reservationId }
+    if (!data.ok || !data.reservationId) throw new Error('Missing reservationId');
+
+    localStorage.setItem('rep:lastName', name);
+    localStorage.setItem('rep:reservationId', data.reservationId);
+    localStorage.setItem('rep:address', address);
+    localStorage.setItem('rep:connected', 'true');
+
+    window.location.assign(`/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(data.reservationId)}`);
+  } catch (e) {
+    console.error('[claim] reserve error', e);
+    toast.error('Could not complete claim. Please try again.');
+  } finally { inFlight = false; }
+}
+
+ACCEPTANCE (must pass):
+	•	Successful reserve immediately navigates to /wallet?name=…&rid=… (no second click, no delay).
+	•	Refresh /wallet shows the name/address from localStorage (and header pill reflects signed-in state).
+	•	Bad reserve or signature shows a toast and stays on /claim (no redirect).
+	•	No UI/layout diffs; only logic changed.
