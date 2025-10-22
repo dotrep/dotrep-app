@@ -348,6 +348,14 @@ export default function ClaimFSN() {
     
     try {
       console.log('[ATOMIC-RESUME] Starting from challenge step');
+      
+      // CRITICAL: Must ensure Base network even on resume
+      console.log('[ATOMIC-RESUME] Step 1: Ensure Base network');
+      setClaimStatus('Switching to Base...');
+      
+      await ensureBase();
+      console.log('[ATOMIC-RESUME] ✓ On Base network');
+      
       setClaimStatus('Getting challenge...');
       
       const canonical = canonicalize(nameToResume);
@@ -450,15 +458,15 @@ export default function ClaimFSN() {
       }
       
       console.log('[ATOMIC] Step 1: Connect wallet');
-      setClaimStatus('Connecting wallet...');
-      
-      // Store pending intent for mobile deep-link resume
-      localStorage.setItem('rep:pendingName', canonical);
-      localStorage.setItem('rep:intent', 'claim');
       
       // Step 1: Connect if not already connected
       if (!isConnected || !address) {
         console.log('[ATOMIC] Wallet not connected, showing modal');
+        
+        // Store pending intent ONLY when showing modal (so resume can pick up after connect)
+        localStorage.setItem('rep:pendingName', canonical);
+        localStorage.setItem('rep:intent', 'claim');
+        
         setClaimStatus('');
         setIsReserving(false);
         inFlightRef.current = false;
@@ -468,6 +476,10 @@ export default function ClaimFSN() {
       
       const walletAddress = address;
       console.log('[ATOMIC] ✓ Wallet already connected:', address);
+      
+      // Store pending intent for mobile deep-link resume (wallet might disconnect mid-flow)
+      localStorage.setItem('rep:pendingName', canonical);
+      localStorage.setItem('rep:intent', 'claim');
       
       // Step 2: Ensure Base network
       console.log('[ATOMIC] Step 2: Ensure Base network');
