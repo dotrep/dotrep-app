@@ -43,13 +43,16 @@ export default function Home() {
     console.log('[LOGIN] handleLogin called, address:', address);
     if (!address) return;
     
+    // Normalize address to lowercase for case-insensitive comparison
+    const normalizedAddress = address.toLowerCase();
+    
     try {
       // Check if wallet has a .rep name
       console.log('[LOGIN] Checking wallet for .rep name...');
       const checkRes = await fetch('/api/rep/lookup-wallet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address }),
+        body: JSON.stringify({ walletAddress: normalizedAddress }),
       });
       
       const checkData = await checkRes.json();
@@ -65,7 +68,7 @@ export default function Home() {
 
       // Request signature to prove wallet ownership
       console.log('[LOGIN] Requesting signature for:', checkData.repName);
-      const message = `Login to ${checkData.repName}.rep\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      const message = `Login to ${checkData.repName}.rep\n\nWallet: ${normalizedAddress}\nTimestamp: ${Date.now()}`;
       const signature = await signMessageAsync({ message });
       console.log('[LOGIN] Signature received');
 
@@ -75,7 +78,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          walletAddress: address,
+          walletAddress: normalizedAddress,
           message,
           signature
         }),
@@ -85,12 +88,17 @@ export default function Home() {
       console.log('[LOGIN] Auth result:', authData);
       
       if (authData.ok) {
-        console.log('[LOGIN] Auth successful! Redirecting to /rep-dashboard');
-        try {
+        console.log('[LOGIN] Auth successful! Redirecting to /wallet with name and rid');
+        
+        // Hard redirect to /wallet with name and reservation ID
+        if (checkData.reservationId) {
+          localStorage.setItem('rep:lastName', checkData.repName);
+          localStorage.setItem('rep:reservationId', checkData.reservationId);
+          localStorage.setItem('rep:address', normalizedAddress);
+          window.location.assign(`/wallet?name=${encodeURIComponent(checkData.repName)}&rid=${encodeURIComponent(checkData.reservationId)}`);
+        } else {
+          // Fallback to dashboard if no reservation ID
           window.location.href = '/rep-dashboard';
-        } catch (navError) {
-          console.error('[LOGIN] Navigation error:', navError);
-          alert('Navigation failed: ' + navError);
         }
       } else {
         console.error('[LOGIN] Auth failed:', authData.error);

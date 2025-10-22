@@ -269,7 +269,7 @@ export default function ClaimFSN() {
         const response = await fetch('/api/rep/lookup-wallet', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ walletAddress: address }),
+          body: JSON.stringify({ walletAddress: address.toLowerCase() }),
         });
         const result = await response.json();
         
@@ -377,10 +377,13 @@ export default function ClaimFSN() {
   }, [isConnected, address]);
 
   // Resume claim from challenge step (for mobile deep-link return)
-  const resumeClaimFromChallenge = async (nameToResume: string, walletAddress: string) => {
+  const resumeClaimFromChallenge = async (nameToResume: string, walletAddr: string) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     setIsReserving(true);
+    
+    // Normalize address to lowercase
+    const walletAddress = walletAddr.toLowerCase();
     
     try {
       console.log('[ATOMIC-RESUME] Starting from challenge step');
@@ -510,8 +513,8 @@ export default function ClaimFSN() {
         return;
       }
       
-      const walletAddress = address;
-      console.log('[ATOMIC] ✓ Wallet already connected:', address);
+      const walletAddress = address.toLowerCase();
+      console.log('[ATOMIC] ✓ Wallet already connected:', walletAddress);
       
       // Store pending intent for mobile deep-link resume (wallet might disconnect mid-flow)
       localStorage.setItem('rep:pendingName', canonical);

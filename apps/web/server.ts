@@ -12,6 +12,7 @@ import OpenAI from 'openai';
 import cors from 'cors';
 import { verifyWalletSignature } from './lib/verifySignature.js';
 import { canonicalize, isValidName as validateName } from './shared/validate.js';
+import { normAddr } from './lib/addr.js';
 import crypto from 'crypto';
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
@@ -125,7 +126,7 @@ function computeHMAC(message: string, nonce: string, address: string, expiresAt:
 app.get('/api/auth/challenge', async (req, res) => {
   try {
     const name = canonicalize(String(req.query.name || ''));
-    const address = String(req.query.address || '').toLowerCase();
+    const address = normAddr(req.query.address as string);
     
     console.log('[CHALLENGE] Request:', { name, address });
     
@@ -174,7 +175,8 @@ app.get('/api/auth/challenge', async (req, res) => {
 // POST /api/auth/verify - Verify wallet signature with HMAC challenge
 app.post('/api/auth/verify', async (req, res) => {
   try {
-    const { address, message, nonce, expiresAt, mac, signature } = req.body;
+    const { message, nonce, expiresAt, mac, signature } = req.body;
+    const address = normAddr(req.body.address);
     
     console.log('[VERIFY] Request:', {
       address,
@@ -193,8 +195,8 @@ app.post('/api/auth/verify', async (req, res) => {
       });
     }
     
-    // Normalize address to lowercase
-    const normalizedAddress = address.toLowerCase();
+    // Address already normalized by normAddr
+    const normalizedAddress = address;
     
     // Check TTL - must not be expired
     const now = Date.now();
@@ -331,7 +333,7 @@ app.get('/api/rep/check', async (req, res) => {
 app.post('/api/rep/reserve', async (req, res) => {
   try {
     const name = canonicalize(String(req.body?.name || ''));
-    const address = String(req.body?.address || '').toLowerCase();
+    const address = normAddr(req.body?.address);
     
     console.log('[RESERVE] Request:', { name, address });
     
@@ -443,7 +445,10 @@ app.post('/api/rep/reserve', async (req, res) => {
 // Lookup wallet to check if it has a .rep name
 app.post('/api/rep/lookup-wallet', async (req, res) => {
   try {
-    const walletAddress = String(req.body?.walletAddress || '');
+    const walletAddress = normAddr(req.body?.walletAddress);
+    
+    console.log('[LOOKUP] Incoming address:', req.body?.walletAddress);
+    console.log('[LOOKUP] Normalized address:', walletAddress);
     
     if (!isValidAddress(walletAddress)) {
       return res.status(400).json({ ok: false, error: 'INVALID_WALLET_ADDRESS' });
@@ -451,11 +456,13 @@ app.post('/api/rep/lookup-wallet', async (req, res) => {
     
     const reservation = await db.select().from(repReservations).where(eq(repReservations.walletAddress, walletAddress)).limit(1);
     
+    console.log('[LOOKUP] Found reservation:', reservation.length > 0 ? reservation[0].name : 'none');
+    
     if (reservation.length === 0) {
       return res.json({ ok: false, repName: null });
     }
     
-    res.json({ ok: true, repName: reservation[0].name });
+    res.json({ ok: true, repName: reservation[0].name, reservationId: reservation[0].id });
   } catch (error) {
     console.error('Lookup wallet error:', error);
     res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
@@ -465,7 +472,7 @@ app.post('/api/rep/lookup-wallet', async (req, res) => {
 // Auth Routes
 app.post('/api/auth/connect', async (req, res) => {
   try {
-    const walletAddress = String(req.body?.walletAddress || '');
+    const walletAddress = normAddr(req.body?.walletAddress);
     const message = String(req.body?.message || '');
     const signature = String(req.body?.signature || '');
     
