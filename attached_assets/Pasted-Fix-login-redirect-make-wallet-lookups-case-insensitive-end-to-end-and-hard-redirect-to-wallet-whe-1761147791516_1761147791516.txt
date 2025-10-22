@@ -1,0 +1,104 @@
+Fix login redirect: make wallet lookups case-insensitive end-to-end and hard-redirect to /wallet when a reservation exists.
+
+SCOPE / DO NOT CHANGE
+
+No visual/layout/copy changes. Logic only (server utils, API handlers, tiny client hook).
+
+Keep existing signature verification (EOA/1271/6492) as-is.
+
+TASKS (do all)
+1) Server: canonicalize addresses everywhere
+
+Create a small util and use it on every write/read/compare:
+
+// projects/api/lib/addr.ts
+export const normAddr = (a?: string) => (a ?? '').trim().toLowerCase();
+
+
+Refactor handlers:
+
+/api/rep/reserve (write normalized)
+
+const address = normAddr(body.address);
+await db.insert(repReservations).values({ name, walletAddress: address /* ... */ });
+
+
+/api/rep/lookup-wallet (read normalized)
+
+Drizzle:
+
+const qAddr = normAddr(req.query.address as string);
+const row = await db.query.repReservations.findFirst({
+  where: (t, { eq }) => eq(t.walletAddress, qAddr),
+});
+return Response.json(row ? {
+  hasReservation: true, name: row.name, reservationId: row.id
+} : { hasReservation: false });
+
+
+Prisma / SQL: use the same normAddr() or lower() in WHERE.
+
+2) DB migration: backfill + uniqueness
+
+Normalize historical rows and index for fast, correct lookups.
+
+UPDATE rep_reservations SET wallet_address = lower(wallet_address);
+CREATE UNIQUE INDEX IF NOT EXISTS rep_reservations_wallet_address_uq
+  ON rep_reservations (wallet_address);
+
+
+(If you prefer a separate normalized column, create wallet_address_norm and use that instead.)
+
+Return: migration file name + exact SQL applied.
+
+3) Client: always send lowercased address
+
+Add helper and use before any API call with an address:
+
+// projects/web/wallet/util.ts
+export async function getNormalizedAddress() {
+  const a = await wallet.getAddress();
+  return a.toLowerCase();
+}
+
+4) Post-verify login redirect (happy path)
+
+After /api/auth/verify succeeds, immediately look up reservation and hard-redirect if present:
+
+const address = await getNormalizedAddress();
+const r = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`);
+if (!r.ok) throw new Error(`lookup HTTP ${r.status}`);
+const data = await r.json(); // { hasReservation, name, reservationId }
+if (data?.hasReservation && data?.name && data?.reservationId) {
+  localStorage.setItem('rep:lastName', data.name);
+  localStorage.setItem('rep:reservationId', data.reservationId);
+  localStorage.setItem('rep:address', address);
+  window.location.assign(`/wallet?name=${encodeURIComponent(data.name)}&rid=${encodeURIComponent(data.reservationId)}`);
+}
+// else: remain on /claim as before
+
+5) Temporary logs (remove after QA)
+
+In /api/rep/lookup-wallet: log incoming vs normalized address and whether a row matched.
+
+In client after verify: log [login] verify ok, [login] lookup ok hasReservation=…, [login] redirect /wallet.
+
+ACCEPTANCE (must all pass)
+
+Reserving with mixed-case address and logging in later with lowercase (or vice-versa) finds the same row and redirects to /wallet?name=&rid= (no second click, no timer).
+
+Fresh reserve flow still redirects to /wallet as before.
+
+DB migration completed; index enforces uniqueness; agent returns migration name + SQL.
+
+No UI/layout diffs; only logic and migration changed.
+
+RETURN THESE ARTIFACTS
+
+List of files changed with one-line summaries.
+
+Migration file name + SQL.
+
+Code snippets showing normAddr in /api/rep/reserve and /api/rep/lookup-wallet.
+
+Short console trace from a passing login redirect (addresses masked).
