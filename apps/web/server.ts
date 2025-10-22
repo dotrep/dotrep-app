@@ -53,6 +53,31 @@ app.get('/api/auth/me', (req, res) => {
   return res.status(401).json({ ok: false });
 });
 
+// GET /api/rep/check?name=... - Check name availability
+app.get('/api/rep/check', async (req, res) => {
+  try {
+    const name = canonicalizeName(String(req.query.name || ''))
+    
+    if (!name || !isValidName(name)) {
+      return res.json({ ok: true, available: false })
+    }
+
+    const [existing] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.nameLower, name))
+      .limit(1)
+
+    return res.json({
+      ok: true,
+      available: !existing,
+    })
+  } catch (e: any) {
+    console.error('[check] error', e)
+    res.status(500).json({ ok: false, error: 'server_error' })
+  }
+})
+
 // GET /api/rep/lookup-wallet?address=0x...
 app.get('/api/rep/lookup-wallet', async (req, res) => {
   try {
