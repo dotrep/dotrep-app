@@ -6,16 +6,10 @@ import { reservations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 
-const USE_CROSS_ORIGIN = true; // Enable CORS for Vite dev server
+const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
 
 const app = express();
 app.set('trust proxy', 1);
-
-// CORS configuration for Vite dev server on port 5000
-app.use(cors({
-  origin: 'http://localhost:5000',
-  credentials: true,
-}));
 
 app.use(express.json());
 

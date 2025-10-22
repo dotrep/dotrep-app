@@ -9,7 +9,7 @@ async function safeJson(res: Response) {
 async function waitForSession(timeoutMs = 1500) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const r = await fetch('http://localhost:9000/api/auth/me', { credentials: 'include' });
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
     if (r.ok) return true;
     await new Promise(r => setTimeout(r, 150));
   }
@@ -22,7 +22,7 @@ async function connectWallet(): Promise<{ address: string; method: WalletMethod;
   const [addr0] = await eth.request({ method: 'eth_requestAccounts' });
   const address = String(addr0).toLowerCase();
   try {
-    const ch = await fetch(`http://localhost:9000/api/auth/challenge?address=${encodeURIComponent(address)}`, { credentials:'include' });
+    const ch = await fetch(`/api/auth/challenge?address=${encodeURIComponent(address)}`, { credentials:'include' });
     if (ch.ok) {
       const { challenge } = await ch.json();
       const signature: string = await eth.request({ method: 'personal_sign', params: [challenge, address] });
@@ -42,7 +42,7 @@ export async function startLogin(inputName: string) {
   if (message) body.message = message;
   if (signature) body.signature = signature;
 
-  const vRes = await fetch('http://localhost:9000/api/auth/verify', {
+  const vRes = await fetch('/api/auth/verify', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
@@ -53,11 +53,11 @@ export async function startLogin(inputName: string) {
 
   if (!(await waitForSession())) throw new Error('Session cookie not visible yet');
 
-  const luRes = await fetch(`http://localhost:9000/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`, { credentials: 'include' });
+  const luRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`, { credentials: 'include' });
   const lu = await safeJson(luRes);
   if (!lu.ok) throw new Error(`/api/rep/lookup-wallet ${lu.status} ${lu.raw || ''}`);
 
-  const rvRes = await fetch('http://localhost:9000/api/rep/reserve', {
+  const rvRes = await fetch('/api/rep/reserve', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ name, address }),
