@@ -21,6 +21,8 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [hasRepName, setHasRepName] = useState(false);
+  const [isCheckingWallet, setIsCheckingWallet] = useState(false);
   const { address, isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
   const { signMessageAsync } = useSignMessage();
@@ -32,12 +34,40 @@ export default function Home() {
     }
   }, []);
 
+  // Check if wallet has a .rep name when connected
+  useEffect(() => {
+    if (isConnected && address) {
+      checkWalletStatus();
+    } else {
+      setHasRepName(false);
+    }
+  }, [isConnected, address]);
+
   // Handle login flow when wallet connects
   useEffect(() => {
     if (isConnected && address && isLoggingIn) {
       handleLogin();
     }
   }, [isConnected, address, isLoggingIn]);
+
+  const checkWalletStatus = async () => {
+    if (!address) return;
+    
+    setIsCheckingWallet(true);
+    try {
+      const res = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address.toLowerCase())}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      console.log('[HOME] Wallet status check:', data);
+      setHasRepName(data.ok && data.walletFound);
+    } catch (error) {
+      console.error('[HOME] Error checking wallet status:', error);
+      setHasRepName(false);
+    } finally {
+      setIsCheckingWallet(false);
+    }
+  };
 
   const handleLogin = async () => {
     console.log('[LOGIN] handleLogin called, address:', address);
@@ -268,16 +298,19 @@ export default function Home() {
                     type="button"
                     onClick={() => setLocation('/claim')} 
                     className="cta-button cta-primary"
+                    disabled={isCheckingWallet || hasRepName}
+                    style={{ opacity: (isCheckingWallet || hasRepName) ? 0.5 : 1, cursor: (isCheckingWallet || hasRepName) ? 'not-allowed' : 'pointer' }}
                   >
-                    Reserve your.rep
+                    {isCheckingWallet ? 'Checking...' : hasRepName ? 'Already claimed ✓' : 'Reserve your.rep'}
                   </button>
                   <button 
                     type="button"
                     onClick={handleLoginClick} 
                     className="cta-button cta-secondary"
-                    disabled={isLoggingIn || isConnecting}
+                    disabled={isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)}
+                    style={{ opacity: (isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)) ? 0.5 : 1, cursor: (isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)) ? 'not-allowed' : 'pointer' }}
                   >
-                    {isConnecting ? 'Connecting...' : isLoggingIn ? 'Logging in...' : isConnected ? 'Login to Dashboard' : '🦊 Connect Wallet'}
+                    {isConnecting ? 'Connecting...' : isLoggingIn ? 'Logging in...' : isCheckingWallet ? 'Checking...' : isConnected ? (hasRepName ? 'Login to Dashboard' : 'Claim .rep first') : '🦊 Connect Wallet'}
                   </button>
                   <button 
                     type="button"
