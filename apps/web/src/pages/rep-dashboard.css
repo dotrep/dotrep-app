@@ -199,7 +199,9 @@
 .dashboard-actions {
   display: flex;
   justify-content: center;
+  gap: 1rem;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
 .action-button {
@@ -212,14 +214,31 @@
   transition: all 0.3s ease;
 }
 
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .action-button-primary {
   background: linear-gradient(135deg, #00d4aa 0%, #0052ff 100%);
   color: #ffffff;
 }
 
-.action-button-primary:hover {
+.action-button-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 212, 170, 0.3);
+}
+
+.action-button-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.action-button-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .loading-spinner {

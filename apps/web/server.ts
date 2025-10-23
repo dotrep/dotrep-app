@@ -260,6 +260,24 @@ app.get('/api/auth/me', (req, res) => {
   return res.status(401).json({ ok: false });
 });
 
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    if (req.session) {
+      await new Promise<void>((resolve, reject) => {
+        req.session.destroy((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+    res.clearCookie('rep.sid');
+    return res.json({ ok: true });
+  } catch (e: any) {
+    console.error('[logout] error', e);
+    return res.status(500).json({ ok: false, error: 'logout_failed' });
+  }
+});
+
 // GET /api/rep/check?name=... - Check name availability
 app.get('/api/rep/check', async (req, res) => {
   try {

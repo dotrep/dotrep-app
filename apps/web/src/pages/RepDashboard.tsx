@@ -19,6 +19,7 @@ export default function RepDashboard() {
   const [repName, setRepName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -80,6 +81,32 @@ export default function RepDashboard() {
 
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        console.log('[DASHBOARD] Logout successful');
+        localStorage.removeItem('rep:lastName');
+        localStorage.removeItem('rep:reservationId');
+        localStorage.removeItem('rep:address');
+        setLocation('/');
+      } else {
+        console.error('[DASHBOARD] Logout failed');
+        alert('Logout failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('[DASHBOARD] Logout error:', error);
+      alert('Logout failed. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   if (isLoading) {
@@ -206,6 +233,13 @@ export default function RepDashboard() {
               onClick={() => setLocation('/')}
             >
               Back to Home
+            </button>
+            <button 
+              className="action-button action-button-secondary"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
             </button>
           </div>
         </main>
