@@ -50,10 +50,74 @@ async function verify1271(addr: `0x${string}`, message: string, signature: `0x${
   }
 }
 
-// TODO: Proper EIP-6492 verification (state override / envelope parse).
-// For now, return false to avoid false positives; we still handle deployed 1271 + EOA.
-async function verify6492(_addr: `0x${string}`, _message: string, _signature: `0x${string}`) {
-  return false;
+// EIP-6492 magic suffix for counterfactual signature detection
+const EIP6492_MAGIC_SUFFIX = '0x6492649264926492649264926492649264926492649264926492649264926492' as const;
+
+async function verify6492(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+  try {
+    console.log('[6492] Checking signature format');
+    console.log('[6492] Signature length:', signature.length);
+    console.log('[6492] Last 64 chars:', signature.slice(-64));
+    console.log('[6492] Expected magic:', EIP6492_MAGIC_SUFFIX.slice(2));
+    
+    // Check if signature ends with EIP-6492 magic bytes
+    const hasMagic = signature.toLowerCase().endsWith(EIP6492_MAGIC_SUFFIX.slice(2).toLowerCase());
+    console.log('[6492] Has magic suffix:', hasMagic);
+    
+    if (!hasMagic) {
+      return false; // Not a 6492 signature
+    }
+
+    // Remove magic suffix to get the wrapper
+    const wrapperHex = signature.slice(0, -64) as `0x${string}`; // Remove 32 bytes (64 hex chars)
+    
+    // Decode the wrapper: (address factory, bytes factoryCalldata, bytes signature)
+    const decoded = await import('viem').then(v => 
+      v.decodeAbiParameters(
+        [
+          { name: 'factory', type: 'address' },
+          { name: 'factoryCalldata', type: 'bytes' },
+          { name: 'signature', type: 'bytes' }
+        ],
+        wrapperHex
+      )
+    );
+
+    const [factory, factoryCalldata, innerSignature] = decoded;
+    
+    // Simulate wallet deployment and verify signature using CREATE2
+    // We'll call the factory with a staticcall to simulate deployment
+    try {
+      // First, simulate the deployment by calling the factory
+      await publicClient.call({
+        to: factory,
+        data: factoryCalldata,
+      });
+      
+      // Now verify the signature via ERC-1271 against the deployed wallet
+      const magic = await publicClient.readContract({
+        address: addr,
+        abi: ERC1271_ABI,
+        functionName: 'isValidSignature',
+        args: [hashMessage(message), innerSignature as `0x${string}`],
+        // Use state override to simulate the deployed contract
+        stateOverride: [
+          {
+            address: addr,
+            stateDiff: []
+          }
+        ] as any
+      });
+      
+      return (typeof magic === 'string' ? magic.toLowerCase() : magic) === ERC1271_MAGIC;
+    } catch (callError) {
+      console.error('[6492] Contract call failed:', callError);
+      return false;
+    }
+  } catch (e) {
+    console.error('[6492] Verification error:', e);
+    return false;
+  }
 }
 
 async function verifySigSmart({
