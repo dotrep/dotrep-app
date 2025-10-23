@@ -2,13 +2,82 @@ import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
 import crypto from 'crypto';
-import { verifyMessage } from 'viem';
+import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
+import { base } from 'viem/chains';
 import { db } from './db/client.js';
 import { reservations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 
 const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
+
+// Base network public client for ERC-1271 smart wallet verification
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(process.env.BASE_RPC_URL || 'https://mainnet.base.org'),
+});
+
+const ERC1271_ABI = [{
+  type: 'function',
+  name: 'isValidSignature',
+  stateMutability: 'view',
+  inputs: [{ name: 'hash', type: 'bytes32' }, { name: 'signature', type: 'bytes' }],
+  outputs: [{ name: 'magicValue', type: 'bytes4' }],
+}] as const;
+
+const ERC1271_MAGIC = '0x1626ba7e' as const;
+
+async function isDeployed(addr: `0x${string}`) {
+  const code = await publicClient.getBytecode({ address: addr }).catch(() => null);
+  return !!(code && code !== '0x');
+}
+
+async function verifyEOA(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+  return verifyMessage({ address: addr, message, signature }).catch(() => false);
+}
+
+async function verify1271(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+  try {
+    const magic = await publicClient.readContract({
+      address: addr,
+      abi: ERC1271_ABI,
+      functionName: 'isValidSignature',
+      args: [hashMessage(message), signature],
+    });
+    return (typeof magic === 'string' ? magic.toLowerCase() : magic) === ERC1271_MAGIC;
+  } catch {
+    return false;
+  }
+}
+
+// TODO: Proper EIP-6492 verification (state override / envelope parse).
+// For now, return false to avoid false positives; we still handle deployed 1271 + EOA.
+async function verify6492(_addr: `0x${string}`, _message: string, _signature: `0x${string}`) {
+  return false;
+}
+
+async function verifySigSmart({
+  address, message, signature,
+}: {
+  address: string; message: string; signature: `0x${string}`;
+}): Promise<'EOA'|'1271'|'6492'> {
+  if (!isAddress(address)) throw new Error('invalid_address');
+  const addr = getAddress(address.toLowerCase());
+
+  if (await isDeployed(addr)) {
+    // Deployed smart account → EIP-1271
+    const ok1271 = await verify1271(addr, message, signature);
+    if (!ok1271) throw new Error('eip_1271_verify_failed');
+    return '1271';
+  } else {
+    // EOA or counterfactual smart account
+    const okEOA = await verifyEOA(addr, message, signature);
+    if (okEOA) return 'EOA';
+    const ok6492 = await verify6492(addr, message, signature);
+    if (!ok6492) throw new Error('eip_6492_verify_failed');
+    return '6492';
+  }
+}
 
 const app = express();
 app.set('trust proxy', 1);
@@ -24,8 +93,8 @@ app.use(
     cookie: {
       httpOnly: true,
       path: '/',
-      sameSite: (USE_CROSS_ORIGIN ? 'none' : 'lax') as 'lax' | 'none',
-      secure: USE_CROSS_ORIGIN ? true : process.env.NODE_ENV === 'production',
+      sameSite: 'none',   // required for in-app browsers
+      secure: true,       // required with SameSite=None (Replit is https)
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })

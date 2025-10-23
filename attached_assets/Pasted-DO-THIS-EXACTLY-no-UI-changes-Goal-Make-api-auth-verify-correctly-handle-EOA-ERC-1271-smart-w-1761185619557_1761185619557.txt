@@ -1,0 +1,165 @@
+DO THIS EXACTLY (no UI changes):
+
+Goal: Make /api/auth/verify correctly handle EOA, ERC-1271 smart wallets, and EIP-6492 counterfactual accounts on Base (8453), set the session cookie reliably, and keep the existing claim flow unchanged.
+
+1) Prereqs (don’t skip)
+	•	Ensure these deps are installed in apps/web:
+	•	viem (already present), @types/express-session (already present)
+	•	Server uses HTTPS (Replit does) and app.set('trust proxy', 1) is enabled.
+
+2) Update session cookie for in-app browsers (Coinbase/MetaMask)
+
+Open apps/web/server.ts. Keep Vite proxy same-origin, but set cookie for WebView compatibility:
+
+app.set('trust proxy', 1);
+
+app.use(
+  session({
+    name: 'rep.sid',
+    secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'none',   // required for in-app browsers
+      secure: true,       // required with SameSite=None (Replit is https)
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  })
+);
+
+Do not enable CORS if you’re using the Vite proxy (/api → API). Keep calls relative (/api/...) with credentials:'include'.
+
+3) Add a robust verifier (EOA → 1271 → 6492) on Base
+
+At the top of apps/web/server.ts, add:
+
+import { createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
+import { base } from 'viem/chains';
+
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(process.env.BASE_RPC_URL || 'https://mainnet.base.org'),
+});
+
+const ERC1271_ABI = [{
+  type: 'function',
+  name: 'isValidSignature',
+  stateMutability: 'view',
+  inputs: [{ name: 'hash', type: 'bytes32' }, { name: 'signature', type: 'bytes' }],
+  outputs: [{ name: 'magicValue', type: 'bytes4' }],
+}] as const;
+
+const ERC1271_MAGIC = '0x1626ba7e' as const;
+
+async function isDeployed(addr: `0x${string}`) {
+  const code = await publicClient.getBytecode({ address: addr }).catch(() => null);
+  return !!(code && code !== '0x');
+}
+
+async function verifyEOA(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+  const { verifyMessage } = await import('viem');
+  return verifyMessage({ address: addr, message, signature }).catch(() => false);
+}
+
+async function verify1271(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+  try {
+    const magic = await publicClient.readContract({
+      address: addr,
+      abi: ERC1271_ABI,
+      functionName: 'isValidSignature',
+      args: [hashMessage(message), signature],
+    });
+    return (typeof magic === 'string' ? magic.toLowerCase() : magic) === ERC1271_MAGIC;
+  } catch {
+    return false;
+  }
+}
+
+// TODO: Proper EIP-6492 verification (state override / envelope parse).
+// For now, return false to avoid false positives; we still handle deployed 1271 + EOA.
+async function verify6492(_addr: `0x${string}`, _message: string, _signature: `0x${string}`) {
+  return false;
+}
+
+async function verifySigSmart({
+  address, message, signature,
+}: {
+  address: string; message: string; signature: `0x${string}`;
+}): Promise<'EOA'|'1271'|'6492'> {
+  if (!isAddress(address)) throw new Error('invalid_address');
+  const addr = getAddress(address.toLowerCase());
+
+  if (await isDeployed(addr)) {
+    // Deployed smart account → EIP-1271
+    const ok1271 = await verify1271(addr, message, signature);
+    if (!ok1271) throw new Error('eip_1271_verify_failed');
+    return '1271';
+  } else {
+    // EOA or counterfactual smart account
+    const okEOA = await verifyEOA(addr, message, signature);
+    if (okEOA) return 'EOA';
+    const ok6492 = await verify6492(addr, message, signature);
+    if (!ok6492) throw new Error('eip_6492_verify_failed');
+    return '6492';
+  }
+}
+
+4) Replace /api/auth/verify to use the new verifier
+
+Find your existing /api/auth/verify handler and replace it with this (don’t change any UI file):
+
+// Body MUST include the exact message shown to the user and the hex signature.
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const { address, message, signature } = req.body ?? {};
+    if (!address || !message || !signature) {
+      return res.status(400).json({ ok: false, error: 'missing_fields' });
+    }
+
+    const method = await verifySigSmart({ address, message, signature }); // 'EOA' | '1271' | '6492'
+    const addr = getAddress(address.toLowerCase());
+
+    req.session.user = { address: addr, method, ts: Date.now() };
+    await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
+
+    return res.json({ ok: true, method, address: addr });
+  } catch (e: any) {
+    console.error('[verify] error', e?.message || e);
+    return res.status(401).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+IMPORTANT: The client must send { address, message, signature }. If your current client only sends { address }, add the challenge/sign step on the client: fetch a challenge string, personal_sign it, then POST all three to /api/auth/verify. (Do not change the page design—just the logic behind your CTA.)
+
+5) Keep /api/auth/me and /api/rep/* as they are
+	•	/api/auth/me should simply read req.session.user and return 200/401.
+	•	/api/rep/reserve must require a session and match the session address to req.body.address (401/403 if absent/mismatch).
+
+6) Client wiring (logic only, no UI changes)
+
+Ensure your existing CTA sequence does this (logic you already have; verify it’s still true):
+	1.	Connect wallet (get address).
+	2.	GET /api/auth/challenge?address=... → receive message (exact string to sign).
+	3.	Wallet signs that exact message via personal_sign.
+	4.	POST /api/auth/verify with { address, message, signature }, credentials:'include'.
+	5.	Poll /api/auth/me until 200, then call /api/rep/reserve (with credentials:'include') and hard redirect.
+
+If you don’t have /api/auth/challenge, create a short-lived HMAC challenge endpoint or (temporarily) sign a fixed dev message like "rep.dev login ${Date.now()}" on both sides while testing.
+
+7) Acceptance tests (must pass)
+	•	EOA (MetaMask/Coinbase ext): /api/auth/verify → 200 { method:'EOA' }, /api/auth/me → 200, reserve succeeds.
+	•	Coinbase Smart Wallet (deployed): /api/auth/verify → 200 { method:'1271' }, /api/auth/me → 200.
+	•	Counterfactual (pre-deploy, 6492): currently returns eip_6492_verify_failed until you implement 6492; that’s acceptable for now unless you need it immediately.
+	•	Cookies: Set-Cookie: rep.sid=…; SameSite=None; Secure on /api/auth/verify response; /api/auth/me request includes Cookie: rep.sid=….
+
+8) Run commands
+
+# Terminal A (API)
+npx tsx apps/web/server.ts
+
+# Terminal B (Vite UI)
+pnpm --filter web dev
+
+Open the Vite URL (proxied), not the API port
