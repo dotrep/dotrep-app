@@ -147,8 +147,8 @@ export default function Claim() {
       const lookupData = await lookupRes.json();
       
       if (lookupData.ok && lookupData.walletFound) {
-        // Wallet already has a name - redirect to wallet page
-        setLocation(`/wallet?name=${encodeURIComponent(lookupData.name)}&rid=${encodeURIComponent(lookupData.reservationId)}`);
+        // Wallet already has a name - redirect to dashboard
+        setLocation('/rep-dashboard');
         return;
       }
 
@@ -206,8 +206,8 @@ export default function Claim() {
         throw new Error(reserveData.error || 'Failed to reserve name');
       }
 
-      // Step 7: Redirect to wallet page
-      setLocation(`/wallet?name=${encodeURIComponent(canonicalName)}&rid=${encodeURIComponent(reserveData.reservationId)}`);
+      // Step 7: Redirect to dashboard
+      setLocation('/rep-dashboard');
       
     } catch (err: any) {
       console.error('[CLAIM] Error:', err);
