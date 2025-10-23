@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAccount, useConnect, useSignMessage } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -25,6 +25,7 @@ export default function Home() {
   const [isCheckingWallet, setIsCheckingWallet] = useState(false);
   const { address, isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
   useEffect(() => {
@@ -323,6 +324,14 @@ export default function Home() {
                     <span className="wallet-indicator">🟢</span>
                     <span className="wallet-address-home">{formatAddress(address)}</span>
                     <span className="wallet-network-home">Base</span>
+                    <button 
+                      type="button"
+                      onClick={() => disconnect()}
+                      className="wallet-disconnect-btn"
+                      title="Switch Wallet"
+                    >
+                      ↻
+                    </button>
                   </div>
                 )}
                 
