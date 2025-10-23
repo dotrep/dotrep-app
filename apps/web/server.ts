@@ -6,7 +6,7 @@ import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMes
 import { base } from 'viem/chains';
 import { db } from './db/client.js';
 import { reservations } from './db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql, or, like } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 
 const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
@@ -417,6 +417,98 @@ app.post('/api/rep/reserve', async (req, res) => {
   } catch (e: any) {
     console.error('[reserve] error', e)
     res.status(500).json({ ok: false, error: 'server_error' })
+  }
+});
+
+// Admin middleware - check if user is admin
+function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').toLowerCase().split(',').filter(Boolean);
+  const userAddress = req.session?.user?.address?.toLowerCase();
+  
+  if (!userAddress) {
+    return res.status(401).json({ ok: false, error: 'not_authenticated' });
+  }
+  
+  if (!adminWallets.includes(userAddress)) {
+    return res.status(403).json({ ok: false, error: 'not_admin' });
+  }
+  
+  next();
+}
+
+// Admin endpoints
+app.get('/api/admin/reservations', isAdmin, async (req, res) => {
+  try {
+    const search = String(req.query.search || '').toLowerCase();
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const offset = Number(req.query.offset) || 0;
+    
+    // Build query based on search
+    const results = search
+      ? await db
+          .select()
+          .from(reservations)
+          .where(
+            or(
+              like(reservations.nameLower, `%${search}%`),
+              like(reservations.addressLower, `%${search}%`)
+            )
+          )
+          .orderBy(sql`${reservations.createdAt} DESC`)
+          .limit(limit)
+          .offset(offset)
+      : await db
+          .select()
+          .from(reservations)
+          .orderBy(sql`${reservations.createdAt} DESC`)
+          .limit(limit)
+          .offset(offset);
+    
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservations);
+    
+    return res.json({
+      ok: true,
+      reservations: results,
+      total: Number(countResult.count),
+      limit,
+      offset,
+    });
+  } catch (e: any) {
+    console.error('[admin/reservations] error', e);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+app.get('/api/admin/stats', isAdmin, async (req, res) => {
+  try {
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservations);
+    
+    const total = Number(countResult.count);
+    
+    // Get recent claims (last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [recentResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservations)
+      .where(sql`${reservations.createdAt} > ${oneDayAgo}`);
+    
+    const last24h = Number(recentResult.count);
+    
+    return res.json({
+      ok: true,
+      stats: {
+        totalClaims: total,
+        last24h,
+      },
+    });
+  } catch (e: any) {
+    console.error('[admin/stats] error', e);
+    return res.status(500).json({ ok: false, error: 'server_error' });
   }
 });
 
