@@ -79,30 +79,27 @@ export default function Admin() {
     setError('');
 
     try {
-      // Get nonce
-      const nonceRes = await fetch('/api/auth/nonce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address }),
+      // Get challenge
+      const challengeRes = await fetch('/api/auth/challenge', {
         credentials: 'include',
       });
 
-      if (!nonceRes.ok) {
-        throw new Error('Failed to get nonce');
+      if (!challengeRes.ok) {
+        throw new Error('Failed to get challenge');
       }
 
-      const { nonce } = await nonceRes.json();
+      const { challenge } = await challengeRes.json();
 
-      // Sign the nonce
+      // Sign the challenge
       const signature = await signMessageAsync({
-        message: `Sign this message to login to .rep admin panel.\n\nNonce: ${nonce}`,
+        message: challenge,
       });
 
       // Verify signature and create session
       const verifyRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, signature, nonce }),
+        body: JSON.stringify({ address, signature }),
         credentials: 'include',
       });
 
