@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import Claim from "./pages/Claim";
 import Wallet from "./pages/Wallet";
+import RepDashboard from "./pages/RepDashboard";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/claim" component={Claim} />
             <Route path="/discover" component={Discover} />
             <Route path="/wallet" component={Wallet} />
+            <Route path="/rep-dashboard" component={RepDashboard} />
             <Route>
               <Home />
             </Route>

@@ -232,8 +232,13 @@ export default function Claim() {
         throw new Error(reserveData.error || 'Failed to reserve name');
       }
 
-      // Step 7: Redirect to dashboard
+      // Step 7: Store reservation info and redirect to dashboard
       console.log('[CLAIM] Step 7: Name reserved successfully! Redirecting to dashboard...');
+      if (reserveData.reservationId) {
+        localStorage.setItem('rep:lastName', canonicalName);
+        localStorage.setItem('rep:reservationId', reserveData.reservationId);
+        localStorage.setItem('rep:address', currentAddress.toLowerCase());
+      }
       setLocation('/rep-dashboard');
       
     } catch (err: any) {

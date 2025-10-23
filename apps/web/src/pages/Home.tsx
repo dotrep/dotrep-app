@@ -103,7 +103,7 @@ export default function Home() {
             localStorage.setItem('rep:lastName', checkData.name);
             localStorage.setItem('rep:reservationId', checkData.reservationId);
             localStorage.setItem('rep:address', normalizedAddress);
-            window.location.assign(`/wallet?name=${encodeURIComponent(checkData.name)}&rid=${encodeURIComponent(checkData.reservationId)}`);
+            setLocation('/rep-dashboard');
             return;
           }
         } else {
@@ -173,16 +173,13 @@ export default function Home() {
       
       console.log('[LOGIN] Auth successful! Redirecting to dashboard');
       
-      // Step 6: Hard redirect to /wallet with name and reservation ID
+      // Step 6: Redirect to dashboard
       if (checkData.reservationId) {
         localStorage.setItem('rep:lastName', checkData.name);
         localStorage.setItem('rep:reservationId', checkData.reservationId);
         localStorage.setItem('rep:address', normalizedAddress);
-        window.location.assign(`/wallet?name=${encodeURIComponent(checkData.name)}&rid=${encodeURIComponent(checkData.reservationId)}`);
-      } else {
-        // Fallback to dashboard if no reservation ID
-        window.location.href = '/rep-dashboard';
       }
+      setLocation('/rep-dashboard');
     } catch (error: any) {
       console.error('[LOGIN] Login error:', error);
       alert('Login failed. Please try again.');
