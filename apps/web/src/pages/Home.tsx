@@ -77,8 +77,44 @@ export default function Home() {
     const normalizedAddress = address.toLowerCase();
     
     try {
-      // Check if wallet has a .rep name
-      console.log('[LOGIN] Checking wallet for .rep name...');
+      // Step 1: Check if we already have a valid session
+      console.log('[LOGIN] Step 1: Checking for existing session...');
+      const sessionRes = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+      
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        console.log('[LOGIN] Existing session found:', sessionData);
+        
+        // Verify session address matches connected wallet
+        if (sessionData.address && sessionData.address.toLowerCase() === normalizedAddress) {
+          console.log('[LOGIN] Session valid! Looking up .rep name...');
+          
+          // Get .rep name info
+          const checkRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(normalizedAddress)}`, {
+            credentials: 'include',
+          });
+          
+          const checkData = await checkRes.json();
+          
+          if (checkData.ok && checkData.walletFound && checkData.reservationId) {
+            console.log('[LOGIN] Redirecting to dashboard with existing session');
+            localStorage.setItem('rep:lastName', checkData.name);
+            localStorage.setItem('rep:reservationId', checkData.reservationId);
+            localStorage.setItem('rep:address', normalizedAddress);
+            window.location.assign(`/wallet?name=${encodeURIComponent(checkData.name)}&rid=${encodeURIComponent(checkData.reservationId)}`);
+            return;
+          }
+        } else {
+          console.log('[LOGIN] Session address mismatch, need to re-authenticate');
+        }
+      } else {
+        console.log('[LOGIN] No existing session found');
+      }
+      
+      // Step 2: Check if wallet has a .rep name
+      console.log('[LOGIN] Step 2: Checking wallet for .rep name...');
       const checkRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(normalizedAddress)}`, {
         credentials: 'include',
       });
@@ -94,8 +130,8 @@ export default function Home() {
         return;
       }
 
-      // Request server-issued challenge nonce
-      console.log('[LOGIN] Requesting challenge nonce...');
+      // Step 3: Request server-issued challenge nonce
+      console.log('[LOGIN] Step 3: Requesting challenge nonce...');
       const challengeRes = await fetch('/api/auth/challenge', {
         method: 'GET',
         credentials: 'include',
@@ -109,14 +145,14 @@ export default function Home() {
       
       if (!nonce) throw new Error('No nonce received from server');
 
-      // Request signature to prove wallet ownership
-      console.log('[LOGIN] Requesting signature for:', checkData.name);
+      // Step 4: Request signature to prove wallet ownership
+      console.log('[LOGIN] Step 4: Requesting signature for:', checkData.name);
       const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${normalizedAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
       const signature = await signMessageAsync({ message: challengeMessage });
       console.log('[LOGIN] Signature received');
 
-      // Verify signature and create session
-      console.log('[LOGIN] Calling /api/auth/verify');
+      // Step 5: Verify signature and create session
+      console.log('[LOGIN] Step 5: Calling /api/auth/verify');
       const authRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,9 +171,9 @@ export default function Home() {
         throw new Error(errorData.error || 'Failed to verify wallet ownership');
       }
       
-      console.log('[LOGIN] Auth successful! Redirecting to /wallet');
+      console.log('[LOGIN] Auth successful! Redirecting to dashboard');
       
-      // Hard redirect to /wallet with name and reservation ID
+      // Step 6: Hard redirect to /wallet with name and reservation ID
       if (checkData.reservationId) {
         localStorage.setItem('rep:lastName', checkData.name);
         localStorage.setItem('rep:reservationId', checkData.reservationId);
