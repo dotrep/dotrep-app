@@ -92,14 +92,24 @@ app.post('/api/auth/verify', async (req, res) => {
     }
     
     // Verify signature matches the address (proof of wallet ownership)
+    console.log('[verify] Attempting signature verification:', { 
+      address, 
+      messageLength: message.length,
+      signatureLength: signature.length 
+    });
+    
     const isValid = await verifyMessage({
       address: address as `0x${string}`,
       message,
       signature: signature as `0x${string}`,
     });
     
+    console.log('[verify] Signature verification result:', isValid);
+    
     if (!isValid) {
       console.error('[verify] Invalid signature for address:', address);
+      console.error('[verify] Message:', message);
+      console.error('[verify] Signature:', signature);
       return res.status(401).json({ ok: false, error: 'invalid_signature' });
     }
     
