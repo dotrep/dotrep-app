@@ -244,6 +244,24 @@
   margin-bottom: 1.5rem;
 }
 
+.admin-error-text {
+  color: #ff6b35 !important;
+  font-size: 0.875rem;
+}
+
+.admin-error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.admin-hint {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .admin-page {
     padding: 1rem;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 import './admin.css';
 
 interface Reservation {
@@ -19,6 +19,7 @@ interface Stats {
 export default function Admin() {
   const [, setLocation] = useLocation();
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,8 @@ export default function Admin() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoad();
@@ -34,6 +37,7 @@ export default function Admin() {
   const checkAuthAndLoad = async () => {
     setLoading(true);
     setError('');
+    setNeedsLogin(false);
     
     try {
       // Check if user is authenticated first
@@ -42,7 +46,7 @@ export default function Admin() {
       });
 
       if (!sessionRes.ok) {
-        setError('Please login first');
+        setNeedsLogin(true);
         setIsAuthorized(false);
         setLoading(false);
         return;
@@ -55,13 +59,65 @@ export default function Admin() {
       if (err.message.includes('403')) {
         setError('Access denied. Admin access required.');
       } else if (err.message.includes('401')) {
-        setError('Please login to access admin panel');
+        setNeedsLogin(true);
       } else {
         setError(err.message || 'Failed to load admin data');
       }
       setIsAuthorized(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!address || !isConnected) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    setLoggingIn(true);
+    setError('');
+
+    try {
+      // Get nonce
+      const nonceRes = await fetch('/api/auth/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+        credentials: 'include',
+      });
+
+      if (!nonceRes.ok) {
+        throw new Error('Failed to get nonce');
+      }
+
+      const { nonce } = await nonceRes.json();
+
+      // Sign the nonce
+      const signature = await signMessageAsync({
+        message: `Sign this message to login to .rep admin panel.\n\nNonce: ${nonce}`,
+      });
+
+      // Verify signature and create session
+      const verifyRes = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, signature, nonce }),
+        credentials: 'include',
+      });
+
+      if (!verifyRes.ok) {
+        const data = await verifyRes.json();
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      // Reload admin data
+      await checkAuthAndLoad();
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to login');
+    } finally {
+      setLoggingIn(false);
     }
   };
 
@@ -117,6 +173,40 @@ export default function Admin() {
       <div className="admin-page">
         <div className="admin-container">
           <div className="admin-loading">Loading admin panel...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (needsLogin) {
+    return (
+      <div className="admin-page">
+        <div className="admin-container">
+          <div className="admin-error">
+            <h2>.rep Admin Login</h2>
+            <p>
+              {isConnected 
+                ? 'Please sign in with your wallet to access the admin panel.'
+                : 'Please connect your wallet first, then sign in to access the admin panel.'}
+            </p>
+            {error && <p className="admin-error-text">{error}</p>}
+            <div className="admin-error-actions">
+              {isConnected ? (
+                <button 
+                  onClick={handleLogin} 
+                  className="admin-button"
+                  disabled={loggingIn}
+                >
+                  {loggingIn ? 'Signing In...' : 'Sign In with Wallet'}
+                </button>
+              ) : (
+                <p className="admin-hint">Connect your wallet using the button in the top right</p>
+              )}
+              <button onClick={() => setLocation('/')} className="admin-button admin-button-secondary">
+                Go to Home
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
