@@ -86,8 +86,68 @@
 .claim-subtitle {
   font-size: 16px;
   color: #94a3b8;
-  margin: 0 0 40px 0;
+  margin: 0 0 32px 0;
   text-align: center;
+}
+
+.wallet-section {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.wallet-connect-button {
+  background: linear-gradient(135deg, #00d4aa 0%, #0052ff 100%);
+  border: none;
+  color: #ffffff;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+}
+
+.wallet-connect-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 170, 0.5);
+}
+
+.wallet-connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  padding: 12px 24px;
+  border-radius: 12px;
+}
+
+.wallet-indicator {
+  font-size: 12px;
+}
+
+.wallet-address {
+  color: #00d4aa;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.wallet-network {
+  background: rgba(0, 82, 255, 0.2);
+  color: #0052ff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .claim-form {

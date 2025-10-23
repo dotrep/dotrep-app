@@ -189,6 +189,38 @@ html.motion-off .ring-pulse {
   text-shadow: 0 0 40px rgba(0, 212, 170, 0.6), 0 0 80px rgba(0, 212, 170, 0.3);
 }
 
+.wallet-status-home {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  padding: 10px 20px;
+  border-radius: 12px;
+  margin-top: 24px;
+  width: fit-content;
+}
+
+.wallet-indicator {
+  font-size: 12px;
+}
+
+.wallet-address-home {
+  color: #00d4aa;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.wallet-network-home {
+  background: rgba(0, 82, 255, 0.2);
+  color: #0052ff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .hero-ctas {
   display: flex;
   flex-direction: column;

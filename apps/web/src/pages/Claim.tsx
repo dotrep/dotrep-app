@@ -28,6 +28,7 @@ export default function Claim() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const preferredMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -87,6 +88,24 @@ export default function Claim() {
 
     return () => clearTimeout(timer);
   }, [name]);
+
+  const handleConnectWallet = async () => {
+    setIsConnecting(true);
+    setError('');
+    
+    try {
+      // Prefer Coinbase Wallet, fallback to first available
+      const connector = connectors.find(c => c.name === 'Coinbase Wallet') || connectors[0];
+      if (!connector) throw new Error('No wallet connector available');
+      
+      await connectAsync({ connector });
+    } catch (err: any) {
+      console.error('[CONNECT] Error:', err);
+      setError(err.message || 'Failed to connect wallet');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   const handleClaim = async () => {
     const canonicalName = canonicalizeName(name);
@@ -205,7 +224,20 @@ export default function Claim() {
     return null;
   };
 
-  const canClaim = name && isValidName(canonicalizeName(name)) && isAvailable === true && !isClaiming;
+  const getButtonText = () => {
+    if (isClaiming) return 'Claiming...';
+    if (!isConnected) return 'Connect Wallet First';
+    if (!name) return 'Check Availability';
+    if (isChecking) return 'Checking...';
+    if (isAvailable === true) return 'Claim Name';
+    return 'Check Availability';
+  };
+
+  const canClaim = isConnected && name && isValidName(canonicalizeName(name)) && isAvailable === true && !isClaiming;
+  
+  const formatAddress = (addr: string) => {
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
 
   return (
     <div className="claim-page">
@@ -247,6 +279,26 @@ export default function Claim() {
             Your onchain identity on Base blockchain
           </p>
 
+          {/* Wallet Connection Section */}
+          <div className="wallet-section">
+            {!isConnected ? (
+              <button
+                type="button"
+                onClick={handleConnectWallet}
+                disabled={isConnecting}
+                className="wallet-connect-button"
+              >
+                {isConnecting ? 'Connecting...' : '🦊 Connect Wallet'}
+              </button>
+            ) : (
+              <div className="wallet-connected">
+                <span className="wallet-indicator">🟢</span>
+                <span className="wallet-address">{formatAddress(address!)}</span>
+                <span className="wallet-network">Base</span>
+              </div>
+            )}
+          </div>
+
           <div className="claim-form">
             <div className="input-wrapper">
               <input
@@ -265,11 +317,11 @@ export default function Claim() {
 
             <button
               type="button"
-              onClick={handleClaim}
-              disabled={!canClaim}
+              onClick={!isConnected ? handleConnectWallet : handleClaim}
+              disabled={isConnecting || isClaiming || (isConnected && !canClaim && !!name)}
               className={`claim-button ${canClaim ? 'claim-button-active' : 'claim-button-disabled'}`}
             >
-              {isClaiming ? 'Claiming...' : canClaim ? 'Claim Name' : 'Check Availability'}
+              {getButtonText()}
             </button>
           </div>
 

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAccount, useSignMessage } from 'wagmi';
-import { WalletPickerModal } from '../../client/src/components/WalletPickerModal';
+import { useAccount, useConnect, useSignMessage } from 'wagmi';
 import './home.css';
 
 const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
@@ -20,9 +19,10 @@ const isMobile = () => {
 export default function Home() {
   const particles = useMemo(() => generateParticles(isMobile() ? 8 : 30), []);
   const [, setLocation] = useLocation();
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { address, isConnected } = useAccount();
+  const { connectAsync, connectors } = useConnect();
   const { signMessageAsync } = useSignMessage();
 
   useEffect(() => {
@@ -124,9 +124,33 @@ export default function Home() {
     }
   };
 
+  const handleConnectWallet = async () => {
+    setIsConnecting(true);
+    
+    try {
+      const connector = connectors.find(c => c.name === 'Coinbase Wallet') || connectors[0];
+      if (!connector) throw new Error('No wallet connector available');
+      
+      await connectAsync({ connector });
+      setIsLoggingIn(true); // Trigger login flow after connection
+    } catch (err: any) {
+      console.error('[CONNECT] Error:', err);
+      alert(err.message || 'Failed to connect wallet');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleLoginClick = () => {
-    setIsLoggingIn(true);
-    setShowWalletModal(true);
+    if (!isConnected) {
+      handleConnectWallet();
+    } else {
+      handleLogin();
+    }
+  };
+  
+  const formatAddress = (addr: string) => {
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
   return (
@@ -230,6 +254,15 @@ export default function Home() {
                   <span className="alive">Alive on Base.</span>
                 </h1>
                 
+                {/* Wallet Status */}
+                {isConnected && address && (
+                  <div className="wallet-status-home">
+                    <span className="wallet-indicator">🟢</span>
+                    <span className="wallet-address-home">{formatAddress(address)}</span>
+                    <span className="wallet-network-home">Base</span>
+                  </div>
+                )}
+                
                 <div className="hero-ctas">
                   <button 
                     type="button"
@@ -242,9 +275,9 @@ export default function Home() {
                     type="button"
                     onClick={handleLoginClick} 
                     className="cta-button cta-secondary"
-                    disabled={isLoggingIn}
+                    disabled={isLoggingIn || isConnecting}
                   >
-                    {isLoggingIn ? 'Connecting...' : 'Login with Wallet'}
+                    {isConnecting ? 'Connecting...' : isLoggingIn ? 'Logging in...' : isConnected ? 'Login to Dashboard' : '🦊 Connect Wallet'}
                   </button>
                   <button 
                     type="button"
@@ -268,14 +301,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-      
-      <WalletPickerModal 
-        isOpen={showWalletModal} 
-        onClose={() => {
-          setShowWalletModal(false);
-          setIsLoggingIn(false);
-        }}
-      />
     </>
   );
 }
