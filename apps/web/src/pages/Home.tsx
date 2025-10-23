@@ -352,7 +352,7 @@ export default function Home() {
                     disabled={isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)}
                     style={{ opacity: (isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)) ? 0.5 : 1, cursor: (isLoggingIn || isConnecting || isCheckingWallet || (!hasRepName && isConnected)) ? 'not-allowed' : 'pointer' }}
                   >
-                    {isConnecting ? 'Connecting...' : isLoggingIn ? 'Logging in...' : isCheckingWallet ? 'Checking...' : isConnected ? (hasRepName ? 'Login to Dashboard' : 'Claim .rep first') : '🦊 Connect Wallet'}
+                    {isConnecting ? 'Connecting...' : isLoggingIn ? 'Logging in...' : isCheckingWallet ? 'Checking...' : isConnected ? (hasRepName ? 'Login to Dashboard' : 'Claim .rep first') : '🔵 Connect Wallet'}
                   </button>
                   <button 
                     type="button"
