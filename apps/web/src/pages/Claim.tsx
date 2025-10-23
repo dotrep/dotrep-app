@@ -320,7 +320,7 @@ export default function Claim() {
                 disabled={isConnecting}
                 className="wallet-connect-button"
               >
-                {isConnecting ? 'Connecting...' : '🦊 Connect Wallet'}
+                {isConnecting ? 'Connecting...' : '🔵 Connect Wallet'}
               </button>
             ) : (
               <div className="wallet-connected">
