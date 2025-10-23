@@ -203,6 +203,9 @@ export default function Claim() {
       const reserveData = await reserveRes.json();
       
       if (!reserveRes.ok || !reserveData.reservationId) {
+        if (reserveData.error === 'wallet_already_has_rep') {
+          throw new Error(`This wallet already owns ${reserveData.existingName}.rep (only one .rep per wallet)`);
+        }
         throw new Error(reserveData.error || 'Failed to reserve name');
       }
 

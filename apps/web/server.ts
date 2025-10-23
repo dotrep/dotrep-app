@@ -206,6 +206,22 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'invalid_input' })
     }
 
+    // SOULBOUND: Check if this wallet already owns a DIFFERENT .rep name
+    const [existingByAddress] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, address))
+      .limit(1)
+
+    if (existingByAddress && existingByAddress.nameLower !== name) {
+      // Wallet already owns a different .rep - reject (soulbound identity)
+      return res.status(409).json({ 
+        ok: false, 
+        error: 'wallet_already_has_rep',
+        existingName: existingByAddress.name 
+      })
+    }
+
     // Name already exists?
     const [existingByName] = await db
       .select()
