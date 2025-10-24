@@ -54,6 +54,17 @@ export const fsnDomains = pgTable('fsn_domains', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Legacy reservations table (used by claim flow)
+export const reservations = pgTable('reservations', {
+  id: text('id').primaryKey().default(sql`gen_random_uuid()::text`),
+  name: text('name').notNull(),
+  nameLower: text('name_lower').notNull().unique(),
+  address: text('address').notNull(),
+  addressLower: text('address_lower').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 // Rep Name Reservations table
 export const repReservations = pgTable('rep_reservations', {
   id: varchar('id', { length: 100 }).primaryKey(), // rid_timestamp_random
