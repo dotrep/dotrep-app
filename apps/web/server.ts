@@ -1056,6 +1056,8 @@ app.post('/api/constellation/beacon', async (req, res) => {
 });
 
 // Health check endpoints for Cloud Run and monitoring
+// Dedicated /healthz endpoint for Cloud Run - responds IMMEDIATELY
+app.get('/healthz', (_req, res) => res.status(200).send('OK'));
 app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
 
 // In production, serve static files from the Vite build
@@ -1064,16 +1066,28 @@ if (process.env.NODE_ENV === 'production') {
   
   // CRITICAL: Root endpoint must handle both health checks AND browser requests
   app.get('/', (req, res) => {
-    // Fast health check detection - only check user-agent (most reliable indicator)
-    const ua = req.get('user-agent') || '';
-    
-    // Cloud Run uses GoogleHC, kube-probe, or empty UA for health checks
-    if (ua.includes('GoogleHC') || ua.includes('kube-probe') || ua === '') {
-      return res.status(200).send('OK');
+    try {
+      // Fast health check detection - only check user-agent (most reliable indicator)
+      const ua = req.get('user-agent') || '';
+      
+      // Cloud Run uses GoogleHC, kube-probe, or empty UA for health checks
+      if (ua.includes('GoogleHC') || ua.includes('kube-probe') || ua === '') {
+        return res.status(200).send('OK');
+      }
+      
+      // Browser request - serve SPA (with error handling)
+      res.sendFile(path.join(distPath, 'index.html'), (err) => {
+        if (err && !res.headersSent) {
+          console.error('[root] Error serving index.html:', err);
+          res.status(500).send('Error loading application');
+        }
+      });
+    } catch (err) {
+      console.error('[root] Unexpected error:', err);
+      if (!res.headersSent) {
+        res.status(500).send('Internal server error');
+      }
     }
-    
-    // Browser request - serve SPA
-    res.sendFile(path.join(distPath, 'index.html'));
   });
   
   // Serve static assets (JS, CSS, images) but NOT index.html
