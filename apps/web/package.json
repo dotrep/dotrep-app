@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "start": "NODE_ENV=production tsx server.ts"
   },
   "dependencies": {
     "@metamask/sdk": "^0.28.2",

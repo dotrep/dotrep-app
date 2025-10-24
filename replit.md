@@ -31,13 +31,28 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 ### Backend Architecture (apps/web)
 - **Technology Stack**: Express.js TypeScript server running via tsx on port 9000.
 - **API Design**: RESTful endpoints for authentication and `.rep` name reservations. All endpoints persist to PostgreSQL via Drizzle ORM.
-- **Server Configuration**: Dual-process setup for same-origin cookie support:
-  - **API Server**: Express on port 9000 (console output) - handles /api/* requests
-  - **Vite Dev Server**: Port 5000 (webview output) - proxies /api/* to port 9000
-  - This architecture ensures same-origin cookies work reliably without CORS issues
-  - **IMPORTANT**: Vite uses `vite.config.mjs` (not `.ts`). Proxy config: `'/api': { target: 'http://localhost:9000' }`
-- **Session Management**: In-memory sessions using express-session with sameSite: 'lax' cookies, 7-day duration. Session stores { address, method, ts }.
+- **Server Configuration**: 
+  - **Development**: Dual-process setup for same-origin cookie support:
+    - API Server: Express on port 9000 (console output) - handles /api/* requests
+    - Vite Dev Server: Port 5000 (webview output) - proxies /api/* to port 9000
+    - This architecture ensures same-origin cookies work reliably without CORS issues
+    - **IMPORTANT**: Vite uses `vite.config.mjs` (not `.ts`). Proxy config: `'/api': { target: 'http://localhost:9000' }`
+  - **Production**: Single-process server configuration:
+    - Server binds to 0.0.0.0 (all interfaces) and uses PORT environment variable
+    - Serves built Vite static files from `dist/` directory
+    - All API routes remain at `/api/*` prefix
+    - SPA routing handled by serving index.html for non-API routes
+- **Session Management**: PostgreSQL session store using connect-pg-simple with sameSite: 'lax' cookies, 7-day duration. Session stores { address, method, ts }.
+- **Health Endpoints**: 
+  - `GET /` - Root health check (returns "OK" 200) for Cloud Run
+  - `GET /api/health` - Detailed health check with environment info
 - **API Endpoint Pattern**: `/api/rep/check` - Real-time name availability checking with database lookup
+- **Production Security**:
+  - Rate limiting via express-rate-limit:
+    - Wallet-based limits for authenticated endpoints (5 claims/hr, 10 social starts/day, 20 verifies/hr)
+    - IP-based limits for auth endpoints (20 attempts/15min)
+  - Environment validation at startup (DATABASE_URL, SESSION_SECRET required)
+  - PostgreSQL session persistence (no session loss on restart)
 
 ### Data Architecture
 - **Database**: Production PostgreSQL database using Drizzle ORM located in `apps/web/db/`
@@ -143,3 +158,50 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 ### Smart Contracts
 - **Solidity**
 - **OpenZeppelin**
+
+## Production Deployment
+
+### Deployment Configuration
+- **Target**: VM deployment (stateful server for session persistence)
+- **Build Command**: `cd apps/web && npm run build` (builds Vite frontend to dist/)
+- **Run Command**: `cd apps/web && npm run start` (starts Express server in production mode)
+- **Port**: Uses PORT environment variable from Cloud Run (defaults to 9000 for local dev)
+- **Bind Address**: Binds to 0.0.0.0 in production for Cloud Run health checks
+
+### Required Environment Variables
+```bash
+# Critical (server won't start without these)
+DATABASE_URL=postgresql://user:pass@host:5432/dbname  # Production PostgreSQL connection
+SESSION_SECRET=<strong-random-secret-minimum-32-chars>  # Session encryption key
+
+# Recommended
+ADMIN_WALLETS=0xYourAdminAddress1,0xYourAdminAddress2  # Comma-separated admin addresses
+ECHO_ENABLED=1                                          # Enable social proof features
+ECHO_X_ENABLED=1                                        # Enable X/Twitter verification
+NODE_ENV=production                                     # Optimizes startup and performance
+
+# Optional (have defaults)
+BASE_RPC_URL=https://mainnet.base.org                   # Base network RPC endpoint
+PORT=8080                                               # Server port (Cloud Run provides this)
+```
+
+### Deployment Checklist
+1. ✅ Set all required environment variables in deployment secrets
+2. ✅ Generate strong SESSION_SECRET (use crypto.randomBytes(32).toString('hex'))
+3. ✅ Configure production DATABASE_URL with connection pooling
+4. ✅ Set NODE_ENV=production for optimized performance
+5. ✅ Verify ADMIN_WALLETS contains your wallet address
+6. ✅ Enable feature flags (ECHO_ENABLED, ECHO_X_ENABLED)
+7. ✅ Test health endpoints: GET / (returns "OK") and GET /api/health
+
+### Health Check Endpoints
+- `GET /` - Returns "OK" 200 for Cloud Run health checks (fast response)
+- `GET /api/health` - Returns JSON with environment info for monitoring
+
+### Production Architecture
+- Single Express server process serves both API and static files
+- Vite build output (dist/) served as static files
+- API routes remain at /api/* prefix
+- Client-side routing handled by serving index.html for non-API routes
+- Server binds to 0.0.0.0 to accept Cloud Run health checks
+- PostgreSQL session store ensures no session loss on restart/scaling

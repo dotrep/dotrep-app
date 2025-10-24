@@ -5,6 +5,8 @@ import pg from 'pg';
 import cors from 'cors';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
 import { base } from 'viem/chains';
 import { db } from './db/client.js';
@@ -13,6 +15,9 @@ import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Base network public client for ERC-1271 smart wallet verification
 const publicClient = createPublicClient({
@@ -1050,7 +1055,49 @@ app.post('/api/constellation/beacon', async (req, res) => {
   }
 });
 
+// Health check endpoints for Cloud Run and monitoring
 app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
+
+// In production, serve static files from the Vite build
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, 'dist');
+  
+  // CRITICAL: Root handler must be defined BEFORE static middleware
+  // This ensures health check detection runs before any file serving
+  app.get('/', (req, res) => {
+    console.log('[health-check] GET / - Accept:', req.get('accept'), 'UA:', req.get('user-agent'));
+    
+    // Detect health check requests (no HTML accepted, or specific User-Agent)
+    const acceptsHtml = req.accepts('html');
+    const userAgent = req.get('user-agent') || '';
+    const isHealthCheck = !acceptsHtml || 
+                         userAgent.includes('GoogleHC') || 
+                         userAgent.includes('kube-probe') ||
+                         userAgent === '';
+    
+    if (isHealthCheck) {
+      console.log('[health-check] Detected health check - returning OK');
+      return res.status(200).send('OK');
+    }
+    
+    console.log('[health-check] Detected browser - serving SPA');
+    // Browser request - serve SPA
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+  
+  // Serve static assets (JS, CSS, images) but NOT index.html (handled above)
+  // The { index: false } option prevents express.static from serving index.html
+  app.use(express.static(distPath, { index: false }));
+  
+  // Serve index.html for all other non-API routes (SPA routing)
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  // In development, just provide a simple health check at root
+  // (Vite dev server handles the SPA)
+  app.get('/', (_req, res) => res.status(200).send('OK'));
+}
 
 export default app;
 
@@ -1105,5 +1152,10 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
   validateEnvironment();
   
   const port = Number(process.env.PORT || 9000);
-  app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+  
+  app.listen(port, host, () => {
+    const displayHost = host === '0.0.0.0' ? 'all interfaces' : host;
+    console.log(`API listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
+  });
 }

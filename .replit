@@ -14,6 +14,7 @@ externalPort = 80
 [[ports]]
 localPort = 9000
 externalPort = 9000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 24678
@@ -109,3 +110,8 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[deployment]
+deploymentTarget = "vm"
+run = ["bash", "-c", "cd apps/web && npm run start"]
+build = ["bash", "-c", "cd apps/web && npm run build"]
