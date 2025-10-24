@@ -1154,9 +1154,8 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, 'dist');
   
-  // Serve static assets (JS, CSS, images, index.html)
-  // express.static will automatically serve index.html for / requests
-  // This gives health checks a fast 200 response (the HTML file)
+  // Serve static assets including index.html at /
+  // This provides fast 200 OK for health checks AND serves the app to users
   app.use(express.static(distPath));
   
   // Serve index.html for all non-API routes (SPA routing)
@@ -1167,10 +1166,6 @@ if (process.env.NODE_ENV === 'production') {
     }
     res.sendFile(path.join(distPath, 'index.html'));
   });
-} else {
-  // In development, just provide a simple health check at root
-  // (Vite dev server handles the SPA)
-  app.get('/', (_req, res) => res.status(200).send('OK'));
 }
 
 export default app;
