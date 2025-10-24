@@ -113,5 +113,5 @@ outputType = "webview"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["bash", "-c", "cd apps/web && NODE_ENV=production pnpm exec tsx server.ts"]
-build = ["bash", "-c", "pnpm install && pnpm --filter web build"]
+run = ["bash", "-c", "cd apps/web && pnpm start"]
+build = ["bash", "-c", "pnpm install && cd apps/web && pnpm build"]

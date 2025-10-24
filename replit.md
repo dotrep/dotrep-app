@@ -163,8 +163,8 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 
 ### Deployment Configuration
 - **Target**: VM deployment (stateful server for session persistence)
-- **Build Command**: `pnpm install && pnpm --filter web build` (installs deps and builds Vite frontend)
-- **Run Command**: `cd apps/web && NODE_ENV=production pnpm exec tsx server.ts` (starts Express server in production mode)
+- **Build Command**: `pnpm install && cd apps/web && pnpm build` (installs deps and builds Vite frontend)
+- **Run Command**: `cd apps/web && pnpm start` (starts Express server with NODE_ENV=production)
 - **Port**: Uses PORT environment variable from Cloud Run (defaults to 9000 for local dev)
 - **Bind Address**: Binds to 0.0.0.0 in production for Cloud Run health checks
 - **Package Manager**: Uses pnpm (monorepo-compatible)
