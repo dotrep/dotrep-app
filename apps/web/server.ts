@@ -131,12 +131,25 @@ async function verifySigSmart({
 
   if (await isDeployed(addr)) {
     // Deployed smart account → EIP-1271
+    console.log('[verifySigSmart] Address is deployed, trying EIP-1271 verification');
     const ok1271 = await verify1271(addr, message, signature);
-    if (!ok1271) {
-      console.error('[verifySigSmart] EIP-1271 verification failed for deployed contract');
-      throw new Error('eip_1271_verify_failed');
+    if (ok1271) {
+      console.log('[verifySigSmart] EIP-1271 verification succeeded');
+      return '1271';
     }
-    return '1271';
+    
+    // EIP-1271 failed, try EOA as fallback (edge case: might be regular signature)
+    console.warn('[verifySigSmart] EIP-1271 verification failed, trying EOA fallback');
+    const okEOA = await verifyEOA(addr, message, signature);
+    if (okEOA) {
+      console.log('[verifySigSmart] EOA fallback verification succeeded');
+      return 'EOA';
+    }
+    
+    // All verification methods failed for deployed contract
+    console.error('[verifySigSmart] All verification methods failed for deployed contract');
+    console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
+    return 'UNKNOWN';
   } else {
     // Not deployed - could be EOA or counterfactual smart account
     console.log('[verifySigSmart] Address not deployed, trying verification methods');
@@ -152,8 +165,11 @@ async function verifySigSmart({
         console.log('[verifySigSmart] EOA verification succeeded');
         return 'EOA';
       }
-      console.error('[verifySigSmart] EOA verification failed');
-      throw new Error('eoa_verify_failed');
+      
+      // EOA verification failed
+      console.error('[verifySigSmart] EOA verification failed for non-6492 signature');
+      console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
+      return 'UNKNOWN';
     }
     
     // Has 6492 magic - this is a counterfactual smart wallet signature
@@ -176,7 +192,7 @@ async function verifySigSmart({
     // All verification methods failed
     // For development/testing, we'll accept the signature as UNKNOWN
     // In production, you might want to throw an error instead
-    console.error('[verifySigSmart] All verification methods failed');
+    console.error('[verifySigSmart] All verification methods failed for 6492 signature');
     console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
     return 'UNKNOWN';
   }
@@ -277,6 +293,12 @@ app.post('/api/auth/verify', async (req, res) => {
     });
     
     console.log('[verify] Signature verification result:', method);
+    
+    // Reject UNKNOWN signatures - they failed verification
+    if (method === 'UNKNOWN') {
+      console.error('[verify] Signature verification failed - method returned as UNKNOWN');
+      return res.status(401).json({ ok: false, error: 'signature_verification_failed' });
+    }
     
     // Clear the challenge to prevent replay (single-use nonce)
     delete req.session.challenge;
