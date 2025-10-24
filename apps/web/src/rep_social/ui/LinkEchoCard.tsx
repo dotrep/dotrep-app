@@ -1,37 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function LinkEchoCard() {
-  const [nonce, setNonce] = useState<string | null>(null);
-  const [handle, setHandle] = useState('');
+  const [repName, setRepName] = useState<string>('');
+  const [nonce, setNonce] = useState<string>('');
   const [tweetUrl, setTweetUrl] = useState('');
-  const [step, setStep] = useState<'idle' | 'posted' | 'verifying' | 'done' | 'error'>('idle');
+  const [step, setStep] = useState<'loading' | 'ready' | 'awaiting' | 'verifying' | 'done' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
-  const [instructions, setInstructions] = useState<string | null>(null);
+  const [hasOpenedTwitter, setHasOpenedTwitter] = useState(false);
 
-  async function start() {
-    setError(null);
+  useEffect(() => {
+    init();
+  }, []);
+
+  async function init() {
     try {
-      const r = await fetch('/api/echo/start', {
+      // Fetch user's .rep name
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!res.ok) {
+        setStep('error');
+        setError('Not authenticated');
+        return;
+      }
+      
+      const data = await res.json();
+      const address = data.user?.address;
+      
+      if (address) {
+        const lookupRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`, {
+          credentials: 'include',
+        });
+        const lookupData = await lookupRes.json();
+        if (lookupData.ok && lookupData.name) {
+          setRepName(lookupData.name);
+        }
+      }
+
+      // Generate nonce
+      const nonceRes = await fetch('/api/echo/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ provider: 'x' }),
       });
-      const j = await r.json();
-      if (!j.ok) {
-        setError(j.error || 'start failed');
-        return;
+      const nonceData = await nonceRes.json();
+      if (nonceData.ok) {
+        setNonce(nonceData.nonce);
+        setStep('ready');
+      } else {
+        setStep('error');
+        setError(nonceData.error || 'Failed to initialize');
       }
-      setNonce(j.nonce);
-      setInstructions(j.instructions);
-      setStep('idle');
     } catch (e: any) {
-      setError(e?.message || 'Network error');
+      setStep('error');
+      setError(e?.message || 'Initialization failed');
     }
   }
 
+  function openTwitterIntent() {
+    if (!repName || !nonce) return;
+    
+    const tweetText = `Just claimed my .${repName} identity on Base! 🔵 
+
+#dotrep
+Proof: ${nonce}`;
+    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+    window.open(intentUrl, '_blank', 'width=550,height=420');
+    setStep('awaiting');
+    setHasOpenedTwitter(true);
+  }
+
   async function verify() {
-    if (!nonce || !tweetUrl || !handle) return;
+    if (!tweetUrl || !nonce) return;
     setError(null);
     setStep('verifying');
     try {
@@ -39,7 +78,7 @@ export default function LinkEchoCard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ provider: 'x', tweetUrl, nonce, handle }),
+        body: JSON.stringify({ provider: 'x', tweetUrl, nonce }),
       });
       const j = await r.json();
       if (!j.ok) {
@@ -54,7 +93,7 @@ export default function LinkEchoCard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ action: 'complete', mission: 'link-echo', meta: { provider: 'x', handle } }),
+        body: JSON.stringify({ action: 'complete', mission: 'link-echo', meta: { provider: 'x', handle: j.handle } }),
       });
     } catch (e: any) {
       setError(e?.message || 'Network error');
@@ -62,63 +101,72 @@ export default function LinkEchoCard() {
     }
   }
 
+  if (step === 'loading') {
+    return (
+      <div style={{ marginTop: '1rem', opacity: 0.7, fontSize: '0.9rem' }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (step === 'done') {
+    return (
+      <div style={{ 
+        marginTop: '1rem',
+        padding: '1rem',
+        borderRadius: '8px',
+        background: 'rgba(0, 212, 170, 0.1)',
+        border: '1px solid rgba(0, 212, 170, 0.3)',
+        color: 'rgb(0, 212, 170)',
+      }}>
+        ✓ X account linked! Mission complete.
+      </div>
+    );
+  }
+
   return (
-    <div style={{ marginTop: '1rem' }}>
-      {!nonce ? (
+    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {!hasOpenedTwitter ? (
         <button
-          onClick={start}
+          onClick={openTwitterIntent}
+          disabled={step !== 'ready'}
           style={{
-            padding: '0.5rem 1rem',
+            padding: '0.75rem 1.25rem',
             borderRadius: '8px',
             border: '1px solid rgba(0, 212, 170, 0.3)',
-            background: 'rgba(0, 212, 170, 0.1)',
-            color: 'rgb(0, 212, 170)',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            fontWeight: '500',
+            background: step === 'ready' ? 'rgba(0, 212, 170, 0.1)' : 'rgba(100, 100, 100, 0.1)',
+            color: step === 'ready' ? 'rgb(0, 212, 170)' : '#666',
+            cursor: step === 'ready' ? 'pointer' : 'not-allowed',
+            fontSize: '0.95rem',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
           }}
         >
-          Connect X
+          🐦 Link X & Share
         </button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ fontSize: '0.85rem', opacity: 0.8, lineHeight: '1.5' }}>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <strong>Step 1:</strong> Post a public tweet that includes:
-            </div>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'rgb(0, 212, 170)', marginLeft: '1rem' }}>
-              #{`dotrep`}
-            </div>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'rgb(0, 212, 170)', marginLeft: '1rem' }}>
-              {nonce}
-            </div>
-            <div style={{ marginTop: '0.5rem' }}>
-              <strong>Step 2:</strong> Paste your tweet URL and X handle below
-            </div>
+        <>
+          <div style={{ 
+            fontSize: '0.85rem', 
+            opacity: 0.9, 
+            lineHeight: '1.5',
+            padding: '0.75rem',
+            borderRadius: '6px',
+            background: 'rgba(255, 255, 255, 0.05)',
+          }}>
+            ✓ Tweet window opened! After posting, paste your tweet URL below:
           </div>
           
           <input
-            placeholder="@handle (without @)"
-            value={handle}
-            onChange={e => setHandle(e.target.value.replace(/^@/, ''))}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              borderRadius: '6px',
-              border: '1px solid rgba(0, 212, 170, 0.3)',
-              background: 'rgba(0, 0, 0, 0.3)',
-              color: '#fff',
-              fontSize: '0.9rem',
-            }}
-          />
-          
-          <input
-            placeholder="https://twitter.com/.../status/..."
+            placeholder="https://twitter.com/.../status/... or https://x.com/.../status/..."
             value={tweetUrl}
             onChange={e => setTweetUrl(e.target.value)}
             style={{
               width: '100%',
-              padding: '0.5rem',
+              padding: '0.75rem',
               borderRadius: '6px',
               border: '1px solid rgba(0, 212, 170, 0.3)',
               background: 'rgba(0, 0, 0, 0.3)',
@@ -130,34 +178,31 @@ export default function LinkEchoCard() {
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button
               onClick={verify}
-              disabled={step === 'verifying' || !handle || !tweetUrl}
+              disabled={step === 'verifying' || !tweetUrl}
               style={{
-                padding: '0.5rem 1rem',
+                padding: '0.75rem 1.25rem',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 212, 170, 0.3)',
                 background: step === 'verifying' ? 'rgba(100, 100, 100, 0.3)' : 'rgba(0, 212, 170, 0.1)',
                 color: step === 'verifying' ? '#666' : 'rgb(0, 212, 170)',
-                cursor: step === 'verifying' || !handle || !tweetUrl ? 'not-allowed' : 'pointer',
+                cursor: step === 'verifying' || !tweetUrl ? 'not-allowed' : 'pointer',
                 fontSize: '0.9rem',
                 fontWeight: '500',
               }}
             >
-              {step === 'verifying' ? 'Verifying...' : 'Verify'}
+              {step === 'verifying' ? 'Verifying...' : 'Verify & Complete'}
             </button>
-            
-            {step === 'done' && (
-              <span style={{ color: 'rgb(0, 212, 170)', fontSize: '0.9rem' }}>
-                ✓ Linked!
-              </span>
-            )}
             
             {error && (
               <span style={{ color: 'rgb(255, 107, 53)', fontSize: '0.85rem' }}>
-                Error: {error}
+                {error === 'tag_not_found' ? 'Tweet must include #dotrep' : 
+                 error === 'nonce_invalid' ? 'Please use the tweet we pre-filled for you' :
+                 error === 'tweet_fetch_fail' ? 'Could not fetch tweet. Make sure it\'s public!' :
+                 `Error: ${error}`}
               </span>
             )}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

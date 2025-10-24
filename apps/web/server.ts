@@ -586,7 +586,7 @@ app.post('/api/echo/start', async (req, res) => {
   }
 });
 
-// POST /api/echo/verify - Verify tweet URL contains nonce and complete verification
+// POST /api/echo/verify - Verify tweet URL contains nonce and #dotrep (secure version)
 app.post('/api/echo/verify', async (req, res) => {
   try {
     // Check feature flags
@@ -600,10 +600,10 @@ app.post('/api/echo/verify', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'not_authenticated' });
     }
     
-    const { provider = 'x', tweetUrl, nonce, handle } = req.body || {};
+    const { provider = 'x', tweetUrl, nonce } = req.body || {};
     
     // Validate inputs
-    if (!tweetUrl || !nonce || !handle) {
+    if (!tweetUrl || !nonce) {
       return res.status(400).json({ ok: false, error: 'invalid_input' });
     }
     
@@ -635,6 +635,10 @@ app.post('/api/echo/verify', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'nonce_invalid' });
     }
     
+    // Extract handle from tweet URL - support both twitter.com and x.com
+    const handleMatch = tweetUrl.match(/(?:twitter\.com|x\.com)\/([^\/]+)\/status\//);
+    const handle = handleMatch ? handleMatch[1] : 'unknown';
+    
     // Fetch tweet HTML and check contents
     console.log('[echo/verify] Fetching tweet:', tweetUrl);
     const tweetRes = await fetch(tweetUrl, {
@@ -654,14 +658,15 @@ app.post('/api/echo/verify', async (req, res) => {
     const squashed = html.toLowerCase().replace(/\s+/g, '');
     
     // Check if tweet contains required elements
-    if (!squashed.includes(nonce.toLowerCase())) {
-      console.error('[echo/verify] Nonce not found in tweet');
-      return res.status(400).json({ ok: false, error: 'nonce_not_found' });
-    }
-    
     if (!squashed.includes('#dotrep')) {
       console.error('[echo/verify] #dotrep tag not found in tweet');
       return res.status(400).json({ ok: false, error: 'tag_not_found' });
+    }
+    
+    // Check if tweet contains the nonce (this proves the user created the tweet)
+    if (!squashed.includes(nonce.toLowerCase())) {
+      console.error('[echo/verify] Nonce not found in tweet');
+      return res.status(400).json({ ok: false, error: 'nonce_invalid' });
     }
     
     // Mark nonce as consumed
@@ -689,9 +694,6 @@ app.post('/api/echo/verify', async (req, res) => {
       });
     
     console.log('[echo/verify] Social account verified:', { user: user.address, provider, handle });
-    
-    // Optionally complete the "Link Echo" mission (+40 XP)
-    // This will be triggered by the frontend calling /api/rep_phase0/progress
     
     return res.json({
       ok: true,
