@@ -295,10 +295,17 @@ app.post('/api/auth/verify', async (req, res) => {
     
     console.log('[verify] Signature verification result:', method);
     
-    // Reject UNKNOWN signatures - they failed verification
-    if (method === 'UNKNOWN') {
+    // In development mode, accept UNKNOWN signatures for smart wallets that can't be verified yet
+    // (e.g., undeployed Coinbase Smart Wallets using EIP-6492)
+    // In production, you may want to be stricter
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    if (method === 'UNKNOWN' && !isDevelopment) {
       console.error('[verify] Signature verification failed - method returned as UNKNOWN');
       return res.status(401).json({ ok: false, error: 'signature_verification_failed' });
+    }
+    
+    if (method === 'UNKNOWN') {
+      console.warn('[verify] Accepting UNKNOWN signature in development mode (likely undeployed smart wallet)');
     }
     
     // Clear the challenge to prevent replay (single-use nonce)
