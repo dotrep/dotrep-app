@@ -43,14 +43,25 @@ SERVER_PID=$!
 
 # Wait for server to be ready
 echo "Waiting for server to start..."
+READY=false
 for i in {1..30}; do
-  if curl -f -s -o /dev/null http://localhost:$PORT/ 2>/dev/null; then
+  if curl -f -s -o /dev/null http://localhost:$PORT/api/health 2>/dev/null; then
     echo "✅ Server is responding to health checks!"
+    READY=true
     break
   fi
   echo "  Attempt $i/30: Server not ready yet..."
   sleep 1
 done
 
+# Fail fast if server never became healthy
+if [ "$READY" = false ]; then
+  echo "❌ Server failed to respond after 30 seconds!"
+  echo "Killing server process $SERVER_PID..."
+  kill $SERVER_PID 2>/dev/null || true
+  exit 1
+fi
+
 # Bring server to foreground
+echo "Server is healthy, continuing to run..."
 wait $SERVER_PID
