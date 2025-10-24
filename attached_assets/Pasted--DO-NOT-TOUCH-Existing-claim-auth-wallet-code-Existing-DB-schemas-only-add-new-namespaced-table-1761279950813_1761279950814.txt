@@ -1,0 +1,385 @@
+⛔ DO NOT TOUCH
+
+Existing claim/auth/wallet code
+
+Existing DB schemas (only add new, namespaced tables)
+
+Existing dashboard stats tiles (only add one CTA button)
+
+0) Feature flag
+
+Add to .env:
+
+CONSTELLATION_ENABLED=1
+
+1) Files to create
+
+Create these (auto-detect /pages vs /app router; use the project’s convention):
+
+/src/rep_constellation/lib/db.ts
+/src/rep_constellation/lib/runtimeMigrate.ts
+/src/rep_constellation/lib/auth.ts
+/src/rep_constellation/lib/hash.ts
+/src/rep_constellation/lib/rewards.ts
+/src/rep_constellation/ui/ConstellationCanvas.tsx
+/app/map/page.tsx            OR   /pages/map.tsx
+/app/api/signal-map/route.ts OR   /pages/api/signal-map.ts
+/app/api/beacon/route.ts     OR   /pages/api/beacon.ts
+
+2) Minimal, isolated tables (runtime “CREATE IF NOT EXISTS”)
+
+/src/rep_constellation/lib/db.ts
+
+import { Database } from "sqlite3";
+const DB_PATH = process.env.DATABASE_URL?.startsWith("file:")
+  ? process.env.DATABASE_URL.replace("file:", "")
+  : "./.data/data.db";
+export const db = new Database(DB_PATH);
+
+
+/src/rep_constellation/lib/runtimeMigrate.ts
+
+import { db } from "./db";
+export function ensureConstellationTables(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS rep_constellation_signal (
+          user_wallet TEXT PRIMARY KEY,
+          rep_name TEXT,
+          xp INTEGER NOT NULL DEFAULT 0,
+          signal_active INTEGER NOT NULL DEFAULT 0,
+          beacon_claimed INTEGER NOT NULL DEFAULT 0,
+          last_seen_ms INTEGER NOT NULL
+        );`, (e1)=> {
+        if (e1) return reject(e1);
+        db.run(`
+          CREATE TABLE IF NOT EXISTS rep_constellation_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL, -- 'signal_jam'
+            starts_at_ms INTEGER NOT NULL,
+            ends_at_ms INTEGER NOT NULL
+          );`, (e2)=> e2?reject(e2):resolve());
+      });
+    });
+  });
+}
+
+
+/src/rep_constellation/lib/auth.ts
+
+// Wrap existing session util; do NOT modify global auth.
+export type SessionUser = { wallet:string; repName?:string|null; };
+export async function requireUser(req:any): Promise<SessionUser> {
+  const u = (req as any).user || (req as any).session?.user || (req as any).sessionUser;
+  if (u?.wallet) return { wallet:u.wallet, repName:u.repName ?? null };
+  const w = req.headers?.["x-user-wallet"];
+  if (typeof w === "string") return { wallet:w };
+  throw new Error("AUTH_REQUIRED");
+}
+
+
+/src/rep_constellation/lib/hash.ts
+
+export function fnv1a(str:string){
+  let h=0x811c9dc5;
+  for (let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h+= (h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24); }
+  return (h>>>0);
+}
+
+
+/src/rep_constellation/lib/rewards.ts
+
+import { db } from "./db";
+
+export async function upsertSignalRow(p:{wallet:string, repName?:string|null, seenAt:number}){
+  await new Promise<void>((resolve,reject)=>{
+    db.run(`
+      INSERT INTO rep_constellation_signal (user_wallet, rep_name, xp, signal_active, beacon_claimed, last_seen_ms)
+      VALUES (?, ?, 0, 1, 0, ?)
+      ON CONFLICT(user_wallet) DO UPDATE SET
+        rep_name=COALESCE(excluded.rep_name, rep_constellation_signal.rep_name),
+        signal_active=1,
+        last_seen_ms=excluded.last_seen_ms
+    `,[p.wallet, p.repName ?? null, p.seenAt], (e)=> e?reject(e):resolve());
+  });
+}
+
+export async function listActiveNodes(nowMS:number){
+  const timeout = nowMS - 10*60*1000; // active if seen in last 10m
+  return await new Promise<any[]>((resolve,reject)=>{
+    db.all(`SELECT user_wallet AS wallet, rep_name AS name, xp, signal_active, beacon_claimed FROM rep_constellation_signal WHERE last_seen_ms >= ?`, [timeout], (e,rows)=> e?reject(e):resolve(rows));
+  });
+}
+
+export async function awardBeacon(wallet:string, amountXP:number){
+  await new Promise<void>((resolve,reject)=>{
+    db.run(`
+      UPDATE rep_constellation_signal
+        SET xp = xp + ?, beacon_claimed = 1
+      WHERE user_wallet = ? AND beacon_claimed = 0
+    `,[amountXP, wallet], (e)=> e?reject(e):resolve());
+  });
+}
+
+3) API: signal feed + beacon reward
+
+/app/api/signal-map/route.ts (or /pages/api/signal-map.ts)
+
+import { ensureConstellationTables } from "@/src/rep_constellation/lib/runtimeMigrate";
+import { listActiveNodes, upsertSignalRow } from "@/src/rep_constellation/lib/rewards";
+import { requireUser } from "@/src/rep_constellation/lib/auth";
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    if (!process.env.CONSTELLATION_ENABLED) {
+      const payload = { ok:true, data:[] };
+      if (res) return res.status(200).json(payload);
+      return new Response(JSON.stringify(payload),{status:200});
+    }
+    await ensureConstellationTables();
+
+    // If logged in, mark user "seen"
+    try {
+      const user = await requireUser(req);
+      await upsertSignalRow({ wallet:user.wallet, repName:user.repName ?? null, seenAt:Date.now() });
+    } catch(_) { /* anonymous view allowed */ }
+
+    const data = await listActiveNodes(Date.now());
+    const payload = { ok:true, data };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  } catch(e:any){
+    const msg = { ok:false, error:e?.message || "signal_error" };
+    if (res) return res.status(500).json(msg);
+    return new Response(JSON.stringify(msg), { status:500 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const GET = handlerLike;
+
+
+/app/api/beacon/route.ts (or /pages/api/beacon.ts)
+
+import { ensureConstellationTables } from "@/src/rep_constellation/lib/runtimeMigrate";
+import { awardBeacon, upsertSignalRow } from "@/src/rep_constellation/lib/rewards";
+import { requireUser } from "@/src/rep_constellation/lib/auth";
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    const user = await requireUser(req);
+    await ensureConstellationTables();
+    await upsertSignalRow({ wallet:user.wallet, repName:user.repName ?? null, seenAt:Date.now() });
+    await awardBeacon(user.wallet, 25); // daily map-visit reward
+    const payload = { ok:true, xpAwarded:25 };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  }catch(e:any){
+    const msg = { ok:false, error:e?.message || "beacon_error" };
+    if (res) return res.status(400).json(msg);
+    return new Response(JSON.stringify(msg), { status:400 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike;
+
+4) UI: animated constellation (neon, pulsing, links, parallax)
+
+/src/rep_constellation/ui/ConstellationCanvas.tsx
+
+"use client";
+import React, {useEffect, useRef, useState} from "react";
+import { fnv1a } from "../lib/hash";
+
+type Node = { wallet:string; name?:string|null; xp:number; signal_active:number; beacon_claimed:number };
+
+function posFromWallet(wallet:string, w:number, h:number){
+  const hash = fnv1a(wallet);
+  const angle = (hash % 3600) / 3600 * Math.PI*2;
+  const rNorm = ((hash>>>8) % 1000)/1000;
+  const r = (0.22 + 0.63*Math.sqrt(rNorm)) * Math.min(w,h)/2;
+  return { x: Math.cos(angle)*r + w/2, y: Math.sin(angle)*r + h/2 };
+}
+function colorFromXP(xp:number){
+  if (xp >= 500) return "rgba(0,190,255,0.95)";
+  if (xp >= 200) return "rgba(255,140,0,0.95)";
+  if (xp >= 100) return "rgba(80,230,140,0.95)";
+  return "rgba(140,155,255,0.9)";
+}
+
+export default function ConstellationCanvas(){
+  const ref = useRef<HTMLCanvasElement>(null);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [hover, setHover] = useState<Node|null>(null);
+  const [me, setMe] = useState<string|null>(null);
+
+  async function load(){
+    const res = await fetch("/api/signal-map");
+    const j = await res.json();
+    if (j.ok) setNodes(j.data);
+  }
+  useEffect(()=>{ load(); const id=setInterval(load, 15000); return ()=>clearInterval(id); },[]);
+
+  useEffect(()=>{
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d")!;
+    let raf=0, t0=performance.now();
+    const stars = Array.from({length:220}, (_,i)=>({x:Math.random(), y:Math.random(), z:0.5+Math.random()*0.5}));
+
+    function draw(t:number){
+      const dt = (t - t0)/1000; t0=t;
+      const w=c.width=c.clientWidth, h=c.height=c.clientHeight;
+
+      // parallax background
+      ctx.clearRect(0,0,w,h);
+      const bg = ctx.createRadialGradient(w*0.5,h*0.5,0, w*0.5,h*0.5, Math.max(w,h)*0.75);
+      bg.addColorStop(0,"#05111a"); bg.addColorStop(1,"#00070d");
+      ctx.fillStyle = bg; ctx.fillRect(0,0,w,h);
+
+      // starfield
+      stars.forEach((s,i)=>{
+        const px = (s.x*w + Math.sin((i*13.37+t*0.0005))*8*s.z);
+        const py = (s.y*h + Math.cos((i*7.91 + t*0.0006))*8*s.z);
+        ctx.globalAlpha = 0.35*s.z;
+        ctx.fillStyle = "#aee7ff";
+        ctx.fillRect(px, py, 1, 1);
+      });
+      ctx.globalAlpha = 1;
+
+      // connective filaments
+      ctx.lineWidth = 0.6; ctx.strokeStyle = "rgba(0,190,255,0.10)";
+      for (let i=0;i<nodes.length;i++){
+        for (let j=i+1;j<nodes.length;j++){
+          const a=nodes[i], b=nodes[j];
+          const pa=posFromWallet(a.wallet,w,h), pb=posFromWallet(b.wallet,w,h);
+          const d = Math.hypot(pa.x-pb.x, pa.y-pb.y);
+          if (d < Math.min(w,h)*0.18){
+            ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+          }
+        }
+      }
+
+      // nodes + pulses
+      nodes.forEach((n,idx)=>{
+        const {x,y} = posFromWallet(n.wallet,w,h);
+        const base = Math.max(2, Math.min(6, 2 + (n.xp||0)/120));
+        const pulse = n.signal_active ? (1 + 0.25*Math.sin(t/450 + (idx*0.73))) : 1;
+        const r = base * pulse;
+
+        const g = ctx.createRadialGradient(x,y,0, x,y, r*4);
+        g.addColorStop(0, colorFromXP(n.xp));
+        g.addColorStop(1, "transparent");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r*4,0,Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      });
+
+      // hover label
+      if (hover){
+        const {x,y} = posFromWallet(hover.wallet,ref.current!.width,ref.current!.height);
+        const label = `${hover.name ?? hover.wallet.slice(0,6)} • ${hover.xp} XP`;
+        ctx.font = "12px Inter, system-ui, sans-serif";
+        const pad=8; const tw = ctx.measureText(label).width;
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(x+10, y-24, tw+pad*2, 20);
+        ctx.fillStyle = "white"; ctx.fillText(label, x+10+pad, y-9);
+      }
+
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return ()=>cancelAnimationFrame(raf);
+  },[nodes,hover]);
+
+  function pick(mx:number,my:number){
+    const c=ref.current!; const w=c.width=c.clientWidth, h=c.height=c.clientHeight;
+    for (const n of nodes){
+      const {x,y} = posFromWallet(n.wallet,w,h);
+      if (Math.hypot(mx-x, my-y) <= 10) return n;
+    } return null;
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <canvas
+        ref={ref}
+        className="absolute inset-0 w-full h-[calc(100vh-80px)] rounded-2xl"
+        onMouseMove={(e)=>{ const r=(e.target as HTMLCanvasElement).getBoundingClientRect(); setHover(pick(e.clientX-r.left, e.clientY-r.top)); }}
+        onClick={async ()=>{ await fetch("/api/beacon",{method:"POST"}); }}
+      />
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={async()=>{ await fetch("/api/beacon",{method:"POST"}); }}
+          className="px-3 py-1 rounded-lg border border-cyan-500/40 bg-black/30 text-xs"
+          title="Claim daily Beacon (+25 XP)"
+        >
+          Claim Beacon ✨
+        </button>
+      </div>
+    </div>
+  );
+}
+
+5) Map page wrapper
+
+/app/map/page.tsx (or /pages/map.tsx)
+
+"use client";
+import dynamic from "next/dynamic";
+const ConstellationCanvas = dynamic(()=>import("@/src/rep_constellation/ui/ConstellationCanvas"), { ssr:false });
+
+export default function MapPage(){
+  if (!process.env.CONSTELLATION_ENABLED) return null;
+  return (
+    <main className="p-4 md:p-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-xl md:text-2xl font-semibold">Constellation</h1>
+        <a href="/dashboard" className="text-sm opacity-80 hover:opacity-100">← Back to Dashboard</a>
+      </div>
+      <div className="rounded-2xl overflow-hidden border border-cyan-500/15">
+        <ConstellationCanvas />
+      </div>
+      <p className="mt-3 text-xs opacity-70">
+        Tip: Click a star to reveal profile. Click “Claim Beacon” for a daily +25 XP boost.
+      </p>
+    </main>
+  );
+}
+
+6) Dashboard CTA (one line + button)
+
+In the Dashboard page (where those stat tiles are), add one button near “View Missions”:
+
+{process.env.NEXT_PUBLIC_SHOW_MAP === "0" ? null : (
+  <a href="/map" className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow hover:opacity-95">
+    View Constellation
+  </a>
+)}
+
+
+(If you prefer, reuse your existing button component—just link to /map.)
+
+7) Purpose loop (why users visit)
+
+Automatic Signal: /api/signal-map marks logged-in visitors “seen” (lights their star).
+
+Daily Beacon: clicking Claim Beacon ✨ posts to /api/beacon → +25 XP (idempotent per day via beacon_claimed flag).
+
+Social Proof: hover shows .rep+XP; brighter stars = higher XP.
+
+Events (optional later): add rows into rep_constellation_events to multiply XP during “Signal Jam” windows.
+
+8) QA checklist
+
+ CONSTELLATION_ENABLED=1 set.
+
+ Visit /map while logged in → star appears + pulses.
+
+ Hover shows label; filaments connect nearby stars.
+
+ Click “Claim Beacon ✨” → returns { ok:true, xpAwarded:25 }.
+
+ Dashboard shows View Constellation button; no other dashboard layout changed.
+
+ No existing claim/auth behavior changed. No TypeScript/build errors.

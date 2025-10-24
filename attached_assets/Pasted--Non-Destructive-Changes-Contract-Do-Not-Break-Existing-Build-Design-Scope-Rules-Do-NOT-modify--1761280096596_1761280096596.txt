@@ -1,0 +1,51 @@
+✅ Non-Destructive Changes Contract (Do Not Break Existing Build/Design)
+
+Scope Rules
+
+Do NOT modify or delete any existing files outside the new namespaces: src/rep_phase0/** and src/rep_constellation/**, plus the single new routes and a single dashboard CTA link to /map.
+
+Do NOT change existing claim/auth logic, DB schemas, env vars, nav structure, or routes—only add.
+
+Use feature flags (DASHBOARD_PHASE0, CONSTELLATION_ENABLED) so new features can be disabled instantly.
+
+Design & CSS Rules
+
+Do NOT touch global CSS, Tailwind config, or theme tokens.
+
+No global style overrides; all styling must be local (component classes only).
+
+Reuse existing button/card components if present; otherwise match sizing, radii, and spacing from current dashboard.
+
+No layout shifts on existing pages; the dashboard change is only an added CTA button to /map.
+
+Code Hygiene
+
+Namespaces only: rep_phase0/* and rep_constellation/*. No edits to shared utils unless adding new, unused-by-others helpers.
+
+Runtime migrations must use CREATE TABLE IF NOT EXISTS and never alter existing tables.
+
+Do not add heavy deps; prefer stdlib. If a dep is absolutely required, ask in code comments and place it in a separate import block.
+
+Safety & Reversibility
+
+All new code must compile behind flags; with flags off, the repo builds exactly as before.
+
+Provide a rollback note at the top of each new file describing how to remove the feature by deleting the namespaced folder and routes.
+
+Add a smoke test: build + start with flags off and on; both must pass.
+
+QA Checklist (must pass)
+
+DASHBOARD_PHASE0=0 and CONSTELLATION_ENABLED=0 → site behaves 100% identical to current prod.
+
+DASHBOARD_PHASE0=1 → dashboard shows missions; no other pages change.
+
+CONSTELLATION_ENABLED=1 → /map works; dashboard has one View Constellation CTA; no layout regressions.
+
+Lighthouse/CLS unchanged on existing pages.
+
+No console errors; no unused exports; types pass.
+
+Deliverables
+
+New code paths behind flags, namespaced folders only, one dashboard CTA link, and a short README_ADDONS.md summarizing enable/disable steps.

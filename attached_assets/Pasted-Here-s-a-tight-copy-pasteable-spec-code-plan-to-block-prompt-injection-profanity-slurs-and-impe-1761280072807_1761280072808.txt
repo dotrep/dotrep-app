@@ -1,0 +1,235 @@
+Here’s a tight, copy-pasteable spec + code plan to block prompt-injection, profanity/slurs, and impersonation in .rep names at claim—server-side first (client checks = UX only).
+
+Policy (apply in this exact order)
+
+Canonicalize
+
+Lowercase, NFC normalize.
+
+Strip whitespace, zero-width/RTL controls, punctuation except hyphen.
+
+Collapse multiple hyphens to one.
+
+Trim leading/trailing hyphens.
+
+Format rules (allow-list)
+
+Charset: ^[a-z0-9-]+$
+
+Length: 3–30 chars.
+
+Must start with [a-z], end with [a-z0-9].
+
+Disallow -- inside.
+
+Confusables / homoglyphs
+
+Reject if any char is outside ASCII a–z/0–9/-. (You can loosen later; MVP keeps spoofing risk low.)
+
+Reject if contains lookalike patterns (e.g., 0 for o, 1 for l/i) and normalized form collides with an existing name.
+
+Reserved & impersonation
+
+Hard-reserve exacts and prefixes:
+admin, root, support, help, team, official, system, mod, staff, security, pay, billing, coinbase, base, basechain, onchain, dotrep, .rep (strip dot), rep, twitter, x, farcaster, lens, discord, github, google, apple, meta, facebook
+
+Also reserve your brands and obvious typos (doatrep, dotrepp, coinbsae…) using a small fuzzy set (edit distance ≤1 from reserved).
+
+Profanity / slurs / hate
+
+Build a blocklist (exact + substring) run after canonicalization and after removing non-letters/digits (so f-u_c k is caught).
+
+Examples to seed (expand over time):
+fuck, shit, bitch, cunt, twat, fag, dyke, negro, nigger, chink, gook, kike, spic, wetback, nazi, neo-nazi, hitler, holocaustdenier, gaschamber, rape, rapist, pedo, pedophile, childsex, zoophile, bestiality, whore, slut, dick, pussy, asshole, retard, retarded, mongoloid, fuctrump, fucktrump, kill[person|group], death2[person|group]
+
+Maintain a soft-review list (political/edgy words that aren’t outright slurs) to queue for manual approval rather than auto-block.
+
+Prompt-injection / markup
+
+Reject if input contains sequences typical of prompts/markup even after cleaning:
+{}, [], <>, backticks, http, ://, @, #, /* */, --, ;, ${}, prompt:, system:, assistant:, user:.
+
+Rate limit & audit
+
+Rate-limit /api/claim by IP + wallet.
+
+Log name_input_raw, name_canon, reason_codes[], wallet, ip, ts.
+
+Appeal override
+
+Add admin override ALLOW(name) with reason; store in rep_name_overrides.
+
+Implementation (TypeScript, server-side)
+1) Utility (/src/lib/repName.ts)
+// Minimal, dependency-light utilities for MVP
+const ZERO_WIDTH = /[\u200B-\u200F\uFEFF]/g; // zero-width + RTL controls
+const INVALID_MARKUP = /[`'"{}<>\[\]\\\/@#\$;%\^&\*\(\)\|\+\=\:\?]/g; // common prompt/markup chars
+const MULTI_HYPHEN = /-{2,}/g;
+const NON_ALLOWED = /[^a-z0-9-]/g;
+
+const RESERVED_EXACT = new Set([
+  "admin","root","support","help","team","official","system","mod","staff","security",
+  "pay","billing","coinbase","base","basechain","onchain","dotrep","rep","twitter","x",
+  "farcaster","lens","discord","github","google","apple","meta","facebook"
+]);
+
+const PROFANITY = [
+  // seed; expand over time (all lowercase)
+  "fuck","shit","bitch","cunt","twat","fag","dyke","negro","nigger","chink","gook","kike","spic","wetback",
+  "nazi","neo-nazi","hitler","holocaustdenier","gaschamber","rape","rapist","pedo","pedophile","childsex","zoophile","bestiality",
+  "whore","slut","dick","pussy","asshole","retard","retarded","mongoloid","fuctrump","fucktrump","kill","death2"
+];
+
+const SOFT_REVIEW = [
+  // examples: politics, controversial slogans—tune to your brand
+  "trump","biden","hamas","israel","palestine","putin","xi","kkk","alt-right","antifa"
+];
+
+function nfcLower(s: string) {
+  return s.normalize("NFC").toLowerCase();
+}
+
+function stripSeparators(s: string) {
+  // remove spaces + zero-width + common markup chars
+  return s.replace(/\s+/g, "").replace(ZERO_WIDTH, "").replace(INVALID_MARKUP, "");
+}
+
+export function canonicalize(raw: string) {
+  let s = nfcLower(raw);
+  s = stripSeparators(s);
+  // allow only a-z0-9- ; remove everything else
+  s = s.replace(NON_ALLOWED, "");
+  s = s.replace(MULTI_HYPHEN, "-").replace(/^-+/, "").replace(/-+$/, "");
+  return s;
+}
+
+// simple levenshtein (cap at dist 1/2 quickly)
+export function editDistanceLE2(a: string, b: string) {
+  if (Math.abs(a.length - b.length) > 2) return false;
+  let dp = Array.from({length: a.length+1}, (_,i)=>[i]);
+  for (let j=1;j<=b.length;j++) dp[0][j]=j;
+  for (let i=1;i<=a.length;i++){
+    dp[i][0]=i;
+    for (let j=1;j<=b.length;j++){
+      const cost = a[i-1]===b[j-1]?0:1;
+      dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[a.length][b.length] <= 2;
+}
+
+function stripNonLettersDigits(s: string){
+  return s.replace(/[^a-z0-9]/g,"");
+}
+
+function containsProfanity(name: string) {
+  const squashed = stripNonLettersDigits(name);
+  return PROFANITY.some(term => squashed.includes(term.replace(/[^a-z0-9]/g,"")));
+}
+
+function needsSoftReview(name: string) {
+  const squashed = stripNonLettersDigits(name);
+  return SOFT_REVIEW.some(term => squashed.includes(term.replace(/[^a-z0-9]/g,"")));
+}
+
+export type NameCheck = { ok: boolean; code?: string; message?: string; canon?: string; review?: boolean; };
+
+export function validateRepName(rawInput: string, getExisting: (canon:string)=>Promise<boolean>): Promise<NameCheck> {
+  return (async ()=>{
+    if (!rawInput || typeof rawInput !== "string") return { ok:false, code:"EMPTY", message:"Name required." };
+
+    const canon = canonicalize(rawInput);
+    if (canon.length < 3 || canon.length > 30) return { ok:false, code:"LENGTH", message:"Name must be 3–30 chars.", canon };
+    if (!/^[a-z]/.test(canon) || !/[a-z0-9]$/.test(canon)) return { ok:false, code:"FORMAT", message:"Must start with a letter and end with a letter/number.", canon };
+    if (/--/.test(canon)) return { ok:false, code:"FORMAT", message:"Consecutive hyphens are not allowed.", canon };
+
+    // Confusables policy (MVP strict): ASCII only is already enforced by canonicalize()
+
+    // Reserved exact & fuzzy
+    if (RESERVED_EXACT.has(canon)) return { ok:false, code:"RESERVED", message:"This name is reserved.", canon };
+    for (const r of RESERVED_EXACT) {
+      if (editDistanceLE2(canon, r)) return { ok:false, code:"RESERVED_FUZZY", message:"Name is too similar to a reserved term.", canon };
+    }
+
+    // Profanity/slurs/hate
+    if (containsProfanity(canon)) return { ok:false, code:"PROFANITY", message:"This name is not allowed.", canon };
+
+    // Soft-review bucket
+    if (needsSoftReview(canon)) return { ok:false, code:"REVIEW", message:"This name needs manual review.", canon, review:true };
+
+    // Availability
+    const exists = await getExisting(canon);
+    if (exists) return { ok:false, code:"TAKEN", message:"This name is already taken.", canon };
+
+    return { ok:true, canon };
+  })();
+}
+
+2) Server hook (in your claim endpoint)
+// /pages/api/claim.ts or /app/api/claim/route.ts
+import { validateRepName } from "@/src/lib/repName";
+// implement: getExisting(canon) -> checks DB uniqueness
+async function getExisting(canon:string){ /* SELECT 1 FROM rep_names WHERE canon=? LIMIT 1 */ return false; }
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    const { name: rawName } = req.body || (await req.json?.());
+    const result = await validateRepName(rawName, getExisting);
+    if (!result.ok) {
+      const payload = { ok:false, code: result.code, message: result.message };
+      if (res) return res.status(result.review ? 202 : 400).json(payload);
+      return new Response(JSON.stringify(payload), { status: result.review ? 202 : 400 });
+    }
+
+    // proceed to reserve with result.canon
+    // INSERT ... rep_names (canon, original_input, wallet, ts)
+    const payload = { ok:true, canon: result.canon };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  } catch(e:any){
+    const msg = { ok:false, code:"SERVER", message:e?.message || "Error" };
+    if (res) return res.status(500).json(msg);
+    return new Response(JSON.stringify(msg), { status:500 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike;
+
+3) Client UX (optional but nice)
+
+Show real-time validation as the user types by calling /api/claim/validate (same logic, no write).
+
+If code === "REVIEW", show: “This name may require manual review. Submit request?” and send to an admin queue.
+
+4) Admin overrides (optional)
+
+rep_name_overrides(name, status: allow|block, reason, reviewer, ts)
+On claim, check overrides first; if allow, skip filters and log decision; if block, reject with that reason.
+
+5) Tests (must-pass examples)
+
+✅ alpha, alpha-1, test123, rep-xyz
+
+❌ ad (too short), -abc, abc-, a--b, a b c, ábc (non-ascii), ad\nmin (reserved via clean)
+
+❌ fuck, f-u_c k, n@z!i, fucktrump (caught after squashing)
+
+❌ admin, officia1 (edit distance to official? keep threshold reasonable)
+
+❌ coinbsae (edit distance ≤2 to coinbase)
+
+❌ prompt:{…}, <script>, ````` (markup/prompt patterns)
+
+6) Rate limiting
+
+Add simple sliding window per IP+wallet on /api/claim (e.g., 10 attempts / 10 minutes). Return 429 with retry-after.
+
+Ops Notes
+
+Keep the ASCII-only rule for Phase 0 to kill spoofing; later you can add a vetted Unicode profile with ICU “confusables” mapping.
+
+Maintain your blocklists in a JSON file and version them; changes = simple redeploy.
+
+Log every rejection with a code so you can tune the filters without guessing.
+
+This will keep .rep names clean, non-abusive, and resistant to prompt-injection/impersonation—without slowing down legit users.
