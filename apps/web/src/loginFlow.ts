@@ -16,17 +16,18 @@ async function waitForSession(timeoutMs = 1500) {
   return false;
 }
 
-async function connectWallet(): Promise<{ address: string; method: WalletMethod; message?: string; signature?: string; }> {
+async function connectWallet(): Promise<{ address: string; method: WalletMethod; message?: string; signature?: string; nonce?: string; }> {
   const eth = (window as any).ethereum;
   if (!eth) throw new Error('No injected wallet found');
   const [addr0] = await eth.request({ method: 'eth_requestAccounts' });
   const address = String(addr0).toLowerCase();
   try {
-    const ch = await fetch(`/api/auth/challenge?address=${encodeURIComponent(address)}`, { credentials:'include' });
+    const ch = await fetch(`/api/auth/challenge`, { credentials:'include' });
     if (ch.ok) {
-      const { challenge } = await ch.json();
-      const signature: string = await eth.request({ method: 'personal_sign', params: [challenge, address] });
-      return { address, method: 'EOA', message: challenge, signature };
+      const { nonce } = await ch.json();
+      const message = `Sign this message to verify your wallet.\n\nNonce: ${nonce}`;
+      const signature: string = await eth.request({ method: 'personal_sign', params: [message, address] });
+      return { address, method: 'EOA', message, signature, nonce };
     }
   } catch {}
   return { address, method: 'EOA' };
@@ -36,11 +37,12 @@ export async function startLogin(inputName: string) {
   const name = inputName.trim().toLowerCase();
   if (!name) throw new Error('Please enter a name');
 
-  const { address, method, message, signature } = await connectWallet();
+  const { address, method, message, signature, nonce } = await connectWallet();
 
   const body: Record<string, unknown> = { address, method };
   if (message) body.message = message;
   if (signature) body.signature = signature;
+  if (nonce) body.nonce = nonce;
 
   const vRes = await fetch('/api/auth/verify', {
     method: 'POST',
