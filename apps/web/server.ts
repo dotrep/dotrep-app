@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
 import { base } from 'viem/chains';
-import { db } from './db/client.js';
+import { db, pool as drizzlePool } from './db/client.js';
 import { reservations, repSocialProofs, repSocialAccounts } from './shared/schema.js';
 import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
@@ -208,6 +208,88 @@ async function verifySigSmart({
 const app = express();
 app.set('trust proxy', 1);
 
+// Health state tracking for critical subsystems
+let dbHealthy = true;
+let dbProbeErrorCount = 0;
+let dbQueryErrorCount = 0;
+const MAX_PROBE_ERRORS = 3; // Consecutive probe failures before declaring DB unhealthy
+const MAX_QUERY_ERRORS = 5; // Consecutive query failures before declaring DB unhealthy
+let lastQuerySuccess = Date.now();
+
+// Periodic database health probe to detect query-level failures
+async function checkDatabaseHealth() {
+  try {
+    // Run simple query to verify database is accessible
+    await drizzlePool.query('SELECT 1');
+    
+    // Reset probe error count on success
+    if (dbProbeErrorCount > 0) {
+      console.log(`✅ Database probe passed, resetting probe error count (was ${dbProbeErrorCount})`);
+      dbProbeErrorCount = 0;
+    }
+    dbHealthy = true;
+  } catch (err: any) {
+    dbProbeErrorCount++;
+    console.error(`❌ Database probe failed (${dbProbeErrorCount}/${MAX_PROBE_ERRORS}):`, err.message);
+    
+    if (dbProbeErrorCount >= MAX_PROBE_ERRORS) {
+      dbHealthy = false;
+      console.error('💥 FATAL: Database marked unhealthy after repeated probe failures');
+      console.error('   Health checks will now fail, triggering Cloud Run restart');
+      
+      // Exit after brief delay to allow health check to fail
+      setTimeout(() => {
+        console.error('   Exiting to allow Cloud Run restart with clean state...');
+        process.exit(1);
+      }, 5000);
+    }
+  }
+}
+
+// Track database query failures from actual requests
+export function trackDatabaseError(err: any) {
+  dbQueryErrorCount++;
+  const timeSinceLastSuccess = Date.now() - lastQuerySuccess;
+  console.error(`❌ Database query error (${dbQueryErrorCount} consecutive, ${Math.round(timeSinceLastSuccess/1000)}s since last success):`, err.message);
+  
+  if (dbQueryErrorCount >= MAX_QUERY_ERRORS) {
+    dbHealthy = false;
+    console.error('💥 FATAL: Database marked unhealthy after repeated query failures');
+    console.error('   Health checks will now fail, triggering Cloud Run restart');
+    
+    // Exit after brief delay to allow health check to fail
+    setTimeout(() => {
+      console.error('   Exiting to allow Cloud Run restart with clean state...');
+      process.exit(1);
+    }, 5000);
+  }
+}
+
+// Reset query error count on successful database operation
+export function trackDatabaseSuccess() {
+  if (dbQueryErrorCount > 0) {
+    console.log(`✅ Database query succeeded, resetting query error count (was ${dbQueryErrorCount})`);
+  }
+  dbQueryErrorCount = 0;
+  lastQuerySuccess = Date.now();
+}
+
+// Run database health probe every 15 seconds
+setInterval(checkDatabaseHealth, 15000);
+
+// Run initial probe on startup
+setTimeout(() => checkDatabaseHealth(), 3000);
+
+// CRITICAL: Health check endpoint FIRST - before ALL middleware
+// Returns 500 if critical subsystems are degraded
+app.get('/healthz', (_req, res) => {
+  if (!dbHealthy) {
+    console.error('❌ Health check failed: Database unhealthy');
+    return res.status(500).send('Database unhealthy');
+  }
+  res.status(200).send('OK');
+});
+
 app.use(express.json());
 
 // CORS Configuration Note:
@@ -218,24 +300,22 @@ app.use(express.json());
 // Configure PostgreSQL session store for production reliability
 const PgStore = connectPgSimple(session);
 
-// Lazy pool creation - only creates connection when needed
-const pgPool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  // Prevent pool from blocking startup
-  connectionTimeoutMillis: 5000,
+// Use the same pool as Drizzle for centralized health tracking
+// Log pool-level errors (idle client failures) but rely on periodic probes for health
+drizzlePool.on('error', (err) => {
+  console.error('PostgreSQL pool error (idle client):', err.message);
+  // Don't increment dbErrorCount here - periodic probe will detect failures
 });
 
-// Prevent pool errors from crashing the server
-pgPool.on('error', (err) => {
-  console.error('PostgreSQL pool error (non-fatal):', err.message);
-});
+// Validate SESSION_SECRET exists before configuring middleware
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required for secure sessions');
+}
 
 app.use(
   session({
     store: new PgStore({
-      pool: pgPool,
+      pool: drizzlePool, // Use same pool as Drizzle for unified health tracking
       tableName: 'session',
       createTableIfMissing: false, // Don't auto-create - prevents blocking DB queries on startup
       pruneSessionInterval: false, // Disable automatic session pruning to prevent startup blocking
@@ -244,7 +324,7 @@ app.use(
       },
     }),
     name: 'rep.sid',
-    secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
+    secret: process.env.SESSION_SECRET, // No fallback - fail fast if missing
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -1067,9 +1147,7 @@ app.post('/api/constellation/beacon', async (req, res) => {
   }
 });
 
-// Health check endpoints for Cloud Run and monitoring
-// Dedicated /healthz endpoint for Cloud Run - responds IMMEDIATELY
-app.get('/healthz', (_req, res) => res.status(200).send('OK'));
+// Additional health check endpoint with environment info
 app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
 
 // In production, serve static files from the Vite build
@@ -1126,12 +1204,13 @@ function validateEnvironment() {
     warnings.push('ECHO_ENABLED is on but ECHO_X_ENABLED is not set - social proof may not work');
   }
 
-  // Log results (no longer fatal - server stays running for health checks)
+  // Log results - fail fast if critical configuration missing
   if (errors.length > 0) {
     console.error('\n❌ CRITICAL ENVIRONMENT ERRORS:');
     errors.forEach(err => console.error(`  - ${err}`));
-    console.error('\n⚠️  Some features may not work until these are fixed.\n');
-    // Don't exit - let server run for health checks
+    console.error('\n💥 Cannot start server without required configuration.');
+    console.error('   Set environment variables in deployment secrets and redeploy.\n');
+    process.exit(1);
   }
 
   if (warnings.length > 0) {
@@ -1140,12 +1219,30 @@ function validateEnvironment() {
     console.warn('');
   }
 
-  if (errors.length === 0) {
-    console.log('✅ Environment validation passed');
-  }
+  console.log('✅ Environment validation passed');
 }
 
 if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
+  // Global error handlers - Log but let process crash for Cloud Run restart
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ FATAL: Unhandled Promise Rejection');
+    console.error('   Promise:', promise);
+    console.error('   Reason:', reason);
+    console.error('   Exiting to allow Cloud Run to restart with clean state...');
+    process.exit(1);
+  });
+
+  process.on('uncaughtException', (error) => {
+    console.error('❌ FATAL: Uncaught Exception');
+    console.error('   Error:', error);
+    console.error('   Exiting to allow Cloud Run to restart with clean state...');
+    process.exit(1);
+  });
+
+  // Validate critical environment BEFORE starting server
+  // This ensures health checks only pass when app is correctly configured
+  validateEnvironment();
+
   // Port configuration: 
   // - Production: Use PORT env var (Cloud Run provides this), default 5000
   // - Development: Use port 9000 (Vite dev server uses 5000)
@@ -1155,13 +1252,9 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
     : 9000;
   const host = isProduction ? '0.0.0.0' : 'localhost';
   
-  // Start server FIRST to respond to health checks, then validate environment
+  // Start server after validation passes
   app.listen(port, host, () => {
     const displayHost = host === '0.0.0.0' ? 'all interfaces' : host;
-    console.log(`API listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
-    
-    // Validate environment AFTER server is listening
-    // This allows health checks to pass even if validation fails
-    validateEnvironment();
+    console.log(`✅ Server listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
   });
 }

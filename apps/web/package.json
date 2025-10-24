@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "db:push": "drizzle-kit push",
-    "start": "NODE_ENV=production tsx server.ts"
+    "start": "NODE_ENV=production tsx server.ts",
+    "health-check": "node health-check.js",
+    "verify-deploy": "npm run build && echo 'Build successful - ready for deployment'"
   },
   "dependencies": {
     "@metamask/sdk": "^0.28.2",
