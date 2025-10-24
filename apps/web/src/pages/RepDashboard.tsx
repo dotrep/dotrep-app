@@ -235,12 +235,6 @@ export default function RepDashboard() {
               View Missions
             </button>
             <button 
-              className="action-button action-button-primary"
-              onClick={() => setLocation('/map')}
-            >
-              View Constellation
-            </button>
-            <button 
               className="action-button action-button-secondary"
               onClick={() => setLocation('/')}
             >
