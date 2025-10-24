@@ -29,7 +29,7 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 - **Component Design**: Functional React components, inline SVG for graphics, CSS keyframes for animations, and client-side state management.
 
 ### Backend Architecture (apps/web)
-- **Technology Stack**: Express.js TypeScript server running via tsx on port 9000.
+- **Technology Stack**: Express.js TypeScript server running via tsx (port 9000 in dev, 5000 in production).
 - **API Design**: RESTful endpoints for authentication and `.rep` name reservations. All endpoints persist to PostgreSQL via Drizzle ORM.
 - **Server Configuration**: 
   - **Development**: Dual-process setup for same-origin cookie support:
@@ -37,14 +37,16 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
     - Vite Dev Server: Port 5000 (webview output) - proxies /api/* to port 9000
     - This architecture ensures same-origin cookies work reliably without CORS issues
     - **IMPORTANT**: Vite uses `vite.config.mjs` (not `.ts`). Proxy config: `'/api': { target: 'http://localhost:9000' }`
-  - **Production**: Single-process server configuration:
-    - Server binds to 0.0.0.0 (all interfaces) and uses PORT environment variable
+  - **Production**: Single-process server configuration optimized for Cloud Run:
+    - Server binds to 0.0.0.0 (all interfaces) on port 5000 (PORT environment variable)
     - Serves built Vite static files from `dist/` directory
     - All API routes remain at `/api/*` prefix
     - SPA routing handled by serving index.html for non-API routes
+    - No health check polling in startup script - Cloud Run handles health checks
 - **Session Management**: PostgreSQL session store using connect-pg-simple with sameSite: 'lax' cookies, 7-day duration. Session stores { address, method, ts }.
-- **Health Endpoints**: 
-  - `GET /` - Root health check (returns "OK" 200) for Cloud Run
+- **Health Endpoints** (optimized for fast Cloud Run health checks): 
+  - `GET /healthz` - Dedicated health check endpoint (instant "OK" response, no logic)
+  - `GET /` - Root endpoint with fast user-agent detection (GoogleHC/kube-probe return "OK", browsers get SPA)
   - `GET /api/health` - Detailed health check with environment info
 - **API Endpoint Pattern**: `/api/rep/check` - Real-time name availability checking with database lookup
 - **Production Security**:

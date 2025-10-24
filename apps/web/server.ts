@@ -1156,7 +1156,7 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
   // Validate environment before starting server
   validateEnvironment();
   
-  const port = Number(process.env.PORT || 9000);
+  const port = Number(process.env.PORT || 5000);
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   
   app.listen(port, host, () => {
