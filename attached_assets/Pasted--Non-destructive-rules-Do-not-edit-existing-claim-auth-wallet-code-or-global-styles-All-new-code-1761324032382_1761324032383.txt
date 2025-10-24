@@ -1,0 +1,281 @@
+⛔ Non-destructive rules
+
+Do not edit existing claim/auth/wallet code or global styles.
+
+All new code goes under src/rep_social_oauth/** and two API routes.
+
+Keep the current proof-by-tweet routes in place; just hide them when OAuth is enabled.
+
+Use a feature flag to toggle this on/off instantly.
+
+0) Env vars (add to Replit Secrets)
+TWITTER_ENABLED=1
+TWITTER_CLIENT_ID=xxxxxxxxxxxxxxxx
+TWITTER_CLIENT_SECRET=xxxxxxxxxxxxxxxx
+TWITTER_REDIRECT_URI=https://<your-live-domain-or-replit-url>/api/echo/callback
+TWITTER_SCOPE=users.read tweet.read offline.access
+BASE_URL=https://<your-live-domain-or-replit-url>
+
+
+BASE_URL is used for safe redirects + server-side POSTs.
+
+1) Files to create
+/src/rep_social_oauth/lib/db.ts
+/src/rep_social_oauth/lib/runtimeMigrate.ts
+/src/rep_social_oauth/lib/auth.ts
+/src/rep_social_oauth/lib/pkce.ts
+/app/api/echo/start/route.ts      OR /pages/api/echo/start.ts
+/app/api/echo/callback/route.ts   OR /pages/api/echo/callback.ts
+
+
+Use the project’s router convention automatically.
+
+2) Minimal tables (runtime create)
+
+Store short-lived OAuth state + code_verifier, and the linked X account.
+
+/src/rep_social_oauth/lib/db.ts
+
+import { Database } from "sqlite3";
+const DB_PATH = process.env.DATABASE_URL?.startsWith("file:")
+  ? process.env.DATABASE_URL.replace("file:", "")
+  : "./.data/data.db";
+export const db = new Database(DB_PATH);
+
+
+/src/rep_social_oauth/lib/runtimeMigrate.ts
+
+import { db } from "./db";
+export function ensureEchoOAuthTables(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS rep_oauth_state (
+          state TEXT PRIMARY KEY,
+          code_verifier TEXT NOT NULL,
+          user_wallet TEXT NOT NULL,
+          created_at_ms INTEGER NOT NULL
+        );`, (e1)=> {
+        if (e1) return reject(e1);
+        db.run(`
+          CREATE TABLE IF NOT EXISTS rep_social_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_wallet TEXT NOT NULL,
+            provider TEXT NOT NULL,  -- 'x'
+            handle TEXT NOT NULL,
+            external_id TEXT NOT NULL,
+            verified_at INTEGER NOT NULL,
+            UNIQUE(user_wallet, provider)
+          );`, (e2)=> e2?reject(e2):resolve());
+      });
+    });
+  });
+}
+
+
+/src/rep_social_oauth/lib/auth.ts
+
+export type SessionUser = { wallet:string; repName?:string|null; };
+export async function requireUser(req:any): Promise<SessionUser> {
+  const u = (req as any).user || (req as any).session?.user || (req as any).sessionUser;
+  if (u?.wallet) return { wallet:u.wallet, repName:u.repName ?? null };
+  const w = req.headers?.["x-user-wallet"];
+  if (typeof w === "string") return { wallet:w };
+  throw new Error("AUTH_REQUIRED");
+}
+
+
+/src/rep_social_oauth/lib/pkce.ts
+
+function b64url(buf:Buffer){
+  return buf.toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+export function newVerifier(): string {
+  return b64url(Buffer.from(crypto.getRandomValues(new Uint8Array(32))));
+}
+export async function challengeFromVerifier(verifier:string): Promise<string> {
+  const hash = crypto.createHash("sha256").update(verifier).digest();
+  return b64url(hash);
+}
+
+3) /api/echo/start – begin OAuth (redirect to X)
+
+/app/api/echo/start/route.ts (or pages/api)
+
+import { ensureEchoOAuthTables } from "@/src/rep_social_oauth/lib/runtimeMigrate";
+import { requireUser } from "@/src/rep_social_oauth/lib/auth";
+import { db } from "@/src/rep_social_oauth/lib/db";
+import { newVerifier, challengeFromVerifier } from "@/src/rep_social_oauth/lib/pkce";
+import crypto from "crypto";
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    if (process.env.TWITTER_ENABLED !== "1") throw new Error("DISABLED");
+    const user = await requireUser(req);
+    await ensureEchoOAuthTables();
+
+    const state = crypto.randomUUID();
+    const code_verifier = newVerifier();
+    const code_challenge = await challengeFromVerifier(code_verifier);
+
+    await new Promise<void>((resolve,reject)=>{
+      db.run(`INSERT INTO rep_oauth_state (state, code_verifier, user_wallet, created_at_ms) VALUES (?,?,?,?)`,
+        [state, code_verifier, user.wallet, Date.now()], (e)=> e?reject(e):resolve());
+    });
+
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: process.env.TWITTER_CLIENT_ID!,
+      redirect_uri: process.env.TWITTER_REDIRECT_URI!,
+      scope: process.env.TWITTER_SCOPE || "users.read",
+      state,
+      code_challenge,
+      code_challenge_method: "S256"
+    });
+
+    const url = `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
+
+    // pages/api vs app router response
+    if (res) return res.redirect(url);
+    return Response.redirect(url, 302);
+  }catch(e:any){
+    const msg = { ok:false, error: e?.message || "start_error" };
+    if (res) return res.status(400).json(msg);
+    return new Response(JSON.stringify(msg), { status:400 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const GET = handlerLike; export const POST = handlerLike;
+
+4) /api/echo/callback – exchange code, fetch user, store link, award XP
+
+/app/api/echo/callback/route.ts (or pages/api)
+
+import { ensureEchoOAuthTables } from "@/src/rep_social_oauth/lib/runtimeMigrate";
+import { db } from "@/src/rep_social_oauth/lib/db";
+
+async function getStateRow(state:string){
+  return await new Promise<any>((resolve,reject)=>{
+    db.get(`SELECT * FROM rep_oauth_state WHERE state=?`, [state], (e,row)=> e?reject(e):resolve(row));
+  });
+}
+async function delState(state:string){
+  await new Promise<void>((resolve)=> db.run(`DELETE FROM rep_oauth_state WHERE state=?`, [state], ()=>resolve()));
+}
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    if (process.env.TWITTER_ENABLED !== "1") throw new Error("DISABLED");
+    await ensureEchoOAuthTables();
+
+    const url = new URL(req.url ?? `${process.env.BASE_URL}/api/echo/callback`);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    if (!code || !state) throw new Error("INVALID_CALLBACK");
+
+    const row = await getStateRow(state);
+    if (!row) throw new Error("STATE_NOT_FOUND");
+
+    // Exchange code for tokens
+    const tokenResp = await fetch("https://api.twitter.com/2/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: process.env.TWITTER_CLIENT_ID!,
+        redirect_uri: process.env.TWITTER_REDIRECT_URI!,
+        code,
+        code_verifier: row.code_verifier
+      })
+    });
+    if (!tokenResp.ok) throw new Error("TOKEN_EXCHANGE_FAILED");
+    const tokens = await tokenResp.json();
+    const accessToken = tokens.access_token as string;
+
+    // Fetch current user (@handle + id)
+    const meResp = await fetch("https://api.twitter.com/2/users/me?user.fields=username", {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!meResp.ok) throw new Error("FETCH_ME_FAILED");
+    const me = await meResp.json();
+    const external_id = me?.data?.id;
+    const handle = me?.data?.username;
+    if (!external_id || !handle) throw new Error("MISSING_USER_DATA");
+
+    // Store the linked account (idempotent)
+    await new Promise<void>((resolve,reject)=>{
+      db.run(`
+        INSERT INTO rep_social_accounts (user_wallet, provider, handle, external_id, verified_at)
+        VALUES (?,?,?, ?, ?)
+        ON CONFLICT(user_wallet, provider) DO UPDATE SET
+          handle=excluded.handle, external_id=excluded.external_id, verified_at=excluded.verified_at
+      `, [row.user_wallet, "x", handle, external_id, Date.now()], (e)=> e?reject(e):resolve());
+    });
+
+    // Cleanup state
+    await delState(state);
+
+    // Award mission XP (best-effort)
+    try{
+      await fetch(`${process.env.BASE_URL}/api/rep_phase0/progress`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-user-wallet": row.user_wallet },
+        body: JSON.stringify({ action:"complete", mission:"link-echo", meta:{ provider:"x", handle } })
+      });
+    }catch(_){ /* ignore */ }
+
+    // Redirect back to dashboard with success flag
+    const dest = `${process.env.BASE_URL}/dashboard?echo=connected`;
+    if (res) return res.redirect(dest);
+    return Response.redirect(dest, 302);
+  }catch(e:any){
+    const dest = `${process.env.BASE_URL || "/"}?echo=error`;
+    if (res) return res.redirect(dest);
+    return Response.redirect(dest, 302);
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const GET = handlerLike;
+
+5) UI: swap the mission button to “Connect X”
+
+In your Link Your Echo mission card, replace the old “Coming Soon / paste tweet URL” area with a single button only when TWITTER_ENABLED=1:
+
+{process.env.NEXT_PUBLIC_TWITTER_ENABLED === "1" || process.env.TWITTER_ENABLED === "1" ? (
+  <a
+    href="/api/echo/start"
+    className="text-sm px-3 py-1 rounded-lg border hover:bg-gray-50/10"
+  >
+    Connect X (Twitter)
+  </a>
+) : (
+  /* keep your existing proof-by-tweet UI as fallback */
+  <OldProofByTweetComponent />
+)}
+
+
+(If you don’t expose a NEXT_PUBLIC flag, just show the button unconditionally—the route will 400 if disabled.)
+
+6) Safety & QA
+
+PKCE (S256) + state implemented; state stored server-side and deleted after use.
+
+No scopes beyond: users.read tweet.read offline.access.
+
+No tweets are posted on the user’s behalf.
+
+Rate-limit /api/echo/start by IP+wallet (optional).
+
+QA:
+
+Enabled → click Connect X → approve → back to /dashboard?echo=connected → mission shows Completed +40 XP.
+
+Disable (TWITTER_ENABLED=0) → old tweet-proof flow remains; no broken UI.
+
+Build passes with flags on/off; no changes to claim/auth/global CSS.
+
+7) Rollback
+
+To disable: set TWITTER_ENABLED=0 (keeps old flow).
+
+To remove entirely: delete src/rep_social_oauth/** and the two /api/echo/* routes.
