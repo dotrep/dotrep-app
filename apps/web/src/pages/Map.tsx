@@ -72,7 +72,7 @@ export default function Map() {
           ← Back to Dashboard
         </button>
       </div>
-      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0, 212, 170, 0.15)', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0, 212, 170, 0.15)', maxWidth: '1400px', margin: '0 auto', height: 'calc(100vh - 120px)', minHeight: '600px' }}>
         <ConstellationCanvas />
       </div>
     </div>
