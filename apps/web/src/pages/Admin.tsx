@@ -88,18 +88,21 @@ export default function Admin() {
         throw new Error('Failed to get challenge');
       }
 
-      const { challenge } = await challengeRes.json();
+      const { nonce } = await challengeRes.json();
 
-      // Sign the challenge
+      // Create the message to sign
+      const message = `Sign this message to login to .rep admin panel.\n\nNonce: ${nonce}`;
+
+      // Sign the message
       const signature = await signMessageAsync({
-        message: challenge,
+        message,
       });
 
       // Verify signature and create session
       const verifyRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, signature }),
+        body: JSON.stringify({ address, message, signature, nonce }),
         credentials: 'include',
       });
 
