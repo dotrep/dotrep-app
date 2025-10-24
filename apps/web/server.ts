@@ -217,29 +217,41 @@ app.use(express.json());
 
 // Configure PostgreSQL session store for production reliability
 const PgStore = connectPgSimple(session);
+
+// Lazy pool creation - only creates connection when needed
 const pgPool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  // For production, use connection pooling
   max: 10,
   idleTimeoutMillis: 30000,
+  // Prevent pool from blocking startup
+  connectionTimeoutMillis: 5000,
+});
+
+// Prevent pool errors from crashing the server
+pgPool.on('error', (err) => {
+  console.error('PostgreSQL pool error (non-fatal):', err.message);
 });
 
 app.use(
   session({
     store: new PgStore({
       pool: pgPool,
-      tableName: 'session', // Store sessions in 'session' table
-      createTableIfMissing: true, // Auto-create table on first run
+      tableName: 'session',
+      createTableIfMissing: false, // Don't auto-create - prevents blocking DB queries on startup
+      pruneSessionInterval: false, // Disable automatic session pruning to prevent startup blocking
+      errorLog: (err) => {
+        console.error('Session store error (non-fatal):', err.message);
+      },
     }),
     name: 'rep.sid',
     secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
     resave: false,
-    saveUninitialized: false,   // Don't create session until something stored (best practice)  
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
       path: '/',
-      sameSite: 'lax',    // same-origin setup via Vite proxy
-      secure: !!process.env.REPLIT_DOMAINS,  // Replit always uses HTTPS
+      sameSite: 'lax',
+      secure: !!process.env.REPLIT_DOMAINS,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
@@ -1134,8 +1146,14 @@ function validateEnvironment() {
 }
 
 if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
-  const port = Number(process.env.PORT || 5000);
-  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+  // Port configuration: 
+  // - Production: Use PORT env var (Cloud Run provides this), default 5000
+  // - Development: Use port 9000 (Vite dev server uses 5000)
+  const isProduction = process.env.NODE_ENV === 'production';
+  const port = isProduction 
+    ? Number(process.env.PORT || 5000)
+    : 9000;
+  const host = isProduction ? '0.0.0.0' : 'localhost';
   
   // Start server FIRST to respond to health checks, then validate environment
   app.listen(port, host, () => {
