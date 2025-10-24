@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useLocation } from 'wouter';
 import './missions.css';
 
 interface Mission {
@@ -19,20 +20,67 @@ interface MissionState {
 }
 
 export default function MissionsDashboard() {
+  const [, setLocation] = useLocation();
   const { address, isConnected } = useAccount();
   const [state, setState] = useState<MissionState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [completingMission, setCompletingMission] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (isConnected && address) {
-      recordHeartbeat();
-      loadState();
-    } else {
+    checkAuthAndLoadMissions();
+  }, [isConnected, address]);
+
+  const checkAuthAndLoadMissions = async () => {
+    setLoading(true);
+    try {
+      // Check if user has a valid session
+      const sessionRes = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+
+      if (!sessionRes.ok) {
+        console.log('[MISSIONS] No session found, redirecting to claim');
+        setLocation('/claim');
+        return;
+      }
+
+      const sessionData = await sessionRes.json();
+      const walletAddress = address?.toLowerCase() || sessionData.address?.toLowerCase();
+      
+      if (!walletAddress) {
+        console.log('[MISSIONS] No wallet address, redirecting to claim');
+        setLocation('/claim');
+        return;
+      }
+
+      // Check if user has a claimed .rep name
+      const lookupRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(walletAddress)}`, {
+        credentials: 'include',
+      });
+
+      const lookupData = await lookupRes.json();
+
+      if (!lookupData.ok || !lookupData.walletFound) {
+        console.log('[MISSIONS] No .rep found, redirecting to claim');
+        setLocation('/claim');
+        return;
+      }
+
+      // User is authenticated and has a .rep name
+      setIsAuthenticated(true);
+      
+      // Record heartbeat and load missions
+      await recordHeartbeat();
+      await loadState();
+    } catch (error) {
+      console.error('[MISSIONS] Auth check error:', error);
+      setLocation('/claim');
+    } finally {
       setLoading(false);
     }
-  }, [isConnected, address]);
+  };
 
   const recordHeartbeat = async () => {
     try {
@@ -92,21 +140,18 @@ export default function MissionsDashboard() {
     }
   };
 
-  if (!isConnected) {
-    return (
-      <div className="missions-container">
-        <div className="missions-auth-required">
-          <h2>Connect Your Wallet</h2>
-          <p>Please connect your wallet to view missions and track your progress.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="missions-container">
         <div className="missions-loading">Loading missions...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="missions-container">
+        <div className="missions-loading">Checking authentication...</div>
       </div>
     );
   }

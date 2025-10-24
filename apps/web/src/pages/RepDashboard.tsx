@@ -230,6 +230,12 @@ export default function RepDashboard() {
           <div className="dashboard-actions">
             <button 
               className="action-button action-button-primary"
+              onClick={() => setLocation('/missions')}
+            >
+              View Missions
+            </button>
+            <button 
+              className="action-button action-button-secondary"
               onClick={() => setLocation('/')}
             >
               Back to Home
