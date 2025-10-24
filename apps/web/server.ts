@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
 import { base } from 'viem/chains';
 import { db } from './db/client.js';
-import { reservations } from './db/schema.js';
+import { reservations } from './shared/schema.js';
 import { eq, and, sql, or, like } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
