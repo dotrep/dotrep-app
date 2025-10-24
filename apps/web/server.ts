@@ -1,7 +1,10 @@
 import express from 'express';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import pg from 'pg';
 import cors from 'cors';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
 import { base } from 'viem/chains';
 import { db } from './db/client.js';
@@ -10,8 +13,6 @@ import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
-
-const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
 
 // Base network public client for ERC-1271 smart wallet verification
 const publicClient = createPublicClient({
@@ -204,18 +205,37 @@ app.set('trust proxy', 1);
 
 app.use(express.json());
 
+// CORS Configuration Note:
+// Using Vite proxy in both dev and production (Vite serves frontend on port 5000, 
+// proxies /api/* requests to Express on port 9000). This provides same-origin requests
+// and eliminates CORS issues. CORS middleware not needed.
+
+// Configure PostgreSQL session store for production reliability
+const PgStore = connectPgSimple(session);
+const pgPool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  // For production, use connection pooling
+  max: 10,
+  idleTimeoutMillis: 30000,
+});
+
 app.use(
   session({
+    store: new PgStore({
+      pool: pgPool,
+      tableName: 'session', // Store sessions in 'session' table
+      createTableIfMissing: true, // Auto-create table on first run
+    }),
     name: 'rep.sid',
     secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
     resave: false,
-    saveUninitialized: true,   // Create session immediately  
+    saveUninitialized: false,   // Don't create session until something stored (best practice)  
     cookie: {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',    // same-origin setup via Vite proxy
       secure: !!process.env.REPLIT_DOMAINS,  // Replit always uses HTTPS
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
 );
@@ -227,8 +247,49 @@ declare module 'express-session' {
   }
 }
 
+// Rate limiting configuration for production security
+// Use wallet address for authenticated endpoints (more accurate than IP)
+const reserveRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Max 5 reserve attempts per hour
+  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '1 hour' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.session?.user?.address, // Only rate limit authenticated users
+  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+});
+
+const echoStartRateLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 10, // Max 10 social proof starts per day
+  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '24 hours' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.session?.user?.address,
+  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+});
+
+const echoVerifyRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // Max 20 verify attempts per hour
+  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '1 hour' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.session?.user?.address,
+  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+});
+
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Max 20 auth attempts per 15 min per IP
+  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // For auth endpoints, use IP-based limiting (built-in handles IPv6 correctly)
+});
+
 // Auth endpoints
-app.get('/api/auth/challenge', async (req, res) => {
+app.get('/api/auth/challenge', authRateLimiter, async (req, res) => {
   try {
     // Generate a cryptographically random nonce
     const nonce = crypto.randomBytes(32).toString('hex');
@@ -245,7 +306,7 @@ app.get('/api/auth/challenge', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify', async (req, res) => {
+app.post('/api/auth/verify', authRateLimiter, async (req, res) => {
   try {
     const { address, message, signature, nonce } = req.body ?? {};
     
@@ -425,7 +486,7 @@ app.get('/api/rep/lookup-wallet', async (req, res) => {
 })
 
 // POST /api/rep/reserve  { name, address }
-app.post('/api/rep/reserve', async (req, res) => {
+app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
   try {
     // CRITICAL: Enforce session-based authentication
     const sessionAddress = req.session?.user?.address
@@ -522,7 +583,7 @@ app.post('/api/rep/reserve', async (req, res) => {
 // Link Echo (Social Proof) API Routes
 
 // POST /api/echo/start - Generate nonce for social proof verification
-app.post('/api/echo/start', async (req, res) => {
+app.post('/api/echo/start', echoStartRateLimiter, async (req, res) => {
   try {
     // Check feature flags
     if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
@@ -593,7 +654,7 @@ app.post('/api/echo/start', async (req, res) => {
 });
 
 // POST /api/echo/verify - Verify tweet URL contains nonce and #dotrep (secure version)
-app.post('/api/echo/verify', async (req, res) => {
+app.post('/api/echo/verify', echoVerifyRateLimiter, async (req, res) => {
   try {
     // Check feature flags
     if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
@@ -993,7 +1054,56 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE
 
 export default app;
 
+// Environment variable validation for production safety
+function validateEnvironment() {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Critical: Database connection
+  if (!process.env.DATABASE_URL) {
+    errors.push('DATABASE_URL is required for database connection');
+  }
+
+  // Critical: Session secret (use a strong secret in production)
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'dev-only-not-secret') {
+    if (process.env.NODE_ENV === 'production') {
+      errors.push('SESSION_SECRET must be set to a strong secret in production');
+    } else {
+      warnings.push('SESSION_SECRET should be set for security (using default dev secret)');
+    }
+  }
+
+  // Important: Admin configuration
+  if (!process.env.ADMIN_WALLETS) {
+    warnings.push('ADMIN_WALLETS not set - admin endpoints will be inaccessible');
+  }
+
+  // Important: Feature flags for Echo social proof
+  if (process.env.ECHO_ENABLED === '1' && !process.env.ECHO_X_ENABLED) {
+    warnings.push('ECHO_ENABLED is on but ECHO_X_ENABLED is not set - social proof may not work');
+  }
+
+  // Log results
+  if (errors.length > 0) {
+    console.error('\n❌ CRITICAL ENVIRONMENT ERRORS:');
+    errors.forEach(err => console.error(`  - ${err}`));
+    console.error('\n⚠️  Server will NOT start. Fix the errors above.\n');
+    process.exit(1);
+  }
+
+  if (warnings.length > 0) {
+    console.warn('\n⚠️  ENVIRONMENT WARNINGS:');
+    warnings.forEach(warn => console.warn(`  - ${warn}`));
+    console.warn('');
+  }
+
+  console.log('✅ Environment validation passed');
+}
+
 if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
+  // Validate environment before starting server
+  validateEnvironment();
+  
   const port = Number(process.env.PORT || 9000);
   app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
 }
