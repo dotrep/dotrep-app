@@ -7,7 +7,7 @@ import { base } from 'viem/chains';
 import { db } from './db/client.js';
 import { reservations } from './shared/schema.js';
 import { eq, and, sql, or, like } from 'drizzle-orm';
-import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
+import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
 
@@ -411,14 +411,23 @@ app.post('/api/rep/reserve', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'unauthorized' })
     }
 
-    const name = canonicalizeName(String(req.body?.name || ''))
+    const rawName = String(req.body?.name || '').trim();
+    
+    // Enhanced validation with detailed error codes
+    const validation = validateRepName(rawName);
+    if (!validation.valid) {
+      console.log('[rep/reserve] Validation failed:', { name: rawName, error: validation.errorCode, message: validation.error });
+      return res.status(400).json({ 
+        ok: false, 
+        error: validation.errorCode || 'invalid_input',
+        message: validation.error 
+      });
+    }
+    
+    const name = canonicalizeName(rawName);
     
     // Use session address, ignore any address from request body
-    const address = sessionAddress
-
-    if (!name || !isValidName(name)) {
-      return res.status(400).json({ ok: false, error: 'invalid_input' })
-    }
+    const address = sessionAddress;
 
     // SOULBOUND: Check if this wallet already owns a DIFFERENT .rep name
     const [existingByAddress] = await db
