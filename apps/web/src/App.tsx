@@ -10,6 +10,7 @@ import Claim from "./pages/Claim";
 import Wallet from "./pages/Wallet";
 import RepDashboard from "./pages/RepDashboard";
 import Admin from "./pages/Admin";
+import Missions from "./pages/Missions";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/discover" component={Discover} />
             <Route path="/wallet" component={Wallet} />
             <Route path="/rep-dashboard" component={RepDashboard} />
+            <Route path="/missions" component={Missions} />
             <Route path="/admin" component={Admin} />
             <Route>
               <Home />
