@@ -9,6 +9,7 @@ import { reservations } from './shared/schema.js';
 import { eq, and, sql, or, like } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
+import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
 
 const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
 
@@ -660,6 +661,80 @@ app.post('/api/rep_phase0/heartbeat', async (req, res) => {
   } catch (e: any) {
     console.error('[phase0/heartbeat] error', e);
     return res.status(500).json({ ok: false, error: e?.message || 'heartbeat_error' });
+  }
+});
+
+// Constellation Map API endpoints
+app.get('/api/constellation/signal-map', async (req, res) => {
+  try {
+    if (!process.env.CONSTELLATION_ENABLED) {
+      return res.json({ ok: true, data: [] });
+    }
+
+    // If logged in, mark user as "seen"
+    const user = req.session?.user;
+    if (user?.address) {
+      try {
+        const lookupRes = await db
+          .select()
+          .from(reservations)
+          .where(eq(reservations.addressLower, user.address.toLowerCase()))
+          .limit(1);
+        
+        const repName = lookupRes[0]?.name || null;
+        await upsertSignalRow({
+          wallet: user.address,
+          repName,
+          seenAt: Date.now(),
+        });
+      } catch (e) {
+        console.error('[signal-map] Failed to upsert signal:', e);
+      }
+    }
+
+    const data = await listActiveNodes(Date.now());
+    return res.json({ ok: true, data });
+  } catch (e: any) {
+    console.error('[signal-map] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'signal_error' });
+  }
+});
+
+app.post('/api/constellation/beacon', async (req, res) => {
+  try {
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+
+    if (!process.env.CONSTELLATION_ENABLED) {
+      return res.status(400).json({ ok: false, error: 'feature_disabled' });
+    }
+
+    const lookupRes = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, user.address.toLowerCase()))
+      .limit(1);
+    
+    const repName = lookupRes[0]?.name || null;
+    
+    await upsertSignalRow({
+      wallet: user.address,
+      repName,
+      seenAt: Date.now(),
+    });
+
+    const awarded = await awardBeacon(user.address, 25);
+    
+    if (!awarded) {
+      return res.status(400).json({ ok: false, error: 'already_claimed' });
+    }
+
+    return res.json({ ok: true, xpAwarded: 25 });
+  } catch (e: any) {
+    console.error('[beacon] error', e);
+    return res.status(400).json({ ok: false, error: e?.message || 'beacon_error' });
   }
 });
 

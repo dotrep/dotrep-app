@@ -282,3 +282,31 @@ export const insertRepPhase0HeartbeatSchema = createInsertSchema(repPhase0Heartb
 });
 export type InsertRepPhase0Heartbeat = z.infer<typeof insertRepPhase0HeartbeatSchema>;
 export type RepPhase0Heartbeat = typeof repPhase0Heartbeat.$inferSelect;
+
+// Constellation Map System Tables
+export const repConstellationSignal = pgTable('rep_constellation_signal', {
+  userWallet: varchar('user_wallet', { length: 42 }).primaryKey(),
+  repName: varchar('rep_name', { length: 50 }),
+  xp: integer('xp').default(0).notNull(),
+  signalActive: boolean('signal_active').default(true).notNull(),
+  beaconClaimed: boolean('beacon_claimed').default(false).notNull(),
+  lastSeenMs: timestamp('last_seen_ms').defaultNow().notNull(),
+});
+
+export const repConstellationEvents = pgTable('rep_constellation_events', {
+  id: serial('id').primaryKey(),
+  type: varchar('type', { length: 50 }).notNull(), // 'signal_jam', etc.
+  startsAtMs: timestamp('starts_at_ms').notNull(),
+  endsAtMs: timestamp('ends_at_ms').notNull(),
+});
+
+// Constellation schema types
+export const insertRepConstellationSignalSchema = createInsertSchema(repConstellationSignal);
+export type InsertRepConstellationSignal = z.infer<typeof insertRepConstellationSignalSchema>;
+export type RepConstellationSignal = typeof repConstellationSignal.$inferSelect;
+
+export const insertRepConstellationEventSchema = createInsertSchema(repConstellationEvents).omit({
+  id: true,
+});
+export type InsertRepConstellationEvent = z.infer<typeof insertRepConstellationEventSchema>;
+export type RepConstellationEvent = typeof repConstellationEvents.$inferSelect;
