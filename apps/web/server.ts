@@ -212,8 +212,8 @@ app.use(
     cookie: {
       httpOnly: true,
       path: '/',
-      sameSite: 'none',   // required for in-app browsers
-      secure: true,       // required with SameSite=None (Replit is https)
+      sameSite: 'lax',    // same-origin setup via Vite proxy
+      secure: false,      // local development (Vite proxy uses HTTP internally)
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
