@@ -1,0 +1,101 @@
+Do NOT
+
+Don’t touch claim/auth/wallet logic or global styles.
+
+Don’t change DB schemas beyond existing Echo tables.
+
+Don’t remove existing fallback behavior.
+
+Goal
+
+Prefill tweet as:
+
+Just claimed my <name>.rep identity on Base! 🔵
+
+#dotrep #Base
+Proof: <nonce>
+cc @rep_protocol
+
+
+Server continues to verify: nonce + #dotrep + repLabel (accept #Base as optional).
+
+1) /api/echo/start — return the rep label
+
+If not already returning it, add repLabel to the payload.
+
+File: /app/api/echo/start/route.ts (or /pages/api/echo/start.ts)
+
+// after resolving user/session:
+const repLabel = user.repName ? `${user.repName}.rep` : ".rep";
+const payload = {
+  ok: true,
+  provider,
+  nonce,
+  repLabel, // <-- add this
+  instructions: `Post a public tweet containing: ${nonce} and #dotrep and your ${repLabel}`
+};
+
+2) Mission UI — build the new tweet text
+
+Update the client code that opens the tweet intent to include #Base and cc @rep_protocol, and use the repLabel.
+
+File: src/rep_social/ui/LinkEchoCard.tsx (or wherever the Echo card is)
+
+// inside start()
+const res = await fetch("/api/echo/start",{ method:"POST" });
+const j = await res.json();
+if(!j.ok) { /* handle error */ return; }
+setNonce(j.nonce);
+const repLabel = j.repLabel || ".rep";
+
+const text = encodeURIComponent(
+  `Just claimed my ${repLabel} identity on Base! 🔵` +
+  `\n\n#dotrep #Base` +
+  `\nProof: ${j.nonce}` +
+  `\ncc @rep_protocol`
+);
+
+// use x.com or twitter.com (both work)
+window.open(`https://x.com/intent/tweet?text=${text}`,"_blank");
+
+
+(Keep the rest of the flow as-is: user pastes tweet URL → Verify.)
+
+3) /api/echo/verify — verify against repLabel + #dotrep
+
+Ensure the verifier checks: nonce present, #dotrep present (required), repLabel present; #Base is optional. Keep backward-compat with the old “.name” format for a short window if you already had it.
+
+File: /app/api/echo/verify/route.ts (or pages version)
+
+// after fetching the tweet HTML:
+const html = await readTweetTextFromUrl(tweetUrl);
+const squashed = html.toLowerCase().replace(/\s+/g, "");
+
+// required: nonce + #dotrep
+if (!squashed.includes(nonce.toLowerCase())) throw new Error("NONCE_NOT_FOUND");
+if (!squashed.includes("#dotrep")) throw new Error("TAG_NOT_FOUND");
+
+// optional: #Base (do not hard-require)
+// if desired: const hasBase = squashed.includes("#base");
+
+// required: rep label (e.g., "test.rep")
+const repLabel = (user.repName ? `${user.repName}.rep` : ".rep").toLowerCase();
+if (!squashed.includes(repLabel.replace(/\s+/g,""))) {
+  // TEMP: accept legacy ".<name>" format if you previously shipped it
+  const legacy = `.${(user.repName||"").toLowerCase()}`;
+  if (!user.repName || !squashed.includes(legacy)) {
+    throw new Error("REP_LABEL_NOT_FOUND");
+  }
+}
+
+4) QA checklist
+
+Clicking Connect X opens a draft tweet with test.rep, #dotrep #Base, nonce, and cc @rep_protocol.
+
+Pasting the tweet URL and clicking Verify completes the mission (+40 XP).
+
+Verifier rejects tweets missing nonce or #dotrep; accepts with/without #Base.
+
+Older tweets with the legacy “.name” still validate during the migration window (if you kept that fallback).
+
+No other pages or styles changed; build passes.

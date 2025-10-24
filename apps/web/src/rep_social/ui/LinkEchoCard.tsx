@@ -41,9 +41,10 @@ export default function LinkEchoCard() {
     
     const tweetText = `Just claimed my ${repName} identity on Base! 🔵
 
-#dotrep
-Proof: ${nonce}`;
-    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+#dotrep #Base
+Proof: ${nonce}
+cc @rep_protocol`;
+    const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(intentUrl, '_blank', 'width=550,height=420');
     setStep('awaiting');
     setHasOpenedTwitter(true);
