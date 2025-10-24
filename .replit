@@ -113,5 +113,5 @@ outputType = "webview"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["bash", "-c", "cd apps/web && pnpm start"]
-build = ["bash", "-c", "pnpm install && cd apps/web && pnpm build"]
+run = ["bash", "deploy-start.sh"]
+build = ["bash", "deploy-build.sh"]
