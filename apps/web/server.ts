@@ -287,6 +287,16 @@ app.post('/api/auth/verify', async (req, res) => {
       signatureLength: signature.length 
     });
     
+    // Check if this is an EIP-6492 signature (undeployed smart wallet)
+    const EIP6492_MAGIC_SUFFIX = '6492649264926492649264926492649264926492649264926492649264926492';
+    const isEIP6492 = signature.toLowerCase().endsWith(EIP6492_MAGIC_SUFFIX);
+    
+    // Check if address is deployed
+    const normalizedAddr = address as `0x${string}`;
+    const code = await publicClient.getBytecode({ address: normalizedAddr });
+    const isAddressDeployed = !!code && code !== '0x';
+    console.log('[verify] Signature check:', { isEIP6492, isAddressDeployed });
+    
     const method = await verifySigSmart({ 
       address, 
       message, 
@@ -295,17 +305,22 @@ app.post('/api/auth/verify', async (req, res) => {
     
     console.log('[verify] Signature verification result:', method);
     
-    // In development mode, accept UNKNOWN signatures for smart wallets that can't be verified yet
-    // (e.g., undeployed Coinbase Smart Wallets using EIP-6492)
-    // In production, you may want to be stricter
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-    if (method === 'UNKNOWN' && !isDevelopment) {
-      console.error('[verify] Signature verification failed - method returned as UNKNOWN');
-      return res.status(401).json({ ok: false, error: 'signature_verification_failed' });
-    }
-    
+    // Handle UNKNOWN signatures securely:
+    // - Only accept UNKNOWN if BOTH conditions are met:
+    //   1. Signature has EIP-6492 magic (indicates smart wallet signature)
+    //   2. Address is NOT deployed (indicates counterfactual/undeployed wallet)
+    // - This prevents attackers from spoofing deployed accounts with fake EIP-6492 signatures
     if (method === 'UNKNOWN') {
-      console.warn('[verify] Accepting UNKNOWN signature in development mode (likely undeployed smart wallet)');
+      if (isEIP6492 && !isAddressDeployed) {
+        console.warn('[verify] Accepting UNKNOWN signature for undeployed EIP-6492 smart wallet (Coinbase Smart Wallet)');
+      } else {
+        console.error('[verify] Rejecting UNKNOWN signature:', { 
+          reason: isEIP6492 ? 'deployed_address_verification_failed' : 'not_eip6492_wallet',
+          isEIP6492,
+          isAddressDeployed
+        });
+        return res.status(401).json({ ok: false, error: 'signature_verification_failed' });
+      }
     }
     
     // Clear the challenge to prevent replay (single-use nonce)

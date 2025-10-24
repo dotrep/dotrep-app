@@ -55,8 +55,8 @@ export default function Map() {
   }
 
   return (
-    <div style={{ padding: '1rem', minHeight: '100vh', background: '#05111a' }}>
-      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#05111a', padding: '1rem' }}>
+      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: '#fff', margin: 0 }}>Constellation</h1>
         <button
           onClick={() => setLocation('/rep-dashboard')}
@@ -72,7 +72,17 @@ export default function Map() {
           ← Back to Dashboard
         </button>
       </div>
-      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0, 212, 170, 0.15)', maxWidth: '1400px', margin: '0 auto', height: 'calc(100vh - 120px)', minHeight: '600px' }}>
+      <div style={{ 
+        borderRadius: '12px', 
+        overflow: 'hidden', 
+        border: '1px solid rgba(0, 212, 170, 0.15)', 
+        maxWidth: '1400px', 
+        width: '100%',
+        margin: '0 auto',
+        flex: 1,
+        minHeight: 0,
+        position: 'relative'
+      }}>
         <ConstellationCanvas />
       </div>
     </div>
