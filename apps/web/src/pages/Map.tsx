@@ -4,17 +4,54 @@ import ConstellationCanvas from '../rep_constellation/ui/ConstellationCanvas';
 
 export default function Map() {
   const [, setLocation] = useLocation();
+  const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Check if feature is enabled
-    fetch('/api/health', { credentials: 'include' })
-      .then(() => setEnabled(true))
-      .catch(() => setEnabled(false));
+    // Check if feature is enabled via server flag
+    // API returns explicit 'enabled' field when CONSTELLATION_ENABLED is set
+    fetch('/api/constellation/signal-map', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setEnabled(data.ok && data.enabled === true);
+        setLoading(false);
+      })
+      .catch(() => {
+        setEnabled(false);
+        setLoading(false);
+      });
   }, []);
 
-  if (!enabled && !process.env.CONSTELLATION_ENABLED) {
-    return null;
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem', minHeight: '100vh', background: '#05111a', color: '#fff', textAlign: 'center' }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!enabled) {
+    return (
+      <div style={{ padding: '2rem', minHeight: '100vh', background: '#05111a', color: '#fff', textAlign: 'center' }}>
+        <h1 style={{ marginBottom: '1rem' }}>Feature Not Available</h1>
+        <p>Constellation Map is currently disabled.</p>
+        <button
+          onClick={() => setLocation('/rep-dashboard')}
+          style={{
+            marginTop: '1rem',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 212, 170, 0.4)',
+            background: 'rgba(0, 212, 170, 0.1)',
+            color: '#00d4aa',
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+          }}
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+    );
   }
 
   return (

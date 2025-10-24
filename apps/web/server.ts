@@ -677,7 +677,7 @@ app.post('/api/rep_phase0/heartbeat', async (req, res) => {
 app.get('/api/constellation/signal-map', async (req, res) => {
   try {
     if (!process.env.CONSTELLATION_ENABLED) {
-      return res.json({ ok: true, data: [] });
+      return res.json({ ok: true, enabled: false, data: [] });
     }
 
     // If logged in, mark user as "seen"
@@ -702,7 +702,7 @@ app.get('/api/constellation/signal-map', async (req, res) => {
     }
 
     const data = await listActiveNodes(Date.now());
-    return res.json({ ok: true, data });
+    return res.json({ ok: true, enabled: true, data });
   } catch (e: any) {
     console.error('[signal-map] error', e);
     return res.status(500).json({ ok: false, error: e?.message || 'signal_error' });
