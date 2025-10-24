@@ -208,12 +208,12 @@ app.use(
     name: 'rep.sid',
     secret: process.env.SESSION_SECRET || 'dev-only-not-secret',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,   // Create session immediately  
     cookie: {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',    // same-origin setup via Vite proxy
-      secure: false,      // local development (Vite proxy uses HTTP internally)
+      secure: !!process.env.REPLIT_DOMAINS,  // Replit always uses HTTPS
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
@@ -316,6 +316,12 @@ app.post('/api/auth/verify', async (req, res) => {
 });
 
 app.get('/api/auth/me', (req, res) => {
+  console.log('[auth/me] Session check:', {
+    hasSession: !!req.session,
+    hasUser: !!req.session?.user,
+    sessionID: req.sessionID,
+    address: req.session?.user?.address || 'none'
+  });
   const u = req.session?.user;
   if (u?.address) return res.json({ ok: true, user: u });
   return res.status(401).json({ ok: false });
