@@ -563,7 +563,12 @@ app.post('/api/echo/start', async (req, res) => {
       .where(eq(reservations.addressLower, user.address.toLowerCase()))
       .limit(1);
     
-    const repName = reservation?.name || 'yourname';
+    if (!reservation?.name) {
+      return res.status(400).json({ ok: false, error: 'no_rep_name' });
+    }
+    
+    const repName = reservation.name;
+    const repLabel = `${repName}.rep`;
     
     // Store nonce in database
     await db.insert(repSocialProofs).values({
@@ -573,12 +578,13 @@ app.post('/api/echo/start', async (req, res) => {
       consumedAt: null,
     });
     
-    // Return nonce and instructions
+    // Return nonce, repLabel, and instructions
     return res.json({
       ok: true,
       provider,
       nonce,
-      instructions: `Post a public tweet containing: #dotrep and ${nonce} and your .rep name ".${repName}"`,
+      repLabel,
+      instructions: `Post a public tweet containing: #dotrep and ${nonce} and your ${repLabel} identity`,
     });
   } catch (e: any) {
     console.error('[echo/start] error', e);
@@ -657,7 +663,7 @@ app.post('/api/echo/verify', async (req, res) => {
     // Squash whitespace and lowercase for simple text search
     const squashed = html.toLowerCase().replace(/\s+/g, '');
     
-    // Check if tweet contains required elements
+    // Check if tweet contains #dotrep tag
     if (!squashed.includes('#dotrep')) {
       console.error('[echo/verify] #dotrep tag not found in tweet');
       return res.status(400).json({ ok: false, error: 'tag_not_found' });
@@ -667,6 +673,33 @@ app.post('/api/echo/verify', async (req, res) => {
     if (!squashed.includes(nonce.toLowerCase())) {
       console.error('[echo/verify] Nonce not found in tweet');
       return res.status(400).json({ ok: false, error: 'nonce_invalid' });
+    }
+    
+    // Get user's .rep name and check for repLabel format
+    const [reservation] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, user.address.toLowerCase()))
+      .limit(1);
+    
+    if (!reservation?.name) {
+      console.error('[echo/verify] User has no .rep name');
+      return res.status(400).json({ ok: false, error: 'no_rep_name' });
+    }
+    
+    const repName = reservation.name;
+    const repLabel = `${repName}.rep`;
+    const normalizedRepLabel = repLabel.toLowerCase().replace(/\s+/g, '');
+    
+    // Check if tweet contains the repLabel (e.g., "test.rep")
+    if (!squashed.includes(normalizedRepLabel)) {
+      // Backward compatibility: also accept legacy ".name" format for migration window
+      const legacyFormat = `.${repName.toLowerCase()}`.replace(/\s+/g, '');
+      if (!squashed.includes(legacyFormat)) {
+        console.error('[echo/verify] repLabel not found in tweet. Expected:', repLabel, 'or legacy:', `.${repName}`);
+        return res.status(400).json({ ok: false, error: 'rep_label_not_found' });
+      }
+      console.log('[echo/verify] Accepted legacy format:', `.${repName}`);
     }
     
     // Mark nonce as consumed

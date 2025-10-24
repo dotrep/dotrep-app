@@ -14,28 +14,7 @@ export default function LinkEchoCard() {
 
   async function init() {
     try {
-      // Fetch user's .rep name
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
-      if (!res.ok) {
-        setStep('error');
-        setError('Not authenticated');
-        return;
-      }
-      
-      const data = await res.json();
-      const address = data.user?.address;
-      
-      if (address) {
-        const lookupRes = await fetch(`/api/rep/lookup-wallet?address=${encodeURIComponent(address)}`, {
-          credentials: 'include',
-        });
-        const lookupData = await lookupRes.json();
-        if (lookupData.ok && lookupData.name) {
-          setRepName(lookupData.name);
-        }
-      }
-
-      // Generate nonce
+      // Generate nonce and get user's repLabel from server
       const nonceRes = await fetch('/api/echo/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,6 +24,7 @@ export default function LinkEchoCard() {
       const nonceData = await nonceRes.json();
       if (nonceData.ok) {
         setNonce(nonceData.nonce);
+        setRepName(nonceData.repLabel);
         setStep('ready');
       } else {
         setStep('error');
@@ -59,7 +39,7 @@ export default function LinkEchoCard() {
   function openTwitterIntent() {
     if (!repName || !nonce) return;
     
-    const tweetText = `Just claimed my .${repName} identity on Base! 🔵 
+    const tweetText = `Just claimed my ${repName} identity on Base! 🔵
 
 #dotrep
 Proof: ${nonce}`;
@@ -198,6 +178,8 @@ Proof: ${nonce}`;
                 {error === 'tag_not_found' ? 'Tweet must include #dotrep' : 
                  error === 'nonce_invalid' ? 'Please use the tweet we pre-filled for you' :
                  error === 'tweet_fetch_fail' ? 'Could not fetch tweet. Make sure it\'s public!' :
+                 error === 'no_rep_name' ? 'You need to claim a .rep name first' :
+                 error === 'rep_label_not_found' ? 'Tweet must include your .rep identity' :
                  `Error: ${error}`}
               </span>
             )}
