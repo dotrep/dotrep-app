@@ -1,0 +1,330 @@
+⛔ Do not break existing stuff
+
+Don’t modify claim/auth/wallet code, global styles, or DB schemas in use.
+
+All new code lives under src/rep_social/** + two API routes.
+
+Use feature flags so we can turn each provider on/off instantly.
+
+Env to add:
+
+ECHO_ENABLED=1
+ECHO_X_ENABLED=1
+ECHO_FC_ENABLED=0
+ECHO_LENS_ENABLED=0
+NEYNAR_API_KEY=            # (when we flip Farcaster later)
+
+1) Goal & Phasing
+
+Phase A (today): X/Twitter “proof via tweet URL” (no OAuth)
+
+User clicks Connect X → we generate a one-time nonce.
+
+UI asks user to post a public tweet containing #dotrep + the nonce.
+
+User pastes the tweet URL; server validates that the tweet text contains the nonce and their .rep name.
+
+On success → write to social_accounts → mark mission completed (+40 XP).
+
+Phase B (1-click Farcaster via Neynar)
+
+Add SIWF (Sign-in with Farcaster) using Neynar later; gated by ECHO_FC_ENABLED.
+
+Phase C (X OAuth)
+
+Optional later when keys are ready.
+
+Rationale: Phase A ships without API hurdles and works reliably.
+
+2) Files to create
+/src/rep_social/lib/db.ts
+/src/rep_social/lib/auth.ts
+/src/rep_social/lib/runtimeMigrate.ts
+/src/rep_social/lib/nonce.ts
+/src/rep_social/ui/LinkEchoCard.tsx
+
+/app/api/echo/start/route.ts     OR  /pages/api/echo/start.ts
+/app/api/echo/verify/route.ts    OR  /pages/api/echo/verify.ts
+
+
+Use the repo’s router convention automatically.
+
+3) Minimal, non-destructive tables (runtime create)
+
+/src/rep_social/lib/db.ts
+
+import { Database } from "sqlite3";
+const DB_PATH = process.env.DATABASE_URL?.startsWith("file:")
+  ? process.env.DATABASE_URL.replace("file:", "")
+  : "./.data/data.db";
+export const db = new Database(DB_PATH);
+
+
+/src/rep_social/lib/runtimeMigrate.ts
+
+import { db } from "./db";
+export function ensureEchoTables(): Promise<void> {
+  return new Promise((resolve,reject)=>{
+    db.serialize(()=>{
+      db.run(`
+        CREATE TABLE IF NOT EXISTS rep_social_accounts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_wallet TEXT NOT NULL,
+          provider TEXT NOT NULL,  -- 'x' | 'farcaster' | 'lens'
+          handle TEXT NOT NULL,
+          proof_url TEXT,
+          verified_at INTEGER NOT NULL,
+          UNIQUE(user_wallet, provider)
+        );`, (e1)=> {
+        if (e1) return reject(e1);
+        db.run(`
+          CREATE TABLE IF NOT EXISTS rep_social_proofs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_wallet TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            nonce TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            consumed_at INTEGER
+          );`, (e2)=> e2?reject(e2):resolve());
+      });
+    });
+  });
+}
+
+
+/src/rep_social/lib/auth.ts
+
+export type SessionUser = { wallet:string; repName?:string|null; };
+export async function requireUser(req:any): Promise<SessionUser> {
+  const u = (req as any).user || (req as any).session?.user || (req as any).sessionUser;
+  if (u?.wallet) return { wallet:u.wallet, repName:u.repName ?? null };
+  const w = req.headers?.["x-user-wallet"];
+  if (typeof w === "string") return { wallet:w };
+  throw new Error("AUTH_REQUIRED");
+}
+
+
+/src/rep_social/lib/nonce.ts
+
+export function newNonce(): string {
+  const bytes = Array.from({length:16},()=>Math.floor(Math.random()*256));
+  return Buffer.from(Uint8Array.from(bytes)).toString("hex");
+}
+
+4) API routes
+
+Start flow (generate nonce)
+/app/api/echo/start/route.ts (or pages/api)
+
+import { ensureEchoTables } from "@/src/rep_social/lib/runtimeMigrate";
+import { requireUser } from "@/src/rep_social/lib/auth";
+import { db } from "@/src/rep_social/lib/db";
+import { newNonce } from "@/src/rep_social/lib/nonce";
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    if (!process.env.ECHO_ENABLED) throw new Error("DISABLED");
+    const user = await requireUser(req);
+    const body = req.body || (await req.json?.());
+    const provider = (body?.provider || "x").toLowerCase(); // default X
+    if (provider !== "x") throw new Error("PROVIDER_UNAVAILABLE");
+
+    await ensureEchoTables();
+    const nonce = newNonce();
+    const created = Date.now();
+
+    await new Promise<void>((resolve,reject)=>{
+      db.run(`INSERT INTO rep_social_proofs (user_wallet, provider, nonce, created_at) VALUES (?,?,?,?)`,
+        [user.wallet, provider, nonce, created], (e)=> e?reject(e):resolve());
+    });
+
+    const payload = {
+      ok:true,
+      provider,
+      nonce,
+      instructions: `Post a public tweet containing: ${nonce} and #dotrep and your .rep name (e.g., ".${(user.repName||"yourname")}")`
+    };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  }catch(e:any){
+    const msg = { ok:false, error:e?.message || "start_error" };
+    if (res) return res.status(400).json(msg);
+    return new Response(JSON.stringify(msg), { status:400 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike;
+
+
+Verify flow (user pastes tweet URL)
+/app/api/echo/verify/route.ts (or pages/api)
+
+import { ensureEchoTables } from "@/src/rep_social/lib/runtimeMigrate";
+import { requireUser } from "@/src/rep_social/lib/auth";
+import { db } from "@/src/rep_social/lib/db";
+
+async function readTweetTextFromUrl(url:string): Promise<string> {
+  // Simple fetch and parse; robust enough for MVP.
+  // We only need to check that the HTML contains the nonce and #dotrep (avoid fragile selectors).
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 .rep verifier" } });
+  if (!res.ok) throw new Error("TWEET_FETCH_FAIL");
+  const html = await res.text();
+  return html;
+}
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    if (!process.env.ECHO_ENABLED) throw new Error("DISABLED");
+    const user = await requireUser(req);
+    const body = req.body || (await req.json?.());
+    const { provider="x", tweetUrl, nonce, handle } = body || {};
+    if (provider !== "x") throw new Error("PROVIDER_UNAVAILABLE");
+    if (!tweetUrl || !nonce || !handle) throw new Error("INVALID_INPUT");
+
+    await ensureEchoTables();
+
+    // Ensure nonce exists and not consumed
+    const proof = await new Promise<any>((resolve,reject)=>{
+      db.get(`SELECT * FROM rep_social_proofs WHERE user_wallet=? AND provider=? AND nonce=? AND consumed_at IS NULL`,
+        [user.wallet, provider, nonce], (e,row)=> e?reject(e):resolve(row));
+    });
+    if (!proof) throw new Error("NONCE_INVALID");
+
+    // Fetch tweet and check contents
+    const html = await readTweetTextFromUrl(tweetUrl);
+    const squashed = html.toLowerCase().replace(/\s+/g,"");
+    if (!squashed.includes(nonce.toLowerCase())) throw new Error("NONCE_NOT_FOUND");
+    if (!squashed.includes("#dotrep")) throw new Error("TAG_NOT_FOUND");
+
+    // Consume nonce + save account
+    await new Promise<void>((resolve,reject)=>{
+      db.serialize(()=>{
+        db.run(`UPDATE rep_social_proofs SET consumed_at=? WHERE id=?`, [Date.now(), proof.id]);
+        db.run(`
+          INSERT INTO rep_social_accounts (user_wallet, provider, handle, proof_url, verified_at)
+          VALUES (?,?,?,?,?) ON CONFLICT(user_wallet, provider)
+          DO UPDATE SET handle=excluded.handle, proof_url=excluded.proof_url, verified_at=excluded.verified_at
+        `, [user.wallet, provider, handle, tweetUrl, Date.now()], (e)=> e?reject(e):resolve());
+      });
+    });
+
+    const payload = { ok:true, provider, handle };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  }catch(e:any){
+    const msg = { ok:false, error:e?.message || "verify_error" };
+    if (res) return res.status(400).json(msg);
+    return new Response(JSON.stringify(msg), { status:400 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike;
+
+
+Note: This avoids X OAuth entirely; users paste a tweet URL. It’s resilient and shippable.
+
+5) UI: turn the mission button on
+
+Replace the “Coming Soon” button in your mission card with a working flow using a small modal (no global CSS changes). If your mission card is in rep_phase0, create a tiny client component:
+
+/src/rep_social/ui/LinkEchoCard.tsx
+
+"use client";
+import React, { useState } from "react";
+
+export default function LinkEchoCard(){
+  const enabled = typeof process !== "undefined" ? process.env.ECHO_ENABLED : true;
+  if (!enabled) return null;
+
+  const [nonce, setNonce] = useState<string| null>(null);
+  const [handle, setHandle] = useState("");
+  const [tweetUrl, setTweetUrl] = useState("");
+  const [step, setStep] = useState<"idle"|"posted"|"verifying"|"done"|"error">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function start(){
+    setError(null);
+    const r = await fetch("/api/echo/start",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ provider:"x" }) });
+    const j = await r.json();
+    if (!j.ok) { setError(j.error||"start failed"); return; }
+    setNonce(j.nonce);
+    setStep("idle");
+  }
+
+  async function verify(){
+    if (!nonce || !tweetUrl || !handle) return;
+    setError(null); setStep("verifying");
+    const r = await fetch("/api/echo/verify", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ provider:"x", tweetUrl, nonce, handle })
+    });
+    const j = await r.json();
+    if (!j.ok) { setError(j.error||"verify failed"); setStep("error"); return; }
+    setStep("done");
+    // OPTIONAL: notify missions API to mark completed
+    fetch("/api/rep_phase0/progress", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ action:"complete", mission:"link-echo", meta:{ provider:"x", handle } })
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      {!nonce ? (
+        <button onClick={start} className="text-sm px-3 py-1 rounded-lg border hover:bg-gray-50/10">
+          Connect X
+        </button>
+      ) : (
+        <div className="space-y-2 text-sm">
+          <div className="opacity-80">
+            1) Post a public tweet that includes:<br/>
+            <span className="font-mono text-xs">#{'dotrep'}</span> and <span className="font-mono text-xs">{nonce}</span><br/>
+            2) Paste your tweet URL below and confirm your X handle.
+          </div>
+          <input placeholder="@handle (without @)" className="w-full rounded-md bg-black/20 border px-2 py-1"
+                 value={handle} onChange={e=>setHandle(e.target.value.replace(/^@/,""))}/>
+          <input placeholder="https://twitter.com/…/status/…" className="w-full rounded-md bg-black/20 border px-2 py-1"
+                 value={tweetUrl} onChange={e=>setTweetUrl(e.target.value)}/>
+          <div className="flex gap-2">
+            <button onClick={verify} className="px-3 py-1 rounded-lg border hover:bg-gray-50/10">
+              Verify
+            </button>
+            {step==="done" && <span className="text-green-500">Linked ✓</span>}
+            {error && <span className="text-red-400">Error: {error}</span>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+Then, inside your “Link Your Echo” mission card, render <LinkEchoCard /> where the disabled “Coming Soon” button was. Keep existing styling—no global changes.
+
+6) Mission completion (server-side safety)
+
+You already have /api/rep_phase0/progress. We call it client-side after success (see above). If you prefer server-side enforcement, add a check in that route to confirm an entry exists in rep_social_accounts for provider x before awarding completion.
+
+7) Anti-abuse & UX polish
+
+Rate-limit /api/echo/start to 5/min per IP+wallet; same for /api/echo/verify.
+
+Expire nonces after 30 minutes (optional).
+
+After success, show handle masked (@al***ra) and a View proof link to the tweet URL.
+
+Add a tooltip: “We never post on your behalf; you control the proof tweet.”
+
+8) QA checklist
+
+ Mission card shows Connect X (not “Coming Soon”).
+
+ Start generates nonce + instructions; no design shift.
+
+ Paste tweet URL with nonce + #dotrep + .rep name → verifies and completes mission (+40 XP).
+
+ Invalid URL or missing nonce gracefully errors without crashing.
+
+ Flags OFF (ECHO_ENABLED=0) → mission button hides; rest unchanged.
+
+ No changes to claim/auth/global CSS; build passes.
