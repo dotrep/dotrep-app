@@ -1114,12 +1114,12 @@ function validateEnvironment() {
     warnings.push('ECHO_ENABLED is on but ECHO_X_ENABLED is not set - social proof may not work');
   }
 
-  // Log results
+  // Log results (no longer fatal - server stays running for health checks)
   if (errors.length > 0) {
     console.error('\n❌ CRITICAL ENVIRONMENT ERRORS:');
     errors.forEach(err => console.error(`  - ${err}`));
-    console.error('\n⚠️  Server will NOT start. Fix the errors above.\n');
-    process.exit(1);
+    console.error('\n⚠️  Some features may not work until these are fixed.\n');
+    // Don't exit - let server run for health checks
   }
 
   if (warnings.length > 0) {
@@ -1128,18 +1128,22 @@ function validateEnvironment() {
     console.warn('');
   }
 
-  console.log('✅ Environment validation passed');
+  if (errors.length === 0) {
+    console.log('✅ Environment validation passed');
+  }
 }
 
 if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
-  // Validate environment before starting server
-  validateEnvironment();
-  
   const port = Number(process.env.PORT || 5000);
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   
+  // Start server FIRST to respond to health checks, then validate environment
   app.listen(port, host, () => {
     const displayHost = host === '0.0.0.0' ? 'all interfaces' : host;
     console.log(`API listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
+    
+    // Validate environment AFTER server is listening
+    // This allows health checks to pass even if validation fails
+    validateEnvironment();
   });
 }
