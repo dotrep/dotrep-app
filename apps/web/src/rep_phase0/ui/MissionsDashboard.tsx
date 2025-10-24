@@ -180,6 +180,14 @@ export default function MissionsDashboard() {
   return (
     <div className="missions-container">
       <header className="missions-header">
+        <div className="missions-header-top">
+          <button 
+            className="missions-back-btn"
+            onClick={() => setLocation('/rep-dashboard')}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
         <h1>Phase 0 Missions</h1>
         <div className="missions-xp-display">
           <div className="missions-xp-bar">
@@ -207,6 +215,21 @@ export default function MissionsDashboard() {
             
             <p className="mission-description">{mission.description}</p>
             
+            {mission.slug === 'go-live' && mission.meta && (
+              <div className="mission-progress-info">
+                Progress: {mission.meta.loginDays} / {mission.meta.target} days
+                {mission.meta.loginDays >= mission.meta.target && mission.status !== 'completed' && (
+                  <span className="mission-auto-complete"> (Auto-completing...)</span>
+                )}
+              </div>
+            )}
+            
+            {mission.slug === 'link-echo' && mission.status === 'available' && (
+              <div className="mission-action-required">
+                ⚠️ Connect your Twitter account to complete this mission
+              </div>
+            )}
+            
             {mission.gatedBy.length > 0 && mission.status === 'locked' && (
               <div className="mission-locked-info">
                 🔒 Complete "{mission.gatedBy[0]}" first
@@ -218,7 +241,7 @@ export default function MissionsDashboard() {
                 <div className="mission-completed-badge">✓ Completed</div>
               )}
               
-              {mission.status === 'available' && (
+              {mission.status === 'available' && mission.slug === 'charge-signal' && (
                 <button
                   onClick={() => completeMission(mission.slug)}
                   disabled={completingMission === mission.slug}
@@ -228,6 +251,27 @@ export default function MissionsDashboard() {
                     ? 'Completing...'
                     : 'Complete Mission'}
                 </button>
+              )}
+              
+              {mission.status === 'available' && mission.slug === 'link-echo' && (
+                <button
+                  className="mission-action-btn"
+                  disabled
+                >
+                  Connect Twitter (Coming Soon)
+                </button>
+              )}
+              
+              {mission.status === 'available' && mission.slug === 'go-live' && (
+                <div className="mission-auto-info">
+                  Auto-completes at 3 days
+                </div>
+              )}
+              
+              {mission.status === 'available' && !['charge-signal', 'link-echo', 'go-live'].includes(mission.slug) && (
+                <div className="mission-auto-info">
+                  Complete required actions to unlock
+                </div>
               )}
               
               {mission.status === 'locked' && (

@@ -62,11 +62,36 @@ export async function getUserState(user: string) {
 
   const pMap = new Map(progress.map(p => [p.missionSlug, p]));
   
+  // Get heartbeat data for "go-live" mission
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const fromISO = sevenDaysAgo.toISOString().split('T')[0];
+  const loginDays = await countHeartbeatDays(userLower, fromISO);
+  
+  // Check if go-live should be auto-completed and persist it
+  const goLiveProgress = pMap.get('go-live');
+  if (loginDays >= 3 && goLiveProgress?.status !== 'completed') {
+    await setProgress(userLower, 'go-live', 'completed', { loginDays, target: 3 });
+    // Refresh progress map
+    const updatedProgress = await db
+      .select()
+      .from(repPhase0Progress)
+      .where(eq(repPhase0Progress.userWallet, userLower));
+    pMap.clear();
+    updatedProgress.forEach(p => pMap.set(p.missionSlug, p));
+  }
+  
   const computed = missions.map(m => {
     const p = pMap.get(m.slug);
     const missionDef = PHASE0_MISSIONS.find(md => md.slug === m.slug);
     
     let calculatedStatus = p?.status ?? 'available';
+    let meta = p?.meta ? JSON.parse(p.meta) : null;
+    
+    // Special handling for "go-live" mission - show real progress
+    if (m.slug === 'go-live') {
+      meta = { loginDays, target: 3 };
+    }
     
     if (!p && missionDef?.gatedBy) {
       const gatesMet = missionDef.gatedBy.every(gate => {
@@ -83,7 +108,7 @@ export async function getUserState(user: string) {
       xp: m.xp,
       status: calculatedStatus,
       updatedAt: p?.updatedAt ?? null,
-      meta: p?.meta ? JSON.parse(p.meta) : null,
+      meta,
       gatedBy: missionDef?.gatedBy ?? [],
     };
   });

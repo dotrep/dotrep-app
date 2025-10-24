@@ -10,6 +10,30 @@
   text-align: center;
 }
 
+.missions-header-top {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
+}
+
+.missions-back-btn {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 24px;
+  color: #00d4aa;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.missions-back-btn:hover {
+  background: rgba(0, 212, 170, 0.1);
+  border-color: rgba(0, 212, 170, 0.5);
+  transform: translateX(-2px);
+}
+
 .missions-header h1 {
   font-size: 2.5rem;
   margin-bottom: 1.5rem;
@@ -168,6 +192,51 @@
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.mission-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  cursor: not-allowed;
+  font-size: 1rem;
+}
+
+.mission-progress-info {
+  padding: 0.75rem;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #00d4aa;
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+.mission-auto-complete {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.mission-action-required {
+  padding: 0.75rem;
+  background: rgba(255, 140, 0, 0.1);
+  border: 1px solid rgba(255, 140, 0, 0.3);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #ff8c00;
+  margin-top: 0.75rem;
+}
+
+.mission-auto-info {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.875rem;
+  font-style: italic;
+  width: 100%;
 }
 
 .missions-footer {
