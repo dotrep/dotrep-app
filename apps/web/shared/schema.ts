@@ -310,3 +310,42 @@ export const insertRepConstellationEventSchema = createInsertSchema(repConstella
 });
 export type InsertRepConstellationEvent = z.infer<typeof insertRepConstellationEventSchema>;
 export type RepConstellationEvent = typeof repConstellationEvents.$inferSelect;
+
+// Social Proof System Tables (Link Echo feature)
+export const repSocialAccounts = pgTable('rep_social_accounts', {
+  id: serial('id').primaryKey(),
+  userWallet: varchar('user_wallet', { length: 42 }).notNull(),
+  provider: varchar('provider', { length: 20 }).notNull(), // 'x', 'farcaster', 'lens'
+  handle: varchar('handle', { length: 100 }).notNull(),
+  proofUrl: varchar('proof_url', { length: 500 }),
+  verifiedAt: timestamp('verified_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueUserProvider: uniqueIndex('rep_social_accounts_user_provider_idx').on(table.userWallet, table.provider),
+  userWalletIdx: index('rep_social_accounts_wallet_idx').on(table.userWallet),
+}));
+
+export const repSocialProofs = pgTable('rep_social_proofs', {
+  id: serial('id').primaryKey(),
+  userWallet: varchar('user_wallet', { length: 42 }).notNull(),
+  provider: varchar('provider', { length: 20 }).notNull(),
+  nonce: varchar('nonce', { length: 32 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  consumedAt: timestamp('consumed_at'),
+}, (table) => ({
+  userWalletIdx: index('rep_social_proofs_wallet_idx').on(table.userWallet),
+}));
+
+// Social Proof schema types
+export const insertRepSocialAccountSchema = createInsertSchema(repSocialAccounts).omit({
+  id: true,
+  verifiedAt: true,
+});
+export type InsertRepSocialAccount = z.infer<typeof insertRepSocialAccountSchema>;
+export type RepSocialAccount = typeof repSocialAccounts.$inferSelect;
+
+export const insertRepSocialProofSchema = createInsertSchema(repSocialProofs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertRepSocialProof = z.infer<typeof insertRepSocialProofSchema>;
+export type RepSocialProof = typeof repSocialProofs.$inferSelect;

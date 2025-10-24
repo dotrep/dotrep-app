@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useLocation } from 'wouter';
+import LinkEchoCard from '../../rep_social/ui/LinkEchoCard';
 import './missions.css';
 
 interface Mission {
@@ -254,12 +255,7 @@ export default function MissionsDashboard() {
               )}
               
               {mission.status === 'available' && mission.slug === 'link-echo' && (
-                <button
-                  className="mission-action-btn"
-                  disabled
-                >
-                  Connect Twitter (Coming Soon)
-                </button>
+                <LinkEchoCard />
               )}
               
               {mission.status === 'available' && mission.slug === 'go-live' && (

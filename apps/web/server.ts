@@ -5,8 +5,8 @@ import crypto from 'crypto';
 import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
 import { base } from 'viem/chains';
 import { db } from './db/client.js';
-import { reservations } from './shared/schema.js';
-import { eq, and, sql, or, like } from 'drizzle-orm';
+import { reservations, repSocialProofs, repSocialAccounts } from './shared/schema.js';
+import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
@@ -516,6 +516,191 @@ app.post('/api/rep/reserve', async (req, res) => {
   } catch (e: any) {
     console.error('[reserve] error', e)
     res.status(500).json({ ok: false, error: 'server_error' })
+  }
+});
+
+// Link Echo (Social Proof) API Routes
+
+// POST /api/echo/start - Generate nonce for social proof verification
+app.post('/api/echo/start', async (req, res) => {
+  try {
+    // Check feature flags
+    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
+      return res.status(403).json({ ok: false, error: 'feature_disabled' });
+    }
+    
+    // Require authentication
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+    
+    const { provider = 'x' } = req.body || {};
+    
+    // Check provider-specific feature flags
+    if (provider === 'x' && (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === '0')) {
+      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    }
+    if (provider === 'farcaster' && (!process.env.ECHO_FC_ENABLED || process.env.ECHO_FC_ENABLED === '0')) {
+      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    }
+    if (provider === 'lens' && (!process.env.ECHO_LENS_ENABLED || process.env.ECHO_LENS_ENABLED === '0')) {
+      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    }
+    
+    // For now, only support X/Twitter
+    if (provider !== 'x') {
+      return res.status(400).json({ ok: false, error: 'provider_unavailable' });
+    }
+    
+    // Generate random nonce (16 bytes = 32 hex chars)
+    const nonce = crypto.randomBytes(16).toString('hex');
+    
+    // Look up user's .rep name for instructions
+    const [reservation] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.addressLower, user.address.toLowerCase()))
+      .limit(1);
+    
+    const repName = reservation?.name || 'yourname';
+    
+    // Store nonce in database
+    await db.insert(repSocialProofs).values({
+      userWallet: user.address.toLowerCase(),
+      provider,
+      nonce,
+      consumedAt: null,
+    });
+    
+    // Return nonce and instructions
+    return res.json({
+      ok: true,
+      provider,
+      nonce,
+      instructions: `Post a public tweet containing: #dotrep and ${nonce} and your .rep name ".${repName}"`,
+    });
+  } catch (e: any) {
+    console.error('[echo/start] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'start_error' });
+  }
+});
+
+// POST /api/echo/verify - Verify tweet URL contains nonce and complete verification
+app.post('/api/echo/verify', async (req, res) => {
+  try {
+    // Check feature flags
+    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
+      return res.status(403).json({ ok: false, error: 'feature_disabled' });
+    }
+    
+    // Require authentication
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+    
+    const { provider = 'x', tweetUrl, nonce, handle } = req.body || {};
+    
+    // Validate inputs
+    if (!tweetUrl || !nonce || !handle) {
+      return res.status(400).json({ ok: false, error: 'invalid_input' });
+    }
+    
+    // For now, only support X/Twitter
+    if (provider !== 'x') {
+      return res.status(400).json({ ok: false, error: 'provider_unavailable' });
+    }
+    
+    // Check provider-specific feature flags
+    if (provider === 'x' && (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === '0')) {
+      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    }
+    
+    // Find the nonce in database (must be unconsumed and belong to this user)
+    const [proof] = await db
+      .select()
+      .from(repSocialProofs)
+      .where(
+        and(
+          eq(repSocialProofs.userWallet, user.address.toLowerCase()),
+          eq(repSocialProofs.provider, provider),
+          eq(repSocialProofs.nonce, nonce),
+          isNull(repSocialProofs.consumedAt)
+        )
+      )
+      .limit(1);
+    
+    if (!proof) {
+      return res.status(400).json({ ok: false, error: 'nonce_invalid' });
+    }
+    
+    // Fetch tweet HTML and check contents
+    console.log('[echo/verify] Fetching tweet:', tweetUrl);
+    const tweetRes = await fetch(tweetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; .rep verifier)',
+      },
+    });
+    
+    if (!tweetRes.ok) {
+      console.error('[echo/verify] Failed to fetch tweet:', tweetRes.status);
+      return res.status(400).json({ ok: false, error: 'tweet_fetch_fail' });
+    }
+    
+    const html = await tweetRes.text();
+    
+    // Squash whitespace and lowercase for simple text search
+    const squashed = html.toLowerCase().replace(/\s+/g, '');
+    
+    // Check if tweet contains required elements
+    if (!squashed.includes(nonce.toLowerCase())) {
+      console.error('[echo/verify] Nonce not found in tweet');
+      return res.status(400).json({ ok: false, error: 'nonce_not_found' });
+    }
+    
+    if (!squashed.includes('#dotrep')) {
+      console.error('[echo/verify] #dotrep tag not found in tweet');
+      return res.status(400).json({ ok: false, error: 'tag_not_found' });
+    }
+    
+    // Mark nonce as consumed
+    await db
+      .update(repSocialProofs)
+      .set({ consumedAt: new Date() })
+      .where(eq(repSocialProofs.id, proof.id));
+    
+    // Save or update social account
+    await db
+      .insert(repSocialAccounts)
+      .values({
+        userWallet: user.address.toLowerCase(),
+        provider,
+        handle,
+        proofUrl: tweetUrl,
+      })
+      .onConflictDoUpdate({
+        target: [repSocialAccounts.userWallet, repSocialAccounts.provider],
+        set: {
+          handle,
+          proofUrl: tweetUrl,
+          verifiedAt: new Date(),
+        },
+      });
+    
+    console.log('[echo/verify] Social account verified:', { user: user.address, provider, handle });
+    
+    // Optionally complete the "Link Echo" mission (+40 XP)
+    // This will be triggered by the frontend calling /api/rep_phase0/progress
+    
+    return res.json({
+      ok: true,
+      provider,
+      handle,
+    });
+  } catch (e: any) {
+    console.error('[echo/verify] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'verify_error' });
   }
 });
 
