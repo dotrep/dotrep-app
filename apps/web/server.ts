@@ -1062,31 +1062,22 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, 'dist');
   
-  // CRITICAL: Root handler must be defined BEFORE static middleware
-  // This ensures health check detection runs before any file serving
+  // CRITICAL: Root endpoint must handle both health checks AND browser requests
   app.get('/', (req, res) => {
-    console.log('[health-check] GET / - Accept:', req.get('accept'), 'UA:', req.get('user-agent'));
+    // Fast health check detection - only check user-agent (most reliable indicator)
+    const ua = req.get('user-agent') || '';
     
-    // Detect health check requests (no HTML accepted, or specific User-Agent)
-    const acceptsHtml = req.accepts('html');
-    const userAgent = req.get('user-agent') || '';
-    const isHealthCheck = !acceptsHtml || 
-                         userAgent.includes('GoogleHC') || 
-                         userAgent.includes('kube-probe') ||
-                         userAgent === '';
-    
-    if (isHealthCheck) {
-      console.log('[health-check] Detected health check - returning OK');
+    // Cloud Run uses GoogleHC, kube-probe, or empty UA for health checks
+    if (ua.includes('GoogleHC') || ua.includes('kube-probe') || ua === '') {
       return res.status(200).send('OK');
     }
     
-    console.log('[health-check] Detected browser - serving SPA');
     // Browser request - serve SPA
     res.sendFile(path.join(distPath, 'index.html'));
   });
   
-  // Serve static assets (JS, CSS, images) but NOT index.html (handled above)
-  // The { index: false } option prevents express.static from serving index.html
+  // Serve static assets (JS, CSS, images) but NOT index.html
+  // The { index: false } ensures all / requests go through the route handler above
   app.use(express.static(distPath, { index: false }));
   
   // Serve index.html for all other non-API routes (SPA routing)
