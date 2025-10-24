@@ -1,6 +1,6 @@
-import { db } from '../../db/client.js';
-import { repPhase0Missions, repPhase0Progress, repPhase0Heartbeat } from '../../db/schema.js';
-import { PHASE0_MISSIONS } from '../constants/missions';
+import { db } from '../../../db/client.js';
+import { repPhase0Missions, repPhase0Progress, repPhase0Heartbeat } from '../../../shared/schema.js';
+import { PHASE0_MISSIONS } from '../constants/missions.js';
 import { eq, and, gte, sql } from 'drizzle-orm';
 
 export function now() {

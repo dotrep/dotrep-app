@@ -35,7 +35,7 @@ export const PHASE0_MISSIONS: {
   {
     slug: "first-attest",
     title: "Leave Your Mark 💬",
-    description: "Post your first on-chain attestation (e.g., "gm from .rep").",
+    description: "Post your first on-chain attestation (e.g., 'gm from .rep').",
     xp: 60,
     gatedBy: ["charge-signal"],
   },

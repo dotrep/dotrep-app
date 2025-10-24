@@ -77,6 +77,36 @@ The project utilizes a Turborepo-based monorepo, encompassing a React + Vite fro
 ### AI Integration
 - **OpenAI Chat**: Production OpenAI API integration for AI assistant conversations. All user and assistant messages persisted to chat_history table for conversation continuity.
 
+### Phase 0 Gamification System
+- **Namespace Isolation**: All Phase 0 code isolated in `apps/web/src/rep_phase0/` to avoid touching existing claim/auth/wallet code
+- **Mission System**: 5 missions with total of 240 XP:
+  - Charge Signal (50 XP) - Verify wallet and activate .rep identity
+  - Link Echo (40 XP) - Connect social account (gated by Charge Signal)
+  - Go Live (60 XP) - Login on 3 different days within 7 days (gated by Charge Signal)
+  - Leave Mark (60 XP) - Post first on-chain attestation (gated by Charge Signal)
+  - Discover Network (30 XP) - View 3 other active Signals (gated by Charge Signal)
+- **Database Tables** (in `shared/schema.ts`):
+  - `rep_phase0_missions` - Mission definitions with slug, title, description, XP
+  - `rep_phase0_progress` - User progress tracking with unique constraint on (user_wallet, mission_slug)
+  - `rep_phase0_heartbeat` - Daily login tracking with unique constraint on (user_wallet, day)
+- **XP Utilities** (`apps/web/src/rep_phase0/lib/xp.ts`):
+  - `seedMissions()` - Idempotent mission seeding
+  - `getUserState(user)` - Calculates mission state with gate logic
+  - `setProgress(user, mission, status, meta)` - Updates mission progress
+  - `recordHeartbeat(user, dayISO)` - Tracks daily logins
+  - `countHeartbeatDays(user, fromISO)` - Counts login days for Go Live validation
+- **API Routes** (session-protected):
+  - `POST /api/rep_phase0/seed` - Seeds missions into database
+  - `GET /api/rep_phase0/state` - Returns user's mission state and total XP
+  - `POST /api/rep_phase0/progress` - Updates mission progress with server-side validation for Go Live
+  - `POST /api/rep_phase0/heartbeat` - Records daily login heartbeat
+- **Frontend**:
+  - `/missions` route with MissionsDashboard component
+  - Styled with .rep platform theme (dark navy/space with neon accents)
+  - XP progress bar, mission cards with locked/available/completed states
+  - Auto-heartbeat on page load for authenticated users
+- **Feature Flag**: System can be gated by `DASHBOARD_PHASE0=1` environment variable (not currently enforced)
+
 ## External Dependencies
 
 ### Blockchain & Web3

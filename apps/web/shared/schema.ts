@@ -1,5 +1,6 @@
 // Clean, simplified schema for leaderboard and referral system
-import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, varchar, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, varchar, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -224,3 +225,49 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
+
+// Phase 0 Missions System Tables
+export const repPhase0Missions = pgTable('rep_phase0_missions', {
+  slug: varchar('slug', { length: 50 }).primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description').notNull(),
+  xp: integer('xp').notNull(),
+});
+
+export const repPhase0Progress = pgTable('rep_phase0_progress', {
+  id: varchar('id', { length: 100 }).primaryKey().default(sql`gen_random_uuid()::text`),
+  userWallet: varchar('user_wallet', { length: 42 }).notNull(),
+  missionSlug: varchar('mission_slug', { length: 50 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  meta: text('meta'),
+}, (table) => ({
+  uniqueUserMission: uniqueIndex('rep_phase0_progress_user_mission_idx').on(table.userWallet, table.missionSlug),
+}));
+
+export const repPhase0Heartbeat = pgTable('rep_phase0_heartbeat', {
+  id: varchar('id', { length: 100 }).primaryKey().default(sql`gen_random_uuid()::text`),
+  userWallet: varchar('user_wallet', { length: 42 }).notNull(),
+  day: varchar('day', { length: 10 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueUserDay: uniqueIndex('rep_phase0_heartbeat_user_day_idx').on(table.userWallet, table.day),
+}));
+
+// Phase 0 schema types
+export const insertRepPhase0MissionSchema = createInsertSchema(repPhase0Missions);
+export type InsertRepPhase0Mission = z.infer<typeof insertRepPhase0MissionSchema>;
+export type RepPhase0Mission = typeof repPhase0Missions.$inferSelect;
+
+export const insertRepPhase0ProgressSchema = createInsertSchema(repPhase0Progress).omit({
+  id: true,
+});
+export type InsertRepPhase0Progress = z.infer<typeof insertRepPhase0ProgressSchema>;
+export type RepPhase0Progress = typeof repPhase0Progress.$inferSelect;
+
+export const insertRepPhase0HeartbeatSchema = createInsertSchema(repPhase0Heartbeat).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertRepPhase0Heartbeat = z.infer<typeof insertRepPhase0HeartbeatSchema>;
+export type RepPhase0Heartbeat = typeof repPhase0Heartbeat.$inferSelect;
