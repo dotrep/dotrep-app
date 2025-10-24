@@ -67,7 +67,29 @@ export async function startLogin(inputName: string) {
   });
   const rv = await safeJson(rvRes);
   const reservationId = rv.json?.reservationId as string | undefined;
-  if (!rv.ok || !reservationId) throw new Error(`/api/rep/reserve ${rv.status} ${rv.raw || ''}`);
+  
+  // Enhanced error handling with user-friendly messages
+  if (!rv.ok || !reservationId) {
+    const errorCode = rv.json?.error || 'unknown_error';
+    const errorMessage = rv.json?.message || '';
+    
+    // Map error codes to user-friendly messages
+    const friendlyMessages: Record<string, string> = {
+      'profanity': 'Name contains inappropriate language. Please choose a different name.',
+      'reserved': 'This name is reserved and cannot be used.',
+      'reserved_similar': 'Name is too similar to a reserved name. Please choose a different name.',
+      'invalid_pattern': 'Name contains invalid patterns. Please use only letters, numbers, hyphens, and underscores.',
+      'too_short': 'Name must be at least 2 characters long.',
+      'too_long': 'Name must be 20 characters or less.',
+      'invalid_chars': 'Name can only contain letters, numbers, hyphens, and underscores.',
+      'invalid_format': 'Invalid name format. Name cannot start/end with special characters or have consecutive special characters.',
+      'name_taken': 'This name is already taken. Please choose a different name.',
+      'wallet_already_has_rep': 'Your wallet already has a .rep name. Each wallet can only claim one name.',
+    };
+    
+    const userMessage = friendlyMessages[errorCode] || errorMessage || 'Unable to reserve name. Please try again.';
+    throw new Error(userMessage);
+  }
 
   window.location.href = `/wallet?name=${encodeURIComponent(name)}&rid=${encodeURIComponent(reservationId)}`;
 }
