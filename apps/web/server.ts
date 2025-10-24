@@ -280,14 +280,40 @@ setInterval(checkDatabaseHealth, 15000);
 // Run initial probe on startup
 setTimeout(() => checkDatabaseHealth(), 3000);
 
-// CRITICAL: Health check endpoint FIRST - before ALL middleware
-// Returns 500 if critical subsystems are degraded
+// CRITICAL: Health check endpoints FIRST - before ALL middleware
+// /healthz - dedicated health check endpoint
 app.get('/healthz', (_req, res) => {
   if (!dbHealthy) {
     console.error('❌ Health check failed: Database unhealthy');
     return res.status(500).send('Database unhealthy');
   }
   res.status(200).send('OK');
+});
+
+// / - Smart health check handler for deployment systems
+// Detects health checkers by User-Agent and returns instant 200 OK
+// Real users proceed to the app (served by express.static or SPA router)
+app.get('/', (req, res, next) => {
+  const userAgent = req.get('user-agent') || '';
+  
+  // Health check detection: Google Cloud Run, Kubernetes, monitoring tools
+  const isHealthCheck = 
+    userAgent.includes('GoogleHC') ||
+    userAgent.includes('kube-probe') ||
+    userAgent.includes('health') ||
+    userAgent.length === 0 ||
+    userAgent === '-';
+  
+  if (isHealthCheck) {
+    if (!dbHealthy) {
+      console.error('❌ Root health check failed: Database unhealthy');
+      return res.status(500).send('Database unhealthy');
+    }
+    return res.status(200).send('OK');
+  }
+  
+  // Real user traffic - continue to static files or SPA
+  next();
 });
 
 app.use(express.json());
