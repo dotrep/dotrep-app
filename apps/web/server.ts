@@ -8,6 +8,7 @@ import { db } from './db/client.js';
 import { reservations } from './db/schema.js';
 import { eq, and, sql, or, like } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName } from './lib/repValidation.js';
+import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 
 const USE_CROSS_ORIGIN = false; // Using Vite proxy instead of CORS
 
@@ -516,6 +517,83 @@ app.get('/api/admin/stats', isAdmin, async (req, res) => {
   } catch (e: any) {
     console.error('[admin/stats] error', e);
     return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// Phase 0 Missions API Routes
+
+// Seed missions into database (idempotent)
+app.post('/api/rep_phase0/seed', async (_req, res) => {
+  try {
+    await seedMissions();
+    return res.json({ ok: true });
+  } catch (e: any) {
+    console.error('[phase0/seed] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'seed_failed' });
+  }
+});
+
+// Get user's mission state
+app.get('/api/rep_phase0/state', async (req, res) => {
+  try {
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+    
+    const state = await getUserState(user.address);
+    return res.json({ ok: true, state });
+  } catch (e: any) {
+    console.error('[phase0/state] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'state_error' });
+  }
+});
+
+// Update mission progress
+app.post('/api/rep_phase0/progress', async (req, res) => {
+  try {
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+    
+    const { action, mission, meta } = req.body || {};
+    
+    if (!action || !mission) {
+      return res.status(400).json({ ok: false, error: 'invalid_input' });
+    }
+    
+    // Server-side validation for "go-live" mission
+    if (mission === 'go-live' && action === 'complete') {
+      const from = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      const days = await countHeartbeatDays(user.address, from);
+      if (days < 3) {
+        return res.status(400).json({ ok: false, error: 'require_3_days_login' });
+      }
+    }
+    
+    await setProgress(user.address, mission, action === 'complete' ? 'completed' : 'available', meta);
+    return res.json({ ok: true });
+  } catch (e: any) {
+    console.error('[phase0/progress] error', e);
+    return res.status(400).json({ ok: false, error: e?.message || 'progress_error' });
+  }
+});
+
+// Record daily heartbeat
+app.post('/api/rep_phase0/heartbeat', async (req, res) => {
+  try {
+    const user = req.session?.user;
+    if (!user?.address) {
+      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    }
+    
+    const today = new Date().toISOString().slice(0, 10);
+    await recordHeartbeat(user.address, today);
+    return res.json({ ok: true });
+  } catch (e: any) {
+    console.error('[phase0/heartbeat] error', e);
+    return res.status(500).json({ ok: false, error: e?.message || 'heartbeat_error' });
   }
 });
 
