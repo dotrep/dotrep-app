@@ -295,16 +295,26 @@ app.get('/healthz', (_req, res) => {
 // Real users proceed to the app (served by express.static or SPA router)
 app.get('/', (req, res, next) => {
   const userAgent = req.get('user-agent') || '';
+  const accept = req.get('accept') || '';
   
-  // Health check detection: Google Cloud Run, Kubernetes, monitoring tools
+  // Health check detection: Cloud Run, Kubernetes, monitoring tools
   const isHealthCheck = 
+    userAgent.includes('Google-Cloud-Run') ||
+    userAgent.includes('Google-HealthCheck') ||
     userAgent.includes('GoogleHC') ||
     userAgent.includes('kube-probe') ||
     userAgent.includes('health') ||
     userAgent.length === 0 ||
-    userAgent === '-';
+    userAgent === '-' ||
+    // Cloud Run often sends */* accept with no specific HTML request
+    (accept === '*/*' && !accept.includes('text/html'));
   
   if (isHealthCheck) {
+    // Log first few health checks to verify detection (for debugging)
+    if (Math.random() < 0.05) { // 5% sampling to avoid log spam
+      console.log(`Health check detected: UA="${userAgent}" Accept="${accept}"`);
+    }
+    
     if (!dbHealthy) {
       console.error('❌ Root health check failed: Database unhealthy');
       return res.status(500).send('Database unhealthy');
