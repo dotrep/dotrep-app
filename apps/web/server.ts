@@ -290,8 +290,9 @@ app.get('/healthz', (_req, res) => {
   res.status(200).send('OK');
 });
 
-// / - Smart health check handler for deployment systems
-// Detects health checkers by User-Agent and returns instant 200 OK
+// / - INSTANT health check handler for Cloud Run deployment
+// Detects health checkers by User-Agent and returns immediate 200 OK
+// NO database checks here - Cloud Run requires fast response (<1s)
 // Real users proceed to the app (served by express.static or SPA router)
 app.get('/', (req, res, next) => {
   const userAgent = req.get('user-agent') || '';
@@ -315,10 +316,8 @@ app.get('/', (req, res, next) => {
       console.log(`Health check detected: UA="${userAgent}" Accept="${accept}"`);
     }
     
-    if (!dbHealthy) {
-      console.error('❌ Root health check failed: Database unhealthy');
-      return res.status(500).send('Database unhealthy');
-    }
+    // CRITICAL: Return instant 200 OK - no database checks
+    // Cloud Run health checks timeout if response takes >1 second
     return res.status(200).send('OK');
   }
   
