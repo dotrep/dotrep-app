@@ -425,6 +425,13 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
   const adminWallets = (process.env.ADMIN_WALLETS || '').toLowerCase().split(',').filter(Boolean);
   const userAddress = req.session?.user?.address?.toLowerCase();
   
+  console.log('[isAdmin] Check:', {
+    adminWalletsRaw: process.env.ADMIN_WALLETS,
+    adminWallets,
+    userAddress,
+    isMatch: adminWallets.includes(userAddress || '')
+  });
+  
   if (!userAddress) {
     return res.status(401).json({ ok: false, error: 'not_authenticated' });
   }
