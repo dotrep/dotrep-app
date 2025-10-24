@@ -1,0 +1,548 @@
+⛔️ RULES (do not skip)
+	•	Do not modify existing claim pages, auth, wallet code, or DB schemas already in use.
+	•	All new code must live under a new namespaced feature: rep_phase0.
+	•	If a choice is needed between /pages vs /app routers, auto-detect and use the existing convention.
+	•	Use CREATE TABLE IF NOT EXISTS (runtime migration) to avoid breaking existing migrations.
+	•	Reuse the project’s existing session/wallet auth helper if found; otherwise add a local wrapper that reads the current user from existing session cookies.
+
+⸻
+
+0) Create a feature flag
+
+Add an env flag and guard UI with it.
+
+File: .env (or secrets UI)
+
+DASHBOARD_PHASE0=1
+
+If using Next.js (any router), ensure this is exposed server-side only (no need to add to NEXT_PUBLIC_).
+
+⸻
+
+1) Add a self-contained feature folder
+
+Create the following files and folders. Do not modify any existing file except the optional nav link in Step 6.
+
+/src/rep_phase0/constants/missions.ts
+/src/rep_phase0/lib/db.ts
+/src/rep_phase0/lib/auth.ts
+/src/rep_phase0/lib/runtimeMigrate.ts
+/src/rep_phase0/lib/xp.ts
+/src/rep_phase0/ui/MissionsDashboard.tsx
+
+Also create API routes (pick the project’s router style):
+	•	If the repo uses /pages/api:
+
+/pages/api/rep_phase0/state.ts
+/pages/api/rep_phase0/progress.ts
+/pages/api/rep_phase0/seed.ts
+/pages/api/rep_phase0/heartbeat.ts
+
+	•	If the repo uses /app router:
+
+/app/api/rep_phase0/state/route.ts
+/app/api/rep_phase0/progress/route.ts
+/app/api/rep_phase0/seed/route.ts
+/app/api/rep_phase0/heartbeat/route.ts
+
+And a dashboard page:
+	•	If /pages router: /pages/dashboard.tsx
+	•	If /app router: /app/dashboard/page.tsx
+
+⸻
+
+2) Mission definitions (copy exactly)
+
+File: /src/rep_phase0/constants/missions.ts
+
+export type MissionSlug =
+  | "charge-signal"
+  | "link-echo"
+  | "go-live"
+  | "first-attest"
+  | "discover-network";
+
+export const PHASE0_MISSIONS: {
+  slug: MissionSlug;
+  title: string;
+  description: string;
+  xp: number;
+  gatedBy?: MissionSlug[];
+}[] = [
+  {
+    slug: "charge-signal",
+    title: "Charge Your Signal ⚡",
+    description: "Verify your wallet and activate your .rep identity.",
+    xp: 50,
+  },
+  {
+    slug: "link-echo",
+    title: "Link Your Echo 🔁",
+    description: "Connect one social (X, Lens, or Farcaster) to prove you're real.",
+    xp: 40,
+    gatedBy: ["charge-signal"],
+  },
+  {
+    slug: "go-live",
+    title: "Go Live 🟢",
+    description: "Log in on 3 different days within 7 days to keep Signal active.",
+    xp: 60,
+    gatedBy: ["charge-signal"],
+  },
+  {
+    slug: "first-attest",
+    title: "Leave Your Mark 💬",
+    description: "Post your first on-chain attestation (e.g., “gm from .rep”).",
+    xp: 60,
+    gatedBy: ["charge-signal"],
+  },
+  {
+    slug: "discover-network",
+    title: "Discover the Network 🧭",
+    description: "View 3 other active Signals to explore the constellation.",
+    xp: 30,
+    gatedBy: ["charge-signal"],
+  },
+];
+
+3) Minimal, non-breaking DB + runtime migrations
+
+We will not touch your existing ORM. We’ll add a small SQLite table (or Postgres—driver-agnostic SQL) via CREATE TABLE IF NOT EXISTS at runtime. This is isolated under rep_phase0.
+
+File: /src/rep_phase0/lib/db.ts
+
+import { Database } from "sqlite3";
+
+// If your project already exports a db connection, import it instead.
+// Otherwise, this local fallback opens the same DB file Prisma/Drizzle use (adjust path if needed).
+const DB_PATH = process.env.DATABASE_URL?.startsWith("file:")
+  ? process.env.DATABASE_URL.replace("file:", "")
+  : "./.data/data.db";
+
+export const db = new Database(DB_PATH);
+
+File: /src/rep_phase0/lib/runtimeMigrate.ts
+
+import { db } from "./db";
+
+export function ensurePhase0Tables(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS rep_phase0_missions (
+          slug TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          xp INTEGER NOT NULL
+        );`, (e1) => {
+        if (e1) return reject(e1);
+
+        db.run(`
+          CREATE TABLE IF NOT EXISTS rep_phase0_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_wallet TEXT NOT NULL,
+            mission_slug TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('locked','available','completed')),
+            updated_at INTEGER NOT NULL,
+            meta TEXT,
+            UNIQUE(user_wallet, mission_slug)
+          );`, (e2) => {
+          if (e2) return reject(e2);
+
+          db.run(`
+            CREATE TABLE IF NOT EXISTS rep_phase0_heartbeat (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_wallet TEXT NOT NULL,
+              day TEXT NOT NULL, -- yyyy-mm-dd
+              UNIQUE(user_wallet, day)
+            );`, (e3) => {
+            if (e3) return reject(e3);
+            resolve();
+          });
+        });
+      });
+    });
+  });
+}
+
+XP utilities (idempotent award & state compute)
+
+File: /src/rep_phase0/lib/xp.ts
+
+import { db } from "./db";
+import { PHASE0_MISSIONS } from "../constants/missions";
+
+export async function seedMissions() {
+  await new Promise<void>((resolve, reject) => {
+    const stmt = db.prepare(`
+      INSERT OR IGNORE INTO rep_phase0_missions (slug, title, description, xp)
+      VALUES (?, ?, ?, ?)
+    `);
+    db.serialize(() => {
+      for (const m of PHASE0_MISSIONS) {
+        stmt.run(m.slug, m.title, m.description, m.xp);
+      }
+      stmt.finalize((e) => (e ? reject(e) : resolve()));
+    });
+  });
+}
+
+export function now() { return Date.now(); }
+
+export async function setProgress(user: string, mission: string, status: "available" | "completed", meta?: any) {
+  await new Promise<void>((resolve, reject) => {
+    const metaStr = meta ? JSON.stringify(meta) : null;
+    db.run(`
+      INSERT INTO rep_phase0_progress (user_wallet, mission_slug, status, updated_at, meta)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(user_wallet, mission_slug)
+      DO UPDATE SET status=excluded.status, updated_at=excluded.updated_at, meta=COALESCE(excluded.meta, rep_phase0_progress.meta)
+    `, [user, mission, status, now(), metaStr], (e) => e ? reject(e) : resolve());
+  });
+}
+
+export async function getUserState(user: string) {
+  const missions = await new Promise<any[]>((resolve, reject) => {
+    db.all(`SELECT slug, title, description, xp FROM rep_phase0_missions`, (e, rows) => e ? reject(e) : resolve(rows));
+  });
+
+  const progress = await new Promise<any[]>((resolve, reject) => {
+    db.all(`SELECT mission_slug, status, updated_at, meta FROM rep_phase0_progress WHERE user_wallet = ?`, [user], (e, rows) => e ? reject(e) : resolve(rows));
+  });
+
+  const pMap = new Map(progress.map(p => [p.mission_slug, p]));
+  const computed = missions.map(m => {
+    const p = pMap.get(m.slug);
+    return { ...m, status: p?.status ?? "available", updated_at: p?.updated_at ?? null, meta: p?.meta ? JSON.parse(p.meta) : null };
+  });
+
+  const totalXP = computed
+    .filter(c => c.status === "completed")
+    .reduce((sum, c) => sum + (c.xp || 0), 0);
+
+  return { missions: computed, totalXP };
+}
+
+export async function recordHeartbeat(user: string, dayISO: string) {
+  await new Promise<void>((resolve) => {
+    db.run(`INSERT OR IGNORE INTO rep_phase0_heartbeat (user_wallet, day) VALUES (?, ?)`, [user, dayISO], () => resolve());
+  });
+}
+
+export async function countHeartbeatDays(user: string, fromISO: string): Promise<number> {
+  return await new Promise<number>((resolve, reject) => {
+    db.get(
+      `SELECT COUNT(*) as n FROM rep_phase0_heartbeat WHERE user_wallet = ? AND day >= ?`,
+      [user, fromISO],
+      (e, row) => e ? reject(e) : resolve(row?.n ?? 0)
+    );
+  });
+}
+
+4) Auth helper (reuse if present)
+
+File: /src/rep_phase0/lib/auth.ts
+
+// If the project already has an auth util that returns { wallet, repName, signalLevel }, import it.
+// Otherwise, this minimal placeholder reads from your existing session cookie middleware.
+
+// IMPORTANT: Do not modify global auth. Only wrap it here.
+import type { NextApiRequest } from "next";
+
+export type SessionUser = {
+  wallet: string;
+  repName?: string | null;
+  signalLevel?: number | null;
+};
+
+export async function requireUser(req: any): Promise<SessionUser> {
+  // Try common places:
+  const u = (req as any).user || (req as any).session?.user || (req as any).sessionUser;
+  if (u?.wallet) return { wallet: u.wallet, repName: u.repName ?? null, signalLevel: u.signalLevel ?? null };
+
+  // If nothing found, try header (for server actions) or throw:
+  const wallet = req.headers?.["x-user-wallet"];
+  if (wallet && typeof wallet === "string") return { wallet };
+
+  throw new Error("AUTH_REQUIRED");
+}
+
+5) API routes
+
+(A) Seed missions
+	•	Only runs on demand (manual POST).
+	•	Safe to re-run (idempotent).
+
+/pages/api/rep_phase0/seed.ts or /app/api/rep_phase0/seed/route.ts
+
+import { ensurePhase0Tables } from "@/src/rep_phase0/lib/runtimeMigrate";
+import { seedMissions } from "@/src/rep_phase0/lib/xp";
+
+export async function handlerLike(req: any, res?: any) {
+  try {
+    await ensurePhase0Tables();
+    await seedMissions();
+    const payload = { ok: true };
+    // pages/api
+    if (res) return res.status(200).json(payload);
+    // app router
+    return new Response(JSON.stringify(payload), { status: 200 });
+  } catch (e:any) {
+    const msg = { ok:false, error: e?.message || "seed_failed" };
+    if (res) return res.status(500).json(msg);
+    return new Response(JSON.stringify(msg), { status: 500 });
+  }
+}
+
+// export proper shape based on router
+export default function handler(req:any, res:any){ return handlerLike(req,res); }
+export const GET = handlerLike; export const POST = handlerLike;
+
+(B) State (read dashboard)
+
+/pages/api/rep_phase0/state.ts or /app/api/rep_phase0/state/route.ts
+
+import { ensurePhase0Tables } from "@/src/rep_phase0/lib/runtimeMigrate";
+import { getUserState } from "@/src/rep_phase0/lib/xp";
+import { requireUser } from "@/src/rep_phase0/lib/auth";
+
+export async function handlerLike(req:any, res?:any){
+  try {
+    const user = await requireUser(req);
+    await ensurePhase0Tables();
+    const state = await getUserState(user.wallet);
+    const payload = { ok: true, state };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status: 200 });
+  } catch(e:any){
+    const msg = { ok:false, error:e?.message || "state_error" };
+    if (res) return res.status(401).json(msg);
+    return new Response(JSON.stringify(msg), { status: 401 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const GET = handlerLike;
+
+(C) Progress (complete/advance missions)
+
+/pages/api/rep_phase0/progress.ts or /app/api/rep_phase0/progress/route.ts
+
+import { ensurePhase0Tables } from "@/src/rep_phase0/lib/runtimeMigrate";
+import { setProgress, countHeartbeatDays } from "@/src/rep_phase0/lib/xp";
+import { requireUser } from "@/src/rep_phase0/lib/auth";
+
+export async function handlerLike(req:any, res?:any){
+  try {
+    const user = await requireUser(req);
+    await ensurePhase0Tables();
+
+    const body = req.body || (await req.json?.());
+    const { action, mission, meta } = body || {};
+
+    if (!action || !mission) throw new Error("INVALID_INPUT");
+
+    // Minimal server-side checks for Phase 0
+    if (mission === "go-live" && action === "complete") {
+      // Ensure user has 3 distinct days in last 7 days
+      const from = new Date(Date.now() - 6*24*3600*1000).toISOString().slice(0,10);
+      const days = await countHeartbeatDays(user.wallet, from);
+      if (days < 3) throw new Error("REQUIRE_3_DAYS_LOGIN");
+    }
+
+    await setProgress(user.wallet, mission, action === "complete" ? "completed" : "available", meta);
+
+    const payload = { ok: true };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status: 200 });
+  } catch(e:any){
+    const msg = { ok:false, error:e?.message || "progress_error" };
+    if (res) return res.status(400).json(msg);
+    return new Response(JSON.stringify(msg), { status: 400 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike;
+
+(D) Heartbeat (track login day when dashboard is viewed)
+
+/pages/api/rep_phase0/heartbeat.ts or /app/api/rep_phase0/heartbeat/route.ts
+
+import { ensurePhase0Tables } from "@/src/rep_phase0/lib/runtimeMigrate";
+import { recordHeartbeat } from "@/src/rep_phase0/lib/xp";
+import { requireUser } from "@/src/rep_phase0/lib/auth";
+
+export async function handlerLike(req:any, res?:any){
+  try{
+    const user = await requireUser(req);
+    await ensurePhase0Tables();
+    const today = new Date().toISOString().slice(0,10);
+    await recordHeartbeat(user.wallet, today);
+    const payload = { ok:true };
+    if (res) return res.status(200).json(payload);
+    return new Response(JSON.stringify(payload), { status:200 });
+  } catch(e:any){
+    const msg = { ok:false, error:e?.message || "heartbeat_error" };
+    if (res) return res.status(401).json(msg);
+    return new Response(JSON.stringify(msg), { status:401 });
+  }
+}
+export default function handler(req:any,res:any){ return handlerLike(req,res); }
+export const POST = handlerLike; export const GET = handlerLike;
+
+6) UI components (isolated)
+
+Dashboard Card UI
+
+File: /src/rep_phase0/ui/MissionsDashboard.tsx
+
+"use client";
+import React, { useEffect, useState } from "react";
+
+type Mission = {
+  slug: string;
+  title: string;
+  description: string;
+  xp: number;
+  status: "locked" | "available" | "completed";
+};
+
+export default function MissionsDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<{missions: Mission[], totalXP: number} | null>(null);
+  const featureOn = typeof process !== "undefined" ? !!process.env.DASHBOARD_PHASE0 : true;
+
+  async function fetchState() {
+    const res = await fetch("/api/rep_phase0/state");
+    const json = await res.json();
+    if (json.ok) setState(json.state);
+    setLoading(false);
+  }
+
+  async function pingHeartbeat() {
+    await fetch("/api/rep_phase0/heartbeat", { method: "POST" });
+  }
+
+  async function complete(slug: string) {
+    const res = await fetch("/api/rep_phase0/progress", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ action: "complete", mission: slug })
+    });
+    const json = await res.json();
+    if (!json.ok) { alert(json.error || "Unable to complete mission"); return; }
+    fetchState();
+  }
+
+  useEffect(() => {
+    if (!featureOn) return;
+    fetchState();
+    pingHeartbeat();
+  }, []);
+
+  if (!featureOn) return null;
+
+  if (loading) return <div className="p-6 text-sm opacity-70">Loading your .rep dashboard…</div>;
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">.rep Dashboard</h1>
+        <div className="text-sm">Total XP: <span className="font-bold">{state?.totalXP ?? 0}</span></div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {state?.missions.map((m) => (
+          <div key={m.slug} className="rounded-2xl border p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-lg font-semibold">{m.title}</div>
+                <div className="text-xs opacity-70 mt-1">{m.description}</div>
+              </div>
+              <div className="text-xs px-2 py-1 rounded-full border">{m.xp} XP</div>
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              {m.status === "completed" ? (
+                <span className="text-green-600 text-sm">Completed ✓</span>
+              ) : (
+                <button
+                  onClick={() => complete(m.slug)}
+                  className="text-sm px-3 py-1 rounded-lg border hover:bg-gray-50"
+                >
+                  {m.slug === "charge-signal" ? "Activate" :
+                   m.slug === "link-echo" ? "Link social" :
+                   m.slug === "go-live" ? "Mark day active" :
+                   m.slug === "first-attest" ? "Submit attestation" :
+                   m.slug === "discover-network" ? "Explore signals" :
+                   "Complete"}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+Page wrapper (auto-detect router)
+	•	/pages/dashboard.tsx:
+
+import MissionsDashboard from "@/src/rep_phase0/ui/MissionsDashboard";
+export default function DashboardPage(){ return <MissionsDashboard />; }
+
+	•	/app/dashboard/page.tsx:
+
+import MissionsDashboard from "@/src/rep_phase0/ui/MissionsDashboard";
+export default function DashboardPage(){ return <MissionsDashboard />; }
+
+Optional (non-invasive) nav link:
+If you have a top nav component, add this one line under a DASHBOARD_PHASE0 check:
+
+{process.env.NEXT_PUBLIC_SHOW_DASHBOARD !== "0" && <a href="/dashboard" className="...">Dashboard</a>}
+
+7) Wire minimal server checks for each mission (no external deps)
+
+We already enforce one rule in the API:
+	•	go-live requires 3 heartbeat days in last 7 days.
+	•	Other missions are manually completable for Phase-0 (UI button triggers /progress), so you can later swap in real checks (Signal level, OAuth, on-chain attestation, network discovery) without changing UI.
+
+When you’re ready to hard-gate:
+	•	charge-signal: confirm user.signalLevel >= 1 before allowing completion.
+	•	link-echo: verify OAuth token exists in your existing user profile table; otherwise throw.
+	•	first-attest: verify an attestation hash or tx hash in meta.
+	•	discover-network: verify the client fetched and rendered 3 profiles (pass proof in meta).
+
+⸻
+
+8) One-time seed (safe to re-run)
+
+Run once (or anytime):
+
+curl -X POST http://localhost:3000/api/rep_phase0/seed
+
+If using the app router, same path works.
+
+⸻
+
+9) Access control (logged-in only)
+	•	The requireUser() wrapper already throws AUTH_REQUIRED.
+	•	If your project uses a custom session util, update /src/rep_phase0/lib/auth.ts to import it (do not edit global auth).
+
+⸻
+
+10) Rollback plan (fast undo)
+
+To remove the feature without side-effects:
+	•	Delete the /src/rep_phase0/** folder, /api/rep_phase0/** routes, and /dashboard page.
+	•	(Optional) Leave the tables—they’re isolated (rep_phase0_%) and won’t be read by other features.
+
+⸻
+
+11) Final QA checklist
+	•	DASHBOARD_PHASE0=1 set.
+	•	/api/rep_phase0/seed returns { ok: true }.
+	•	Visiting /dashboard when logged in loads missions & adds heartbeat for today.
+	•	Completing “Go Live” only succeeds after 3 distinct days.
+	•	Nothing in /claim or wallet flows changed.
+	•	No TypeScript errors; build passes.
