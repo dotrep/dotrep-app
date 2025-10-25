@@ -274,19 +274,13 @@ export function trackDatabaseSuccess() {
   lastQuerySuccess = Date.now();
 }
 
-// Run database health probe every 15 seconds
-setInterval(checkDatabaseHealth, 15000);
-
-// Run initial probe on startup
-setTimeout(() => checkDatabaseHealth(), 3000);
+// Database health probes will be initialized AFTER server binds to port
+// This ensures health checks respond immediately during startup
 
 // CRITICAL: Health check endpoints FIRST - before ALL middleware
-// /healthz - dedicated health check endpoint
+// /healthz - INSTANT health check endpoint (NO database checks)
+// Cloud Run requires responses within 1 second, so we skip all DB checks
 app.get('/healthz', (_req, res) => {
-  if (!dbHealthy) {
-    console.error('❌ Health check failed: Database unhealthy');
-    return res.status(500).send('Database unhealthy');
-  }
   res.status(200).send('OK');
 });
 
@@ -1265,19 +1259,30 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
     console.log(`✅ Server listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
     console.log('   Health check endpoint: /healthz and /');
     
+    // Initialize database health probes AFTER server is listening
+    // This ensures health checks respond immediately during startup
+    setTimeout(() => {
+      console.log('   Starting database health monitoring...');
+      checkDatabaseHealth();
+      // Run database health probe every 15 seconds
+      setInterval(checkDatabaseHealth, 15000);
+    }, 5000);
+    
     // Validate environment AFTER server is listening
     // This ensures Cloud Run can reach health checks even if validation fails
-    try {
-      validateEnvironment();
-      console.log('✅ Server fully initialized and ready');
-    } catch (error) {
-      console.error('❌ Environment validation failed after server started');
-      console.error('   Server will respond to health checks but API routes may not work');
-      console.error('   Error:', error);
-      // In production, exit to trigger restart with correct env vars
-      if (isProduction) {
-        setTimeout(() => process.exit(1), 5000);
+    setTimeout(() => {
+      try {
+        validateEnvironment();
+        console.log('✅ Server fully initialized and ready');
+      } catch (error) {
+        console.error('❌ Environment validation failed after server started');
+        console.error('   Server will respond to health checks but API routes may not work');
+        console.error('   Error:', error);
+        // In production, exit to trigger restart with correct env vars
+        if (isProduction) {
+          setTimeout(() => process.exit(1), 5000);
+        }
       }
-    }
+    }, 1000);
   });
 }

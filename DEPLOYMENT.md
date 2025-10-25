@@ -30,12 +30,14 @@ DASHBOARD_PHASE0=1
 ### Health Check Configuration
 **Set these in Deploy → Advanced Settings → Health Check**:
 
-- **Health check path**: `/api/health`
-- **Initial delay**: 30 seconds
-- **Interval**: 10 seconds
-- **Timeout**: 5 seconds
+- **Health check path**: `/healthz`
+- **Initial delay**: 10 seconds
+- **Interval**: 5 seconds
+- **Timeout**: 2 seconds
 - **Success threshold**: 1
 - **Failure threshold**: 3
+
+**CRITICAL**: Use `/healthz` (NOT `/api/health`) - this endpoint responds instantly without database checks.
 
 ### Port Configuration
 The server automatically binds to:
