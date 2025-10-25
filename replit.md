@@ -28,8 +28,15 @@ The project uses a Turborepo monorepo, including a React + Vite frontend (`apps/
   - **Development**: Dual-process setup (Express on port 9000, Vite Dev Server on port 5000 with proxy) for same-origin cookie support.
   - **Production**: Single-process server optimized for Cloud Run, serving built Vite static files and API routes, binding to 0.0.0.0 on port 5000.
 - **Session Management**: PostgreSQL session store using `connect-pg-simple` with `sameSite: 'lax'` cookies and a 7-day duration.
-- **Health Endpoints**: `/healthz` (instant "OK"), `/` (fast user-agent detection), `/api/health` (detailed info).
-- **Security**: Rate limiting (wallet-based and IP-based), environment variable validation, and PostgreSQL session persistence.
+- **Health Endpoints**: `/healthz` (instant "OK"), `/` (instant "OK" for non-browser requests, serves app to browsers), `/api/health` (detailed info).
+- **Startup Sequence** (Cloud Run optimized):
+  1. `deploy-start.sh` validates environment variables with Zod schema (`scripts/check-env.ts`) - fails fast with clear error messages if secrets missing
+  2. Server binds to port IMMEDIATELY (before any validation or database setup)
+  3. Health check endpoints `/` and `/healthz` respond instantly (<1ms)
+  4. Environment validation happens AFTER server is listening (deferred async)
+  5. If validation fails in production, server stays alive 5 seconds for health checks, then exits for Cloud Run restart
+- **Environment Variables**: Validates DATABASE_URL (required), SESSION_SECRET (≥32 chars required), feature flags (ECHO_ENABLED, TWITTER_ENABLED, etc.), with conditional validation for dependent secrets.
+- **Security**: Rate limiting (wallet-based and IP-based), Zod-based environment validation, and PostgreSQL session persistence.
 
 ### Data Architecture
 - **Database**: PostgreSQL with Drizzle ORM.
