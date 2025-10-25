@@ -291,38 +291,19 @@ app.get('/healthz', (_req, res) => {
 });
 
 // / - INSTANT health check handler for Cloud Run deployment
-// Detects health checkers by User-Agent and returns immediate 200 OK
-// NO database checks here - Cloud Run requires fast response (<1s)
-// Real users proceed to the app (served by express.static or SPA router)
+// Returns immediate 200 OK for all non-browser requests
+// Browsers (requesting HTML) get served the app via express.static below
 app.get('/', (req, res, next) => {
-  const userAgent = req.get('user-agent') || '';
   const accept = req.get('accept') || '';
   
-  // Health check detection: Cloud Run, Kubernetes, monitoring tools
-  const isHealthCheck = 
-    userAgent.includes('Google-Cloud-Run') ||
-    userAgent.includes('Google-HealthCheck') ||
-    userAgent.includes('GoogleHC') ||
-    userAgent.includes('kube-probe') ||
-    userAgent.includes('health') ||
-    userAgent.length === 0 ||
-    userAgent === '-' ||
-    // Cloud Run often sends */* accept with no specific HTML request
-    (accept === '*/*' && !accept.includes('text/html'));
-  
-  if (isHealthCheck) {
-    // Log first few health checks to verify detection (for debugging)
-    if (Math.random() < 0.05) { // 5% sampling to avoid log spam
-      console.log(`Health check detected: UA="${userAgent}" Accept="${accept}"`);
-    }
-    
-    // CRITICAL: Return instant 200 OK - no database checks
-    // Cloud Run health checks timeout if response takes >1 second
-    return res.status(200).send('OK');
+  // If browser is requesting HTML, serve the app (continue to express.static)
+  if (accept.includes('text/html')) {
+    return next();
   }
   
-  // Real user traffic - continue to static files or SPA
-  next();
+  // All other requests (health checks, curl, monitoring) get instant 200 OK
+  // NO database checks - Cloud Run requires fast response (<1s)
+  return res.status(200).send('OK');
 });
 
 app.use(express.json());
