@@ -1,0 +1,209 @@
+Goal: Deployment stalls at “Promote”. Fix by running exactly one HTTP server that listens on $PORT and exposes GET /api/health -> 200. If monorepo, serve the web from the same process. Then redeploy with correct health-check settings.
+
+Detect repo layout
+
+Inspect the repo. If it’s a monorepo like:
+
+/apps/api   (Express?)
+/apps/web   (Next.js)
+
+
+proceed with Plan A.
+If there is no Express and only Next.js, use Plan B.
+
+Plan A — Express (+ Next.js web in same process)
+
+Objective: One Node process (Express) that:
+
+listens on $PORT + 0.0.0.0
+
+serves GET /api/health -> 200
+
+serves the Next.js site (built) from /apps/web/.next/standalone (Next 13+ “standalone” output)
+
+1) Ensure Next standalone build
+
+Edit apps/web/next.config.js (create if missing) to include:
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone'
+};
+module.exports = nextConfig;
+
+2) Build web
+
+Add/verify scripts in package.json (root):
+
+{
+  "scripts": {
+    "build:web": "pnpm -F web build",
+    "build:api": "pnpm -F api build || true",
+    "start": "node apps/api/server.cjs"
+  }
+}
+
+
+(If the API is TS, make sure it builds to JS or we’ll run via ts-node. Prefer emitting JS.)
+
+3) Create a single server file
+
+Create apps/api/server.cjs with this content (CommonJS for simplicity):
+
+// apps/api/server.cjs
+const path = require('path');
+const express = require('express');
+
+const app = express();
+
+// --- HEALTH CHECK ---
+app.get('/api/health', (_req, res) => res.status(200).send('ok'));
+
+// --- STATIC ASSETS FOR NEXT STANDALONE ---
+// After building Next with "output: 'standalone'", Next outputs a self-contained server in .next/standalone
+// We will require that server and mount it behind Express on the root.
+
+const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
+const HOST = '0.0.0.0';
+
+// Attempt to load the Next standalone server if it exists
+const standaloneDir = path.join(__dirname, '..', 'web', '.next', 'standalone');
+const publicDir = path.join(__dirname, '..', 'web', 'public');
+
+let hasStandalone = false;
+try {
+  require('fs').accessSync(standaloneDir);
+  hasStandalone = true;
+} catch (_) { /* no-op */ }
+
+// Serve /public for good measure (optional)
+app.use('/_public', express.static(publicDir, { maxAge: '1y', fallthrough: true }));
+
+if (hasStandalone) {
+  // Next standalone layout includes server.js at .next/standalone/apps/web/server.js (depending on workspace)
+  // Find server.js automatically:
+  const findServer = require('fs')
+    .readdirSync(standaloneDir, { withFileTypes: true })
+    .flatMap(d => d.isDirectory() ? [path.join(standaloneDir, d.name, 'server.js')] : [])
+    .find(p => require('fs').existsSync(p));
+
+  if (findServer) {
+    console.log('[.rep] Loading Next standalone server:', findServer);
+    // Next creates its own HTTP server; we’ll delegate requests by proxying through Node's http
+    // Simpler: let Next server listen on an internal port and proxy. To keep it simple here,
+    // we will START Next standalone server as a child process and proxy all non-/api paths.
+    const { spawn } = require('child_process');
+    const NEXT_PORT = process.env.NEXT_PORT || 4000;
+    const nextProc = spawn('node', [findServer], {
+      env: { ...process.env, PORT: String(NEXT_PORT), HOSTNAME: HOST },
+      stdio: 'inherit'
+    });
+
+    process.on('exit', () => nextProc.kill('SIGINT'));
+
+    // minimal proxy to Next
+    const httpProxy = require('http-proxy');
+    const proxy = httpProxy.createProxyServer({ target: `http://127.0.0.1:${NEXT_PORT}` });
+
+    app.use((req, res, next) => {
+      // keep API routes local to Express; everything else -> Next
+      if (req.url.startsWith('/api/') && req.url !== '/api/health') return next();
+      proxy.web(req, res);
+    });
+  } else {
+    console.warn('[.rep] Could not find Next standalone server.js; API will run but web won’t be served.');
+  }
+} else {
+  console.warn('[.rep] No Next standalone build found; API will run but web won’t be served.');
+}
+
+// Example API route (optional)
+// app.get('/api/hello', (_req,res)=>res.json({ok:true}));
+
+app.listen(PORT, HOST, () => {
+  console.log(`[.rep] listening on http://${HOST}:${PORT}`);
+});
+
+4) Adjust Replit build/run
+
+Build command (Deployments):
+
+pnpm install --frozen-lockfile
+pnpm build:web
+pnpm build:api || true
+
+
+Run command (Deployments):
+
+pnpm start
+
+
+Health check:
+
+Path: /api/health
+
+Initial delay: 10s
+
+Interval: 5s
+
+Timeout: 5s
+
+Healthy threshold: 1
+
+Unhealthy threshold: 3
+
+Ensure environment variables are set in Deployments → Environment.
+
+Plan B — Next.js only (no Express)
+
+Objective: Use Next’s built-in server, expose /api/health as a Next API route, and bind to $PORT + 0.0.0.0.
+
+1) Add a health route
+
+Create apps/web/src/pages/api/health.ts (or /pages/api/health.ts if not using /src):
+
+import type { NextApiRequest, NextApiResponse } from 'next';
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
+  res.status(200).send('ok');
+}
+
+2) Ensure Next listens correctly
+
+In package.json:
+
+{
+  "scripts": {
+    "build": "pnpm -F web build",
+    "start": "pnpm -F web exec next start -p $PORT -H 0.0.0.0"
+  }
+}
+
+3) Replit Deploy settings
+
+Build command:
+
+pnpm install --frozen-lockfile
+pnpm build
+
+
+Run command:
+
+pnpm start
+
+
+Health check path: /api/health
+
+Same probe timings as Plan A.
+
+Verification (before clicking Promote)
+
+Run this in the Deploy logs shell or a temporary shell:
+
+curl -sf http://localhost:$PORT/api/health && echo "health OK" || (echo "health FAIL" && exit 1)
+
+
+You should see health OK.
+
+If deploy still stalls, increase memory one tier and re-run. These changes enforce one process and a fast 200 /api/health so Promote should pass.
+
+End of instructions.
