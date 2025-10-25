@@ -111,6 +111,6 @@ waitForPort = 9000
 outputType = "console"
 
 [deployment]
-deploymentTarget = "vm"
+deploymentTarget = "autoscale"
 run = ["bash", "deploy-start.sh"]
 build = ["bash", "deploy-build.sh"]
