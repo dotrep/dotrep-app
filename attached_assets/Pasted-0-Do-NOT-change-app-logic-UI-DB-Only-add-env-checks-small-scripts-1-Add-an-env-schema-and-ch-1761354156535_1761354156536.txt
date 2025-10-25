@@ -1,0 +1,107 @@
+0) Do NOT change app logic/UI/DB.
+
+Only add env checks + small scripts.
+
+1) Add an env schema and checker
+
+File: /scripts/check-env.ts
+
+import { z } from "zod";
+
+const Env = z.object({
+  // REQUIRED for prod
+  BASE_URL: z.string().url(),
+  DATABASE_URL: z.string().min(1),
+
+  // Feature flags (optional)
+  DASHBOARD_PHASE0: z.string().optional(),
+  CONSTELLATION_ENABLED: z.string().optional(),
+  ECHO_ENABLED: z.string().optional(),
+  TWITTER_ENABLED: z.string().optional(),
+
+  // OAuth keys (optional; only required if feature on)
+  TWITTER_CLIENT_ID: z.string().optional(),
+  TWITTER_CLIENT_SECRET: z.string().optional(),
+  TWITTER_REDIRECT_URI: z.string().optional(),
+  TWITTER_SCOPE: z.string().optional(),
+})
+.superRefine((env, ctx) => {
+  // If enabling Twitter, require keys
+  if (env.TWITTER_ENABLED === "1") {
+    ["TWITTER_CLIENT_ID","TWITTER_CLIENT_SECRET","TWITTER_REDIRECT_URI"].forEach(k=>{
+      if (!process.env[k]) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Missing ${k} (required when TWITTER_ENABLED=1)`});
+    });
+  }
+});
+
+const parsed = Env.safeParse(process.env);
+if (!parsed.success) {
+  console.error("❌ ENV VALIDATION FAILED");
+  for (const issue of parsed.error.issues) console.error(" -", issue.message);
+  process.exit(42);
+} else {
+  console.log("✅ Env looks good");
+}
+
+
+Add dep: pnpm add zod -w (or normal add).
+
+2) Call the checker in the start script
+
+File: start.sh (append near top, after exporting PORT)
+
+# Validate env (fail fast with helpful messages)
+node -e "require('./scripts/check-env.ts')" || { echo 'Env check failed'; exit 42; }
+
+
+If you don’t transpile TypeScript at runtime, switch file to .mjs and write in JS, or use tsx: pnpm dlx tsx scripts/check-env.ts.
+
+3) Ensure Deployment secrets are used (not Workspace)
+
+In Deploy → Deployment secrets, add only the prod values:
+
+BASE_URL=https://www.dotrep.io
+
+DATABASE_URL=file:.data/data.db
+
+Feature flags as needed (DASHBOARD_PHASE0=1, etc.)
+
+Leave TWITTER_ empty* unless TWITTER_ENABLED=1.
+
+Remove duplicates from Workspace (Editor → Secrets) to avoid ambiguity.
+
+4) Make build not require secrets
+
+Keep /api/health independent of secrets/DB.
+
+Ensure no code in next.config.js or build-time imports reads secret envs; move such reads to runtime only.
+
+5) Add a simple /api/envcheck (optional for sanity)
+
+App router:
+
+export async function GET() {
+  const needed = ["BASE_URL","DATABASE_URL"];
+  const missing = needed.filter(k => !process.env[k]);
+  return new Response(JSON.stringify({ ok: missing.length===0, missing }), { status: 200 });
+}
+
+6) Replit Deploy settings
+
+Run command: bash -lc './start.sh'
+
+Port: 5000 (or “Use $PORT”).
+
+Build command: leave blank or pnpm build.
+
+After first failure, don’t delete secrets—fix per the checker’s list and re-deploy.
+
+7) Quick checklist
+
+Deploy logs show either:
+
+✅ Env looks good → proceeds to start and passes health; or
+
+❌ ENV VALIDATION FAILED with a clear, finite list—add those in Deployment secrets, redeploy.
+
+/api/health returns 200 immediately.
