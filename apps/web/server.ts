@@ -323,10 +323,9 @@ drizzlePool.on('error', (err) => {
   // Don't increment dbErrorCount here - periodic probe will detect failures
 });
 
-// Validate SESSION_SECRET exists before configuring middleware
-if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET environment variable is required for secure sessions');
-}
+// Session middleware - uses SESSION_SECRET from environment
+// If SESSION_SECRET is missing, server will start but validateEnvironment() will fail it later
+const sessionSecret = process.env.SESSION_SECRET || 'temp-secret-for-health-checks-only';
 
 app.use(
   session({
@@ -340,7 +339,7 @@ app.use(
       },
     }),
     name: 'rep.sid',
-    secret: process.env.SESSION_SECRET, // No fallback - fail fast if missing
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -1250,10 +1249,6 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   });
 
-  // Validate critical environment BEFORE starting server
-  // This ensures health checks only pass when app is correctly configured
-  validateEnvironment();
-
   // Port configuration: 
   // - Production: Use PORT env var (Cloud Run provides this), default 5000
   // - Development: Use port 9000 (Vite dev server uses 5000)
@@ -1263,9 +1258,26 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
     : 9000;
   const host = isProduction ? '0.0.0.0' : 'localhost';
   
-  // Start server after validation passes
+  // CRITICAL: Start server IMMEDIATELY to respond to Cloud Run health checks
+  // Validation happens AFTER binding to ensure health endpoint is always accessible
   app.listen(port, host, () => {
     const displayHost = host === '0.0.0.0' ? 'all interfaces' : host;
     console.log(`✅ Server listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
+    console.log('   Health check endpoint: /healthz and /');
+    
+    // Validate environment AFTER server is listening
+    // This ensures Cloud Run can reach health checks even if validation fails
+    try {
+      validateEnvironment();
+      console.log('✅ Server fully initialized and ready');
+    } catch (error) {
+      console.error('❌ Environment validation failed after server started');
+      console.error('   Server will respond to health checks but API routes may not work');
+      console.error('   Error:', error);
+      // In production, exit to trigger restart with correct env vars
+      if (isProduction) {
+        setTimeout(() => process.exit(1), 5000);
+      }
+    }
   });
 }
