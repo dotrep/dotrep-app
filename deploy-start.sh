@@ -19,6 +19,17 @@ echo "  DATABASE_URL: ${DATABASE_URL:+[SET]}"
 echo "  SESSION_SECRET: ${SESSION_SECRET:+[SET]}"
 echo "========================================="
 
+# Validate environment variables BEFORE changing directory
+# This ensures we fail fast with helpful messages if secrets are missing
+echo "Validating environment variables..."
+pnpm dlx tsx scripts/check-env.ts || {
+  echo "========================================="
+  echo "❌ Environment validation failed!"
+  echo "Fix the issues above and redeploy"
+  echo "========================================="
+  exit 42
+}
+
 cd apps/web
 
 # Verify dist folder exists (quick check, no expensive operations)
