@@ -1,23 +1,30 @@
-# .rep — Your onchain reputation. Alive on Base.
+# dotrep-app
 
-**Live:** https://dotrep.io  
-**Chain:** Base (chainId **8453**)  
-**Tagline:** Identity isn’t minted — it’s earned.
+**Your onchain reputation. Alive on Base.**
 
-## What this is
-.repprotocol app: claim your `.rep`, connect wallet, complete missions, and build a visible reputation graph. Backend exposes health and API routes; frontend is Next.js.
+.reputation protocol and app layer for onchain identity and trust.
 
-## Stack
-- **Frontend:** Next.js (React)
-- **Backend:** Node/Express (single server binding to `$PORT` on `0.0.0.0`)
-- **Deploy:** Replit Deployments
-- **Health:** `GET /api/health → 200 OK`
+---
 
-## Run locally
+### 🧩 Overview
+dotrep.app lets users:
+- 🔹 Claim a `.rep` identity on Base  
+- 🔹 Build portable reputation through activity  
+- 🔹 Connect trust between wallets and ecosystems  
+
+---
+
+### 🛠️ Tech Stack
+- **Frontend:** Next.js + TypeScript  
+- **Backend:** Express + Node.js  
+- **Chain:** Base (Optimism stack)  
+- **Infra:** Replit + GitHub Actions + Vercel deployment  
+
+---
+
+### ⚙️ Development
+To run locally:
+
 ```bash
-pnpm install
-# web build (standalone) + optional api build
-pnpm run build:web
-pnpm run build:api || true
-pnpm start
-# server listens on $PORT (default 5000)
+npm install
+npm run dev
