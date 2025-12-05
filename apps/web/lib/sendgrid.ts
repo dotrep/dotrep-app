@@ -40,8 +40,11 @@ export async function getUncachableSendGridClient() {
 }
 
 export async function sendAdminNotification(repName: string, walletAddress: string) {
+  console.log(`[SendGrid] Starting admin notification for ${repName}.rep to ${walletAddress}`);
   try {
+    console.log('[SendGrid] Getting credentials...');
     const { client, fromEmail } = await getUncachableSendGridClient();
+    console.log(`[SendGrid] Got credentials, sending from: ${fromEmail}`);
     
     const msg = {
       to: 'info@dotrep.io',
