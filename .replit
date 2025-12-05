@@ -69,6 +69,7 @@ externalPort = 8008
 
 [agent]
 expertMode = true
+integrations = ["sendgrid:1.0.0"]
 
 [workflows]
 runButton = "Project"
@@ -102,13 +103,13 @@ outputType = "webview"
 name = "API Server"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd apps/web && NODE_ENV=development npx tsx server.ts"
 waitForPort = 9000
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [deployment]
 deploymentTarget = "autoscale"

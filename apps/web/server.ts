@@ -15,6 +15,7 @@ import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
+import { sendAdminNotification } from './lib/sendgrid.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -667,6 +668,11 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
         })
         .returning()
 
+      // Send admin notification email (non-blocking)
+      sendAdminNotification(created.name, created.address).catch(err => {
+        console.error('[reserve] Failed to send admin notification:', err);
+      });
+
       return res.json({
         ok: true,
         reservationId: created.id,
@@ -1250,7 +1256,8 @@ if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
   const port = isProduction 
     ? Number(process.env.PORT || 5000)
     : 9000;
-  const host = isProduction ? '0.0.0.0' : 'localhost';
+  // Always bind to 0.0.0.0 for proper port detection in Replit
+  const host = '0.0.0.0';
   
   // CRITICAL: Start server IMMEDIATELY to respond to Cloud Run health checks
   // Validation happens AFTER binding to ensure health endpoint is always accessible
