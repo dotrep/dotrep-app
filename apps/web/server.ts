@@ -594,9 +594,12 @@ app.get('/api/rep/lookup-wallet', async (req, res) => {
 
 // POST /api/rep/reserve  { name, address }
 app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
+  console.log('[reserve] ===== RESERVE ENDPOINT HIT =====');
+  console.log('[reserve] Body:', JSON.stringify(req.body));
   try {
     // CRITICAL: Enforce session-based authentication
     const sessionAddress = req.session?.user?.address
+    console.log('[reserve] Session address:', sessionAddress);
     if (!sessionAddress) {
       return res.status(401).json({ ok: false, error: 'unauthorized' })
     }
