@@ -15,7 +15,7 @@ import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
 import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
 import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
 import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
-import { sendAdminNotification } from './lib/sendgrid.js';
+import { sendAdminNotification } from './lib/email.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
