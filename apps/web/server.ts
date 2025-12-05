@@ -1168,6 +1168,19 @@ app.post('/api/constellation/beacon', async (req, res) => {
 // Additional health check endpoint with environment info
 app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
 
+// Test endpoint for email - TEMPORARY
+app.get('/api/test-email', async (_req, res) => {
+  console.log('[test-email] Testing SendGrid...');
+  try {
+    const result = await sendAdminNotification('test-name', '0xTEST_WALLET');
+    console.log('[test-email] Result:', result);
+    res.json({ ok: true, emailSent: result });
+  } catch (error: any) {
+    console.error('[test-email] Error:', error);
+    res.json({ ok: false, error: error.message });
+  }
+});
+
 // In production, serve static files from the Vite build
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, 'dist');
