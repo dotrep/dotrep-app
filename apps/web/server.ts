@@ -672,9 +672,15 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
         .returning()
 
       // Send admin notification email (non-blocking)
-      sendAdminNotification(created.name, created.address).catch(err => {
-        console.error('[reserve] Failed to send admin notification:', err);
-      });
+      console.log('[reserve] ===== SENDING EMAIL NOTIFICATION =====');
+      console.log('[reserve] Name:', created.name, 'Address:', created.address);
+      sendAdminNotification(created.name, created.address)
+        .then(result => {
+          console.log('[reserve] Email send result:', result);
+        })
+        .catch(err => {
+          console.error('[reserve] Failed to send admin notification:', err);
+        });
 
       return res.json({
         ok: true,
