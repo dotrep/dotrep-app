@@ -12,7 +12,7 @@ export async function sendAdminNotification(repName: string, walletAddress: stri
   
   try {
     const { data, error } = await resend.emails.send({
-      from: 'dotrep.io <notifications@dotrep.io>',
+      from: 'dotrep.io <onboarding@resend.dev>',
       to: 'info@dotrep.io',
       subject: `New .rep Claim: ${repName}`,
       text: `A new .rep name has been claimed!\n\n` +
