@@ -223,7 +223,6 @@ export default function Home() {
         {/* Top Navigation */}
         <nav className="home-topnav">
           <div className="topnav-inner">
-            <div className="topnav-brand">.rep</div>
             <div className="topnav-links">
               <a 
                 href="https://x.com/rep_protocol" 

@@ -494,14 +494,7 @@ html.motion-off .ring-pulse {
   padding: 0 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.topnav-brand {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.03em;
-  color: var(--text);
+  justify-content: flex-end;
 }
 
 .topnav-links {
