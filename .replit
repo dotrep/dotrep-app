@@ -19,54 +19,6 @@ externalPort = 9000
 localPort = 24678
 externalPort = 5173
 
-[[ports]]
-localPort = 32903
-externalPort = 8099
-
-[[ports]]
-localPort = 33099
-externalPort = 8081
-
-[[ports]]
-localPort = 33507
-externalPort = 8080
-
-[[ports]]
-localPort = 36611
-externalPort = 8000
-
-[[ports]]
-localPort = 37063
-externalPort = 3000
-
-[[ports]]
-localPort = 37253
-externalPort = 5000
-
-[[ports]]
-localPort = 38563
-externalPort = 6800
-
-[[ports]]
-localPort = 40717
-externalPort = 3003
-
-[[ports]]
-localPort = 41285
-externalPort = 4200
-
-[[ports]]
-localPort = 43573
-externalPort = 6000
-
-[[ports]]
-localPort = 43599
-externalPort = 3002
-
-[[ports]]
-localPort = 44977
-externalPort = 8008
-
 [agent]
 expertMode = true
 integrations = ["sendgrid:1.0.0"]

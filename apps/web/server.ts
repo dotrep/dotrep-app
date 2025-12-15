@@ -1187,6 +1187,14 @@ app.get('/api/test-email', async (_req, res) => {
   }
 });
 
+// Serve whitepaper as static HTML (works in both dev and production)
+app.get('/whitepaper', (_req, res) => {
+  const whitepaperPath = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, 'dist', 'whitepaper.html')
+    : path.join(__dirname, 'public', 'whitepaper.html');
+  res.sendFile(whitepaperPath);
+});
+
 // In production, serve static files from the Vite build
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, 'dist');

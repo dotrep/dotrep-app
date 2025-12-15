@@ -38,6 +38,11 @@ export default defineConfig({
           });
         },
       },
+      '/whitepaper': {
+        target: 'http://localhost:9000',
+        changeOrigin: false,
+        secure: false,
+      },
     },
   },
   preview: {

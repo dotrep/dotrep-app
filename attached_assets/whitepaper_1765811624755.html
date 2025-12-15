@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>.rep — Reputation Under Cheap Identity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root{
+      --bg0:#070a14;
+      --bg1:#0b1022;
+      --ink:#eef2ff;
+      --muted:#d6def2;
+      --muted2:#c9d3f5;
+      --line:rgba(255,255,255,.08);
+      --panel:rgba(18,24,44,.78);
+      --panel2:rgba(18,24,44,.85);
+      --glowA:rgba(255,145,0,.18);   /* warm */
+      --glowB:rgba(30,140,255,.18);  /* cool */
+      --jungle1:#43d39e;
+      --jungle2:#b6ff5e;
+      --baseBlue:#2f6bff;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--ink);
+      line-height:1.7;
+      background:
+        radial-gradient(1200px 900px at 18% 45%, var(--glowA), transparent 60%),
+        radial-gradient(1000px 800px at 72% 52%, var(--glowB), transparent 60%),
+        radial-gradient(900px 600px at 58% 15%, rgba(70,120,255,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 55%, #050713);
+      overflow-x:hidden;
+    }
+
+    /* star / dust layer */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-40px;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.18) 0 1px, transparent 2px) 0 0/220px 220px,
+        radial-gradient(circle at 72% 28%, rgba(255,255,255,.14) 0 1px, transparent 2px) 0 0/260px 260px,
+        radial-gradient(circle at 34% 78%, rgba(255,255,255,.10) 0 1px, transparent 2px) 0 0/310px 310px,
+        radial-gradient(circle at 88% 66%, rgba(255,255,255,.10) 0 1px, transparent 2px) 0 0/340px 340px;
+      opacity:.55;
+      filter: blur(.2px);
+      transform: translateZ(0);
+      animation: drift 18s linear infinite;
+    }
+
+    /* soft vignette */
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 900px at 50% 55%, transparent 40%, rgba(0,0,0,.45) 78%),
+        radial-gradient(900px 700px at 50% 40%, rgba(0,0,0,.10), rgba(0,0,0,.55));
+      mix-blend-mode:multiply;
+    }
+
+    @keyframes drift{
+      from{transform:translate3d(0,0,0)}
+      to{transform:translate3d(-60px, 40px, 0)}
+    }
+
+    .wrap{
+      max-width:1120px;
+      margin:0 auto;
+      padding:40px 22px 160px; /* reduced top padding */
+      position:relative;
+      z-index:1;
+    }
+
+    h1,h2,h3{line-height:1.18; letter-spacing:-0.02em}
+    h1{font-size:44px; margin:0 0 10px}
+    h2{margin-top:54px; font-size:30px} /* reduced spacing */
+    h3{margin-top:28px; font-size:22px}
+
+    p{color:var(--muted); font-size:16px; margin:14px 0}
+    ul{color:var(--muted); margin:14px 0 0 18px}
+    li{margin:10px 0}
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:26px;
+      padding:40px;
+      margin-top:28px; /* tighter vertical rhythm */
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:
+        0 18px 55px rgba(0,0,0,.45),
+        0 1px 0 rgba(255,255,255,.04) inset;
+    }
+
+    .hero{position:relative; overflow:hidden}
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(900px 300px at 18% 0%, rgba(255,145,0,.18), transparent 62%),
+        radial-gradient(700px 280px at 72% 0%, rgba(30,140,255,.18), transparent 62%);
+      opacity:.8;
+      pointer-events:none;
+    }
+    .hero > *{position:relative; z-index:1}
+    .hero p{font-size:19px}
+
+    .quote{
+      margin-top:18px;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-0.01em;
+      display:inline-block;
+      padding:10px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+
+    /* subtle "alive on base" jungle-tone shimmer */
+    .quote span{
+      background: linear-gradient(90deg, #eaf2ff, var(--jungle1), var(--jungle2), #eaf2ff);
+      background-size: 220% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 18px rgba(67,211,158,.10);
+      animation: jungleShimmer 4.8s ease-in-out infinite;
+    }
+    @keyframes jungleShimmer{
+      0%{background-position:0% 50%; filter: drop-shadow(0 0 0 rgba(0,0,0,0))}
+      45%{background-position:100% 50%; filter: drop-shadow(0 0 10px rgba(67,211,158,.22))}
+      100%{background-position:0% 50%; filter: drop-shadow(0 0 0 rgba(0,0,0,0))}
+    }
+
+    /* warm/cool accent for section headings */
+    h2{
+      position:relative;
+      padding-top:10px;
+    }
+    h2::before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      width:42px;
+      height:3px;
+      border-radius:3px;
+      background: linear-gradient(90deg, rgba(255,145,0,.85), rgba(30,140,255,.85));
+      opacity:.9;
+    }
+
+    .axiom{
+      font-size:18px;
+      font-weight:650;
+      background:rgba(255,255,255,.05);
+      border-left:4px solid rgba(47,107,255,.90);
+      padding:18px 22px;
+      margin:22px 0;
+      border-radius:18px;
+    }
+
+    footer{
+      margin-top:130px;
+      font-size:13px;
+      color:#9aa6cc;
+      text-align:center;
+      opacity:.9;
+    }
+
+    @media (max-width:720px){
+      .wrap{padding:28px 14px 130px}
+      .card{padding:26px;border-radius:22px}
+      h1{font-size:38px}
+      h2{margin-top:44px;font-size:26px}
+      .quote{font-size:18px}
+      .hero p{font-size:17px}
+    }
+  
+    .topnav{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background:rgba(7,10,20,.65);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:14px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      font-weight:800;
+      letter-spacing:-0.03em;
+      font-size:18px;
+    }
+    .nav-links{
+      display:flex;
+      gap:18px;
+      align-items:center;
+    }
+    .nav-links a{
+      color:#d6def2;
+      text-decoration:none;
+      font-size:14px;
+      opacity:.9;
+    }
+    .nav-links a:hover{
+      opacity:1;
+    }
+    .nav-links .cta{
+      padding:8px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06);
+    }
+
+  </style>
+
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-inner">
+    <div class="brand">.rep</div>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#model">Model</a>
+      <a href="#example">Example</a>
+      <a href="#implications">Implications</a>
+      <a href="https://dotrep.io" target="_blank" class="cta">dotrep.io</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<section class="card hero">
+  <h1>.rep</h1>
+  <p>
+    .rep is a coordination primitive for permissionless systems. It derives non‑transferable trust signals
+    from observable wallet behavior to support contextual access decisions under cheap identity.
+  </p>
+  <div class="quote"><span>Two wallets may perform the same actions, yet differ in the trust they earn over time.</span></div>
+</section>
+
+<section class="card" id="abstract">
+  <h2>Abstract</h2>
+  <p>
+    Permissionless systems cannot avoid access decisions. Any system that allocates scarce resources—attention,
+    throughput, incentives, coordination—must determine eligibility in practice.
+  </p>
+  <p>
+    Under cheap identity, static credentials and cumulative scores collapse. Identities can be created faster
+    than trust can be earned, and any fixed rule becomes an optimization target.
+  </p>
+  <p>
+    .rep reframes reputation as a property of behavior embedded in time and population structure. Trust is not
+    accumulated or owned. It must be continuously maintained.
+  </p>
+</section>
+
+<section class="card" id="model">
+  <h2>The Structural Constraint</h2>
+  <p>
+    Access‑control failures in open systems are not implementation bugs. They arise from a structural mismatch:
+    evaluation is local and static, while incentives are global and adaptive.
+  </p>
+  <p>
+    If evaluation ignores either persistence over time or relational context, behavior becomes replayable.
+    If both are ignored, reputation degenerates into accumulation.
+  </p>
+</section>
+
+<section class="card" id="example">
+  <h2>Why These Dimensions Are Unavoidable</h2>
+  <p>
+    Any reputation system operating under cheap identity must answer two questions:
+    whether behavior persists, and how it relates to the behavior of others.
+  </p>
+  <p>
+    Remove time, and the system cannot distinguish sustained participation from opportunistic execution.
+    Remove relational position, and identical behavior becomes indistinguishable regardless of coordination.
+  </p>
+  <p>
+    Additional signals may refine evaluation, but they inevitably collapse into one of these two dimensions.
+    Time and relational position are not design choices. They are the minimal degrees of freedom required
+    to make synthetic participation expensive.
+  </p>
+</section>
+
+<section class="card" id="implications">
+  <h2>The Core Object</h2>
+  <div class="axiom">
+    The behavior graph is the primary object of evaluation in .rep.
+    All eligibility decisions are derived from its structure as it evolves over time.
+  </div>
+  <p>
+    Nodes represent wallet‑bound identities. Proximity reflects similarity of behavior within a shared context.
+    Clusters, neighborhoods, and trajectories encode population structure directly.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Time as Maintenance Cost</h2>
+  <p>
+    Time in .rep is not a decay function applied to a score. It expresses the cost of maintaining coherence
+    under observation.
+  </p>
+  <p>
+    Sustained participation produces smooth trajectories. Opportunistic strategies require frequent
+    repositioning as incentives shift. Over time, these costs diverge.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Relational Position as Constraint</h2>
+  <p>
+    Relational position is not subjective context. It encodes how behavior sits relative to the population.
+  </p>
+  <p>
+    Coordinated or synthetic behavior tends toward dense, shallow clusters that must be continually adjusted.
+    Organic participation produces broader, more stable neighborhoods.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Continuity</h2>
+  <p>
+    .rep evaluates behavior as a trajectory through relational space rather than as isolated events.
+    Continuity is enforced as a constraint.
+  </p>
+  <p>
+    Natural participation deforms gradually. Synthetic strategies often require abrupt transitions that
+    increase maintenance cost.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Identical Actions, Divergent Trust</h2>
+  <p>
+    Two wallets perform the same set of actions over the same period. Transactionally, they appear identical.
+  </p>
+  <p>
+    One integrates gradually into a stable neighborhood. Its trajectory is smooth and persistent.
+    The other exhibits bursty participation aligned to incentives, repeatedly shifting relational position.
+  </p>
+  <p>
+    The difference is not behavior, but cost. One maintains coherence naturally. The other must continually
+    re‑optimize to remain eligible.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Eligibility</h2>
+  <p>
+    .rep produces contextual eligibility signals, not universal scores. Eligibility is non‑transferable,
+    continuously evaluated, and decays automatically.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Corollary</h2>
+  <p>
+    In permissionless systems, reputation cannot be accumulated without bound. It can only be maintained
+    under constraint.
+  </p>
+  <p>
+    Cheap identity is not eliminated. Its dominance is reduced. Trust ceases to be owned and becomes
+    an emergent property of sustained participation.
+  </p>
+</section>
+
+<footer>
+  © .rep
+</footer>
+
+</div>
+</body>
+</html>
