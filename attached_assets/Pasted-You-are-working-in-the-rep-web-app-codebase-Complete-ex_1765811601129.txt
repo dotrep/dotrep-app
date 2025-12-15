@@ -1,0 +1,87 @@
+You are working in the .rep web app codebase. Complete exactly the following three changes:
+
+Goal A — Publish the whitepaper at /whitepaper
+
+I will provide you a finished HTML file (the whitepaper). Add it to the project so it is served at this URL:
+
+https://dotrep.io/whitepaper (route path: /whitepaper)
+
+Implement /whitepaper using the simplest approach consistent with the current stack:
+
+If the app is Next.js: create a route at pages/whitepaper.tsx (Pages Router) or app/whitepaper/page.tsx (App Router) that renders the HTML.
+
+If the app is Express or another server: add a GET route /whitepaper that returns the HTML file contents.
+
+Do not embed the whitepaper HTML inline inside a React component unless necessary. Prefer serving it as a static file.
+
+Put the file in a location appropriate for static hosting (examples: public/whitepaper/index.html or public/whitepaper.html), and route /whitepaper to it.
+
+The end state must be: visiting /whitepaper shows the whitepaper as a full page.
+
+Confirm these acceptance checks:
+
+Navigating to /whitepaper in the browser loads the whitepaper successfully.
+
+Refreshing /whitepaper works (no 404, no client-side route-only behavior).
+
+Page title remains “.rep — Reputation Under Cheap Identity” (from the HTML).
+
+Goal B — Change the homepage button from Discover.rep to Whitepaper
+
+Find the homepage CTA button that currently says “Discover.rep”.
+
+Change its label text to: “Whitepaper”
+
+Change its click target so it navigates to: /whitepaper
+
+If using Next.js <Link>: href="/whitepaper"
+
+If using a router navigate function: navigate to /whitepaper
+
+Confirm acceptance checks:
+
+The button text reads Whitepaper
+
+Clicking it reliably goes to /whitepaper
+
+Goal C — Add an X link icon in the top-right nav linking to @rep_protocol
+
+In the homepage top navigation area (top-right), add an X icon link that points to:
+
+https://x.com/rep_protocol
+
+Placement requirements:
+
+Place the X icon at the far right of the top nav (top-right corner), after the other nav items.
+
+It must be icon-only (no “Twitter”, no “X” text label).
+
+It must not look like a primary CTA button. It should look like a subtle nav icon.
+
+Behavior requirements:
+
+Clicking the icon opens the X profile in a new tab.
+
+Add target="_blank" and rel="noopener noreferrer".
+
+Styling requirements (match existing style, keep subtle):
+
+Default opacity around ~0.7 (or similar muted appearance).
+
+On hover: opacity goes to 1.0 (or a slight glow if consistent with the design).
+
+Keep size visually consistent with other nav items (roughly 16–20px icon height).
+
+Use a proper X icon:
+
+Prefer an SVG for the X logo (simple monochrome).
+
+Do not use the old Twitter bird.
+
+Confirm acceptance checks:
+
+X icon appears in the top-right nav.
+
+Clicking it opens https://x.com/rep_protocol in a new tab.
+
+The icon does not distract from the main “Login” and “Whitepaper” actions.
