@@ -1,340 +1,159 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>.rep Mini App</title>
-  <style>
-    :root{
-      --bg: #050607;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>.rep — mini</title>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style>
+      :root {
+        --bg: #06070a; /* deep near-black */
+      }
 
-      /* Button gradients tuned to be less vivid (closer to your reference) */
-      --btn1-a: rgba(140, 200, 255, .92); /* soft sky */
-      --btn1-b: rgba(167, 150, 255, .92); /* soft violet */
-      --btn2-a: rgba(52, 56, 112, .92);   /* deep indigo */
-      --btn2-b: rgba(92, 70, 140, .92);   /* muted purple */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        color: #fff;
+      }
 
-      --shadow: 0 18px 60px rgba(0,0,0,.55);
-      --radius: 999px;
-    }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 18px;
+        box-sizing: border-box;
+        background:
+          radial-gradient(
+            900px 600px at 50% 40%,
+            rgba(120, 180, 255, 0.1),
+            transparent 55%
+          ),
+          radial-gradient(
+            900px 600px at 15% 70%,
+            rgba(255, 160, 80, 0.08),
+            transparent 60%
+          ),
+          var(--bg);
+      }
 
-    html,body{height:100%;}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: radial-gradient(1200px 900px at 50% 30%, rgba(64, 92, 255, .06), transparent 55%),
-                  radial-gradient(800px 600px at 40% 55%, rgba(140, 200, 255, .05), transparent 55%),
-                  var(--bg);
-      color: var(--text);
-      overflow:hidden;
-    }
+      .card {
+        width: min(520px, 92vw);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
 
-    .stage{
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 28px 18px;
-      box-sizing:border-box;
-    }
+      .eye {
+        width: min(420px, 86vw);
+        aspect-ratio: 3 / 4;
+        display: grid;
+        place-items: center;
+        border-radius: 22px;
+        overflow: hidden;
+        position: relative;
+      }
 
-    .frame{
-      width:min(720px, 92vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap: 26px;
-    }
+      /* This overlay hides JPEG-edge rectangles by blending the borders */
+      .eye::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            closest-side at 50% 45%,
+            rgba(0, 0, 0, 0) 55%,
+            rgba(0, 0, 0, 0.55) 100%
+          ),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35));
+        mix-blend-mode: multiply;
+      }
 
-    /* Eye block */
-    .eye-wrap{
-      position:relative;
-      width:min(620px, 92vw);
-      aspect-ratio: 1 / 1.05;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      filter: drop-shadow(0 24px 70px rgba(0,0,0,.65));
-    }
+      .eye img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: contrast(1.02) saturate(1.02);
+      }
 
-    .eye-img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      border-radius: 18px;
-      /* keep the raw feel; no oversmoothing */
-      image-rendering:auto;
-    }
+      .btn {
+        width: 100%;
+        border: 0;
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 16px 18px;
+        font-size: 16px;
+        font-weight: 600;
+        transition:
+          transform 0.08s ease,
+          opacity 0.12s ease;
+      }
 
-    /* Subtle "alive" layer:
-       - shimmer sweep (specular scan)
-       - breathing glow (very low amplitude)
-       - tiny star twinkle (procedural via gradients)
-       No movement of the actual image pixels; we animate overlays. */
-    .alive{
-      position:absolute;
-      inset: 6%;
-      border-radius: 24px;
-      pointer-events:none;
-      mix-blend-mode: screen;
-      opacity: .55;
-      filter: blur(.2px);
-    }
+      .btn:active {
+        transform: translateY(1px);
+      }
 
-    .alive::before{
-      content:"";
-      position:absolute;
-      inset:-10%;
-      border-radius: 999px;
-      background:
-        conic-gradient(from 0deg,
-          rgba(140,200,255,.0) 0deg,
-          rgba(140,200,255,.0) 35deg,
-          rgba(140,200,255,.22) 55deg,
-          rgba(167,150,255,.12) 70deg,
-          rgba(140,200,255,.0) 90deg,
-          rgba(140,200,255,.0) 360deg);
-      transform: rotate(0deg);
-      animation: sweep 7.2s linear infinite;
-      opacity:.55;
-    }
+      .btn-primary {
+        background: linear-gradient(
+          90deg,
+          rgba(140, 200, 255, 0.95),
+          rgba(155, 135, 255, 0.95)
+        );
+        color: #0b0c12;
+      }
 
-    .alive::after{
-      content:"";
-      position:absolute;
-      inset:-2%;
-      border-radius: 28px;
-      /* twinkle field */
-      background:
-        radial-gradient(2px 2px at 18% 22%, rgba(255,255,255,.25), transparent 55%),
-        radial-gradient(1.5px 1.5px at 76% 30%, rgba(255,255,255,.18), transparent 55%),
-        radial-gradient(1.8px 1.8px at 58% 74%, rgba(255,255,255,.22), transparent 60%),
-        radial-gradient(1.4px 1.4px at 34% 68%, rgba(255,255,255,.15), transparent 60%),
-        radial-gradient(1.6px 1.6px at 82% 58%, rgba(255,255,255,.16), transparent 60%);
-      animation: twinkle 3.8s ease-in-out infinite;
-      opacity:.55;
-    }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.55);
+        cursor: not-allowed;
+      }
 
-    .breath{
-      position:absolute;
-      inset: 4%;
-      border-radius: 22px;
-      pointer-events:none;
-      mix-blend-mode: screen;
-      background: radial-gradient(closest-side at 50% 45%, rgba(140,200,255,.10), transparent 62%);
-      animation: breathe 4.6s ease-in-out infinite;
-      opacity:.35;
-      filter: blur(2px);
-    }
+      .hint {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+        text-align: center;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="eye">
+          <!-- Absolute path is safest -->
+          <img src="/mini/miniapp-eye-plate.jpg" alt=".rep eye" />
+        </div>
 
-    @keyframes sweep{
-      0%   { transform: rotate(0deg) scale(1); }
-      100% { transform: rotate(360deg) scale(1); }
-    }
+        <button
+          class="btn btn-primary"
+          type="button"
+          onclick="alert('Wallet connect coming next');"
+        >
+          Connect Wallet
+        </button>
 
-    @keyframes twinkle{
-      0%,100% { opacity:.38; filter: blur(0px); }
-      50%     { opacity:.62; filter: blur(.2px); }
-    }
+        <button class="btn btn-secondary" type="button" disabled>Claim</button>
 
-    @keyframes breathe{
-      0%,100% { transform: scale(1); opacity:.28; }
-      50%     { transform: scale(1.02); opacity:.40; }
-    }
-
-    /* Buttons */
-    .controls{
-      width:min(520px, 92vw);
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-      align-items:center;
-    }
-
-    .btn{
-      width:100%;
-      height: 66px;
-      border-radius: var(--radius);
-      border: 1px solid rgba(255,255,255,.10);
-      background: linear-gradient(90deg, var(--btn1-a), var(--btn1-b));
-      color: rgba(255,255,255,.93);
-      font-weight: 650;
-      letter-spacing: .2px;
-      font-size: 20px;
-      cursor:pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
-      user-select:none;
-    }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(.98); }
-    .btn:active{ transform: translateY(1px) scale(.99); }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; transform:none; }
-
-    .btn.secondary{
-      background: linear-gradient(90deg, var(--btn2-a), var(--btn2-b));
-      font-weight: 700;
-    }
-
-    .status{
-      width:min(520px, 92vw);
-      text-align:center;
-      font-size: 13px;
-      color: var(--muted);
-      line-height:1.4;
-      min-height: 18px;
-    }
-
-    /* Small screens: ensure eye still feels big */
-    @media (max-width: 520px){
-      .frame{ gap: 18px; }
-      .btn{ height: 62px; font-size: 18px; }
-      .eye-wrap{ width: min(640px, 96vw); }
-    }
-  </style>
-</head>
-<body>
-  <div class="stage">
-    <div class="frame" role="application" aria-label=".rep mini app">
-      <div class="eye-wrap">
-        <img class="eye-img" src="./miniapp-miniapp-eye-plate.jpg" alt=".rep eye" />
-        <div class="breath"></div>
-        <div class="alive"></div>
+        <div class="hint">Identity isn’t minted. It’s earned.</div>
       </div>
-
-      <div class="controls">
-        <button id="btnConnect" class="btn">Connect Wallet</button>
-        <button id="btnClaim" class="btn secondary" disabled>Claim</button>
-      </div>
-
-      <div id="status" class="status"></div>
     </div>
-  </div>
-
-  <script>
-    const $ = (id) => document.getElementById(id);
-
-    const statusEl = $("status");
-    const btnConnect = $("btnConnect");
-    const btnClaim = $("btnClaim");
-
-    let walletAddress = null;
-
-    function setStatus(msg) {
-      statusEl.textContent = msg || "";
-    }
-
-    function shortAddr(a){
-      if(!a) return "";
-      return a.slice(0,6) + "…" + a.slice(-4);
-    }
-
-    async function connectWallet(){
-      if (!window.ethereum) {
-        setStatus("No injected wallet found. Open this in Coinbase Wallet or install MetaMask.");
-        return;
-      }
-      try {
-        setStatus("Connecting…");
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        walletAddress = accounts && accounts[0] ? accounts[0] : null;
-
-        if (!walletAddress) {
-          setStatus("No wallet selected.");
-          return;
-        }
-
-        btnConnect.textContent = "Wallet Connected";
-        btnConnect.disabled = true;
-
-        btnClaim.disabled = false;
-        setStatus("Connected: " + shortAddr(walletAddress));
-      } catch (e) {
-        setStatus("Wallet connect cancelled.");
-      }
-    }
-
-    async function apiCheck(name){
-      const url = `/api/rep/check?name=${encodeURIComponent(name)}`;
-      const res = await fetch(url, { method: "GET" });
-      if (!res.ok) throw new Error("check_failed");
-      return res.json();
-    }
-
-    async function apiReserve(name, wallet){
-      const res = await fetch("/api/rep/reserve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, walletAddress: wallet })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) {
-        const err = data && data.error ? data.error : "reserve_failed";
-        throw new Error(err);
-      }
-      return data;
-    }
-
-    async function claimFlow(){
-      if (!walletAddress) {
-        setStatus("Connect your wallet first.");
-        return;
-      }
-
-      const name = (prompt("Choose your .rep name (3–32 chars, a-z, 0-9, hyphen):") || "").trim().toLowerCase();
-      if (!name) return;
-
-      try {
-        setStatus("Checking availability…");
-        const check = await apiCheck(name);
-
-        if (!check.ok) {
-          setStatus("Name check failed. Try again.");
-          return;
-        }
-
-        if (!check.available) {
-          setStatus(`“${name}” is already reserved. Try another.`);
-          return;
-        }
-
-        setStatus("Reserving…");
-        const reserved = await apiReserve(name, walletAddress);
-
-        setStatus(`Reserved “${reserved.name}” for ${shortAddr(reserved.walletAddress)} ✅`);
-        btnClaim.disabled = true;
-        btnClaim.textContent = "Claimed";
-      } catch (e) {
-        const msg = String(e && e.message || "");
-        if (msg === "ALREADY_RESERVED") setStatus(`“${name}” is already reserved. Try another.`);
-        else if (msg === "INVALID_NAME") setStatus("Invalid name format. Use 3–32 chars: a-z, 0-9, hyphen.");
-        else if (msg === "INVALID_WALLET_ADDRESS") setStatus("Wallet address failed validation.");
-        else setStatus("Something failed. If this keeps happening, your /api proxy may not be configured in this host.");
-      }
-    }
-
-    btnConnect.addEventListener("click", connectWallet);
-    btnClaim.addEventListener("click", claimFlow);
-
-    // If wallet changes, reset state (helps inside wallet browsers)
-    if (window.ethereum && window.ethereum.on) {
-      window.ethereum.on("accountsChanged", (accounts) => {
-        walletAddress = accounts && accounts[0] ? accounts[0] : null;
-        if (!walletAddress) {
-          btnConnect.disabled = false;
-          btnConnect.textContent = "Connect Wallet";
-          btnClaim.disabled = true;
-          btnClaim.textContent = "Claim";
-          setStatus("");
-        } else {
-          btnConnect.textContent = "Wallet Connected";
-          btnConnect.disabled = true;
-          btnClaim.disabled = false;
-          setStatus("Connected: " + shortAddr(walletAddress));
-        }
-      });
-    }
-  </script>
-</body>
+  </body>
 </html>
