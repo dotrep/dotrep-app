@@ -9,9 +9,7 @@
     <meta http-equiv="Expires" content="0" />
 
     <style>
-      :root {
-        --bg: #06070a;
-      }
+      :root { --bg: #05060a; }
 
       html, body {
         height: 100%;
@@ -26,67 +24,66 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 28px 18px;
+        padding: 26px 18px;
         box-sizing: border-box;
         background:
-          radial-gradient(900px 600px at 50% 40%, rgba(120,180,255,0.10), transparent 55%),
-          radial-gradient(900px 600px at 15% 70%, rgba(255,160,80,0.08), transparent 60%),
+          radial-gradient(1200px 900px at 50% 40%, rgba(120,180,255,0.10), transparent 58%),
+          radial-gradient(1200px 900px at 12% 74%, rgba(255,160,80,0.08), transparent 62%),
+          radial-gradient(800px 700px at 80% 80%, rgba(120,255,220,0.06), transparent 60%),
           var(--bg);
       }
 
       .card {
-        width: min(540px, 92vw);
+        width: min(760px, 96vw);
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 18px;
       }
 
-      /* Eye card — tuned to eliminate JPEG “boxing” edges */
       .eye {
-        width: min(460px, 88vw);
-        aspect-ratio: 3 / 4;
-        border-radius: 26px;
-        overflow: hidden;
+        width: min(720px, 96vw);
+        aspect-ratio: 16 / 11;
         position: relative;
-
-        background: #05060a;
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,0.06),
-          0 22px 70px rgba(0,0,0,0.70);
+        border-radius: 34px;
+        overflow: visible;
+        display: grid;
+        place-items: center;
       }
 
-      /* glow behind image to erase seams */
       .eye::before {
         content: "";
         position: absolute;
-        inset: -40px;
-        background: radial-gradient(circle at 50% 45%, rgba(120,180,255,0.22), rgba(0,0,0,0) 62%);
-        filter: blur(18px);
-        opacity: 0.55;
-        pointer-events: none;
-      }
-
-      /* vignette to fade JPEG edges away */
-      .eye::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
+        inset: -80px;
         background:
-          radial-gradient(closest-side at 50% 45%, rgba(0,0,0,0) 54%, rgba(0,0,0,0.78) 100%),
-          linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.45));
+          radial-gradient(circle at 50% 50%, rgba(120,180,255,0.26), rgba(0,0,0,0) 60%),
+          radial-gradient(circle at 30% 70%, rgba(255,160,80,0.16), rgba(0,0,0,0) 62%);
+        filter: blur(26px);
+        opacity: 0.65;
+        pointer-events: none;
       }
 
       .eye img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
-        /* critical: hide border pixels */
-        transform: scale(1.04);
+
+        /* kills the JPEG rectangle */
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 88%);
+        mask-image: radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 88%);
+
+        transform: scale(1.18);
         transform-origin: center;
-        filter: contrast(1.03) saturate(1.03);
+        filter: contrast(1.05) saturate(1.05);
+      }
+
+      .btnRow {
+        width: min(620px, 92vw);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 4px;
       }
 
       .btn {
@@ -118,11 +115,22 @@
       }
 
       .hint {
-        font-size: 12px;
-        color: rgba(255,255,255,0.55);
+        width: min(620px, 92vw);
+        font-size: 13px;
+        color: rgba(255,255,255,0.78);
         text-align: center;
-        line-height: 1.4;
+        line-height: 1.35;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.05);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
         min-height: 18px;
+      }
+
+      .hint small {
+        display: block;
+        margin-top: 6px;
+        color: rgba(255,255,255,0.55);
       }
     </style>
   </head>
@@ -131,19 +139,18 @@
     <div class="wrap">
       <div class="card">
         <div class="eye">
-          <!-- Absolute path is safest under /mini -->
           <img src="/mini/miniapp-eye-plate.jpg" alt=".rep eye" />
         </div>
 
-        <button id="connectBtn" class="btn btn-primary" type="button">
-          Connect Wallet
-        </button>
+        <div class="btnRow">
+          <button id="connectBtn" class="btn btn-primary" type="button">Connect Wallet</button>
+          <button id="claimBtn" class="btn btn-secondary" type="button" disabled>Claim</button>
+        </div>
 
-        <button id="claimBtn" class="btn btn-secondary" type="button" disabled>
-          Claim
-        </button>
-
-        <div id="hint" class="hint">Identity isn’t minted. It’s earned.</div>
+        <div id="hint" class="hint">
+          Identity isn’t minted. It’s earned.
+          <small id="subhint">Tip: open this page in Coinbase Wallet (in-app browser) or a browser with a wallet extension.</small>
+        </div>
       </div>
     </div>
 
@@ -153,9 +160,11 @@
       const connectBtn = document.getElementById("connectBtn");
       const claimBtn = document.getElementById("claimBtn");
       const hintEl = document.getElementById("hint");
+      const subhintEl = document.getElementById("subhint");
 
-      function setHint(msg) {
-        hintEl.textContent = msg;
+      function setHint(msg, sub) {
+        hintEl.childNodes[0].textContent = msg;
+        if (typeof sub === "string") subhintEl.textContent = sub;
       }
 
       function shortAddr(a) {
@@ -172,15 +181,20 @@
       async function connectWallet() {
         try {
           if (!window.ethereum) {
-            setHint("No wallet detected. Open in Coinbase Wallet in-app browser, or install a browser wallet.");
+            setHint(
+              "No wallet detected on this browser.",
+              "Open dotrep.io/mini/ inside Coinbase Wallet’s in-app browser, or install a wallet extension."
+            );
             return;
           }
+
+          setHint("Opening wallet…", "Approve the connection request.");
 
           const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
           connectedAddress = accounts && accounts[0] ? accounts[0] : null;
 
           if (!connectedAddress) {
-            setHint("Wallet connection failed. Try again.");
+            setHint("Wallet connection failed.", "Try again.");
             return;
           }
 
@@ -190,24 +204,24 @@
           connectBtn.style.cursor = "default";
 
           enableClaim();
-          setHint("Connected. Claim your .rep name.");
+          setHint("Connected.", "Now claim your .rep name.");
         } catch (err) {
           console.error(err);
-          setHint("Wallet connection canceled or failed.");
+          setHint("Wallet connection canceled or failed.", "Open DevTools → Console.");
         }
       }
 
       async function claimName() {
         try {
           if (!connectedAddress) {
-            setHint("Connect wallet first.");
+            setHint("Connect wallet first.", "Claim unlocks after connecting.");
             return;
           }
 
           const name = prompt("Choose your .rep name (letters/numbers only):");
           if (!name) return;
 
-          setHint("Checking availability…");
+          setHint("Checking availability…", "One moment.");
 
           const checkRes = await fetch(`/api/rep/check?name=${encodeURIComponent(name)}`, {
             method: "GET",
@@ -217,15 +231,15 @@
           const checkJson = await checkRes.json();
 
           if (!checkJson.ok) {
-            setHint("Invalid name. Use letters/numbers only.");
+            setHint("Invalid name.", "Use letters/numbers only.");
             return;
           }
           if (!checkJson.available) {
-            setHint("Taken. Try another name.");
+            setHint("Taken.", "Try another name.");
             return;
           }
 
-          setHint("Reserving…");
+          setHint("Reserving…", "Confirming on server.");
 
           const reserveRes = await fetch(`/api/rep/reserve`, {
             method: "POST",
@@ -236,17 +250,17 @@
           const reserveJson = await reserveRes.json();
 
           if (!reserveRes.ok || !reserveJson.ok) {
-            setHint(reserveJson?.error ? `Error: ${reserveJson.error}` : "Reserve failed.");
+            setHint(reserveJson?.error ? `Error: ${reserveJson.error}` : "Reserve failed.", "Try again.");
             return;
           }
 
-          setHint(`Reserved @${reserveJson.name} ✅`);
+          setHint(`Reserved @${reserveJson.name} ✅`, "You’re in.");
           claimBtn.disabled = true;
           claimBtn.style.opacity = "0.7";
           claimBtn.style.cursor = "default";
         } catch (err) {
           console.error(err);
-          setHint("Something went wrong. Check console.");
+          setHint("Something went wrong.", "Open DevTools → Console.");
         }
       }
 
