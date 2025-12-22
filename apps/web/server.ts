@@ -1,21 +1,47 @@
-import express from 'express';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
-import pg from 'pg';
-import cors from 'cors';
-import crypto from 'crypto';
-import rateLimit from 'express-rate-limit';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { verifyMessage, createPublicClient, http, getAddress, isAddress, hashMessage } from 'viem';
-import { base } from 'viem/chains';
-import { db, pool as drizzlePool } from './db/client.js';
-import { reservations, repSocialProofs, repSocialAccounts } from './shared/schema.js';
-import { eq, and, sql, or, like, isNull } from 'drizzle-orm';
-import { canonicalizeName, toLowerAddress, isValidName, validateRepName } from './lib/repNameValidation.js';
-import { seedMissions, getUserState, setProgress, recordHeartbeat, countHeartbeatDays } from './src/rep_phase0/lib/xp.js';
-import { upsertSignalRow, listActiveNodes, awardBeacon } from './src/rep_constellation/lib/rewards.js';
-import { sendAdminNotification } from './lib/email.js';
+import express from "express";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import pg from "pg";
+import cors from "cors";
+import crypto from "crypto";
+import rateLimit from "express-rate-limit";
+import path from "path";
+import { fileURLToPath } from "url";
+import {
+  verifyMessage,
+  createPublicClient,
+  http,
+  getAddress,
+  isAddress,
+  hashMessage,
+} from "viem";
+import { base } from "viem/chains";
+import { db, pool as drizzlePool } from "./db/client.js";
+import {
+  reservations,
+  repSocialProofs,
+  repSocialAccounts,
+} from "./shared/schema.js";
+import { eq, and, sql, or, like, isNull } from "drizzle-orm";
+import {
+  canonicalizeName,
+  toLowerAddress,
+  isValidName,
+  validateRepName,
+} from "./lib/repNameValidation.js";
+import {
+  seedMissions,
+  getUserState,
+  setProgress,
+  recordHeartbeat,
+  countHeartbeatDays,
+} from "./src/rep_phase0/lib/xp.js";
+import {
+  upsertSignalRow,
+  listActiveNodes,
+  awardBeacon,
+} from "./src/rep_constellation/lib/rewards.js";
+import { sendAdminNotification } from "./lib/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,77 +49,104 @@ const __dirname = path.dirname(__filename);
 // Base network public client for ERC-1271 smart wallet verification
 const publicClient = createPublicClient({
   chain: base,
-  transport: http(process.env.BASE_RPC_URL || 'https://mainnet.base.org'),
+  transport: http(process.env.BASE_RPC_URL || "https://mainnet.base.org"),
 });
 
-const ERC1271_ABI = [{
-  type: 'function',
-  name: 'isValidSignature',
-  stateMutability: 'view',
-  inputs: [{ name: 'hash', type: 'bytes32' }, { name: 'signature', type: 'bytes' }],
-  outputs: [{ name: 'magicValue', type: 'bytes4' }],
-}] as const;
+const ERC1271_ABI = [
+  {
+    type: "function",
+    name: "isValidSignature",
+    stateMutability: "view",
+    inputs: [
+      { name: "hash", type: "bytes32" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [{ name: "magicValue", type: "bytes4" }],
+  },
+] as const;
 
-const ERC1271_MAGIC = '0x1626ba7e' as const;
+const ERC1271_MAGIC = "0x1626ba7e" as const;
 
 async function isDeployed(addr: `0x${string}`) {
-  const code = await publicClient.getBytecode({ address: addr }).catch(() => null);
-  return !!(code && code !== '0x');
+  const code = await publicClient
+    .getBytecode({ address: addr })
+    .catch(() => null);
+  return !!(code && code !== "0x");
 }
 
-async function verifyEOA(addr: `0x${string}`, message: string, signature: `0x${string}`) {
-  return verifyMessage({ address: addr, message, signature }).catch(() => false);
+async function verifyEOA(
+  addr: `0x${string}`,
+  message: string,
+  signature: `0x${string}`,
+) {
+  return verifyMessage({ address: addr, message, signature }).catch(
+    () => false,
+  );
 }
 
-async function verify1271(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+async function verify1271(
+  addr: `0x${string}`,
+  message: string,
+  signature: `0x${string}`,
+) {
   try {
     const magic = await publicClient.readContract({
       address: addr,
       abi: ERC1271_ABI,
-      functionName: 'isValidSignature',
+      functionName: "isValidSignature",
       args: [hashMessage(message), signature],
     });
-    return (typeof magic === 'string' ? magic.toLowerCase() : magic) === ERC1271_MAGIC;
+    return (
+      (typeof magic === "string" ? magic.toLowerCase() : magic) ===
+      ERC1271_MAGIC
+    );
   } catch {
     return false;
   }
 }
 
 // EIP-6492 magic suffix for counterfactual signature detection
-const EIP6492_MAGIC_SUFFIX = '0x6492649264926492649264926492649264926492649264926492649264926492' as const;
+const EIP6492_MAGIC_SUFFIX =
+  "0x6492649264926492649264926492649264926492649264926492649264926492" as const;
 
-async function verify6492(addr: `0x${string}`, message: string, signature: `0x${string}`) {
+async function verify6492(
+  addr: `0x${string}`,
+  message: string,
+  signature: `0x${string}`,
+) {
   try {
-    console.log('[6492] Checking signature format');
-    console.log('[6492] Signature length:', signature.length);
-    console.log('[6492] Last 64 chars:', signature.slice(-64));
-    console.log('[6492] Expected magic:', EIP6492_MAGIC_SUFFIX.slice(2));
-    
+    console.log("[6492] Checking signature format");
+    console.log("[6492] Signature length:", signature.length);
+    console.log("[6492] Last 64 chars:", signature.slice(-64));
+    console.log("[6492] Expected magic:", EIP6492_MAGIC_SUFFIX.slice(2));
+
     // Check if signature ends with EIP-6492 magic bytes
-    const hasMagic = signature.toLowerCase().endsWith(EIP6492_MAGIC_SUFFIX.slice(2).toLowerCase());
-    console.log('[6492] Has magic suffix:', hasMagic);
-    
+    const hasMagic = signature
+      .toLowerCase()
+      .endsWith(EIP6492_MAGIC_SUFFIX.slice(2).toLowerCase());
+    console.log("[6492] Has magic suffix:", hasMagic);
+
     if (!hasMagic) {
       return false; // Not a 6492 signature
     }
 
     // Remove magic suffix to get the wrapper
     const wrapperHex = signature.slice(0, -64) as `0x${string}`; // Remove 32 bytes (64 hex chars)
-    
+
     // Decode the wrapper: (address factory, bytes factoryCalldata, bytes signature)
-    const decoded = await import('viem').then(v => 
+    const decoded = await import("viem").then((v) =>
       v.decodeAbiParameters(
         [
-          { name: 'factory', type: 'address' },
-          { name: 'factoryCalldata', type: 'bytes' },
-          { name: 'signature', type: 'bytes' }
+          { name: "factory", type: "address" },
+          { name: "factoryCalldata", type: "bytes" },
+          { name: "signature", type: "bytes" },
         ],
-        wrapperHex
-      )
+        wrapperHex,
+      ),
     );
 
     const [factory, factoryCalldata, innerSignature] = decoded;
-    
+
     // Simulate wallet deployment and verify signature using CREATE2
     // We'll call the factory with a staticcall to simulate deployment
     try {
@@ -102,112 +155,141 @@ async function verify6492(addr: `0x${string}`, message: string, signature: `0x${
         to: factory,
         data: factoryCalldata,
       });
-      
+
       // Now verify the signature via ERC-1271 against the deployed wallet
       const magic = await publicClient.readContract({
         address: addr,
         abi: ERC1271_ABI,
-        functionName: 'isValidSignature',
+        functionName: "isValidSignature",
         args: [hashMessage(message), innerSignature as `0x${string}`],
         // Use state override to simulate the deployed contract
         stateOverride: [
           {
             address: addr,
-            stateDiff: []
-          }
-        ] as any
+            stateDiff: [],
+          },
+        ] as any,
       });
-      
-      return (typeof magic === 'string' ? magic.toLowerCase() : magic) === ERC1271_MAGIC;
+
+      return (
+        (typeof magic === "string" ? magic.toLowerCase() : magic) ===
+        ERC1271_MAGIC
+      );
     } catch (callError) {
-      console.error('[6492] Contract call failed:', callError);
+      console.error("[6492] Contract call failed:", callError);
       return false;
     }
   } catch (e) {
-    console.error('[6492] Verification error:', e);
+    console.error("[6492] Verification error:", e);
     return false;
   }
 }
 
 async function verifySigSmart({
-  address, message, signature,
+  address,
+  message,
+  signature,
 }: {
-  address: string; message: string; signature: `0x${string}`;
-}): Promise<'EOA'|'1271'|'6492'|'UNKNOWN'> {
-  if (!isAddress(address)) throw new Error('invalid_address');
+  address: string;
+  message: string;
+  signature: `0x${string}`;
+}): Promise<"EOA" | "1271" | "6492" | "UNKNOWN"> {
+  if (!isAddress(address)) throw new Error("invalid_address");
   const addr = getAddress(address.toLowerCase());
 
   if (await isDeployed(addr)) {
     // Deployed smart account → EIP-1271
-    console.log('[verifySigSmart] Address is deployed, trying EIP-1271 verification');
+    console.log(
+      "[verifySigSmart] Address is deployed, trying EIP-1271 verification",
+    );
     const ok1271 = await verify1271(addr, message, signature);
     if (ok1271) {
-      console.log('[verifySigSmart] EIP-1271 verification succeeded');
-      return '1271';
+      console.log("[verifySigSmart] EIP-1271 verification succeeded");
+      return "1271";
     }
-    
+
     // EIP-1271 failed, try EOA as fallback (edge case: might be regular signature)
-    console.warn('[verifySigSmart] EIP-1271 verification failed, trying EOA fallback');
+    console.warn(
+      "[verifySigSmart] EIP-1271 verification failed, trying EOA fallback",
+    );
     const okEOA = await verifyEOA(addr, message, signature);
     if (okEOA) {
-      console.log('[verifySigSmart] EOA fallback verification succeeded');
-      return 'EOA';
+      console.log("[verifySigSmart] EOA fallback verification succeeded");
+      return "EOA";
     }
-    
+
     // All verification methods failed for deployed contract
-    console.error('[verifySigSmart] All verification methods failed for deployed contract');
-    console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
-    return 'UNKNOWN';
+    console.error(
+      "[verifySigSmart] All verification methods failed for deployed contract",
+    );
+    console.warn(
+      "[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT",
+    );
+    return "UNKNOWN";
   } else {
     // Not deployed - could be EOA or counterfactual smart account
-    console.log('[verifySigSmart] Address not deployed, trying verification methods');
-    
+    console.log(
+      "[verifySigSmart] Address not deployed, trying verification methods",
+    );
+
     // Check if signature has EIP-6492 magic bytes
-    const has6492Magic = signature.toLowerCase().endsWith(EIP6492_MAGIC_SUFFIX.slice(2).toLowerCase());
-    console.log('[verifySigSmart] Has EIP-6492 magic:', has6492Magic);
-    
+    const has6492Magic = signature
+      .toLowerCase()
+      .endsWith(EIP6492_MAGIC_SUFFIX.slice(2).toLowerCase());
+    console.log("[verifySigSmart] Has EIP-6492 magic:", has6492Magic);
+
     if (!has6492Magic) {
       // No 6492 magic, try EOA verification
       const okEOA = await verifyEOA(addr, message, signature);
       if (okEOA) {
-        console.log('[verifySigSmart] EOA verification succeeded');
-        return 'EOA';
+        console.log("[verifySigSmart] EOA verification succeeded");
+        return "EOA";
       }
-      
+
       // EOA verification failed
-      console.error('[verifySigSmart] EOA verification failed for non-6492 signature');
-      console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
-      return 'UNKNOWN';
+      console.error(
+        "[verifySigSmart] EOA verification failed for non-6492 signature",
+      );
+      console.warn(
+        "[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT",
+      );
+      return "UNKNOWN";
     }
-    
+
     // Has 6492 magic - this is a counterfactual smart wallet signature
     // Try 6492 verification, but be more lenient if it fails
     const ok6492 = await verify6492(addr, message, signature);
     if (ok6492) {
-      console.log('[verifySigSmart] EIP-6492 verification succeeded');
-      return '6492';
+      console.log("[verifySigSmart] EIP-6492 verification succeeded");
+      return "6492";
     }
-    
+
     // 6492 verification failed, but let's try EOA as a fallback
     // (in case the signature was wrapped but is actually just an EOA)
-    console.warn('[verifySigSmart] EIP-6492 verification failed, trying EOA fallback');
+    console.warn(
+      "[verifySigSmart] EIP-6492 verification failed, trying EOA fallback",
+    );
     const okEOA = await verifyEOA(addr, message, signature);
     if (okEOA) {
-      console.log('[verifySigSmart] EOA fallback verification succeeded');
-      return 'EOA';
+      console.log("[verifySigSmart] EOA fallback verification succeeded");
+      return "EOA";
     }
-    
+
     // All verification methods failed
     // For development/testing, we'll accept the signature as UNKNOWN
     // In production, you might want to throw an error instead
-    console.error('[verifySigSmart] All verification methods failed for 6492 signature');
-    console.warn('[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT');
-    return 'UNKNOWN';
+    console.error(
+      "[verifySigSmart] All verification methods failed for 6492 signature",
+    );
+    console.warn(
+      "[verifySigSmart] ACCEPTING SIGNATURE AS UNKNOWN FOR DEVELOPMENT",
+    );
+    return "UNKNOWN";
   }
 }
 
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Health state tracking for critical subsystems
 let dbHealthy = true;
@@ -221,26 +303,37 @@ let lastQuerySuccess = Date.now();
 async function checkDatabaseHealth() {
   try {
     // Run simple query to verify database is accessible
-    await drizzlePool.query('SELECT 1');
-    
+    await drizzlePool.query("SELECT 1");
+
     // Reset probe error count on success
     if (dbProbeErrorCount > 0) {
-      console.log(`✅ Database probe passed, resetting probe error count (was ${dbProbeErrorCount})`);
+      console.log(
+        `✅ Database probe passed, resetting probe error count (was ${dbProbeErrorCount})`,
+      );
       dbProbeErrorCount = 0;
     }
     dbHealthy = true;
   } catch (err: any) {
     dbProbeErrorCount++;
-    console.error(`❌ Database probe failed (${dbProbeErrorCount}/${MAX_PROBE_ERRORS}):`, err.message);
-    
+    console.error(
+      `❌ Database probe failed (${dbProbeErrorCount}/${MAX_PROBE_ERRORS}):`,
+      err.message,
+    );
+
     if (dbProbeErrorCount >= MAX_PROBE_ERRORS) {
       dbHealthy = false;
-      console.error('💥 FATAL: Database marked unhealthy after repeated probe failures');
-      console.error('   Health checks will now fail, triggering Cloud Run restart');
-      
+      console.error(
+        "💥 FATAL: Database marked unhealthy after repeated probe failures",
+      );
+      console.error(
+        "   Health checks will now fail, triggering Cloud Run restart",
+      );
+
       // Exit after brief delay to allow health check to fail
       setTimeout(() => {
-        console.error('   Exiting to allow Cloud Run restart with clean state...');
+        console.error(
+          "   Exiting to allow Cloud Run restart with clean state...",
+        );
         process.exit(1);
       }, 5000);
     }
@@ -251,16 +344,25 @@ async function checkDatabaseHealth() {
 export function trackDatabaseError(err: any) {
   dbQueryErrorCount++;
   const timeSinceLastSuccess = Date.now() - lastQuerySuccess;
-  console.error(`❌ Database query error (${dbQueryErrorCount} consecutive, ${Math.round(timeSinceLastSuccess/1000)}s since last success):`, err.message);
-  
+  console.error(
+    `❌ Database query error (${dbQueryErrorCount} consecutive, ${Math.round(timeSinceLastSuccess / 1000)}s since last success):`,
+    err.message,
+  );
+
   if (dbQueryErrorCount >= MAX_QUERY_ERRORS) {
     dbHealthy = false;
-    console.error('💥 FATAL: Database marked unhealthy after repeated query failures');
-    console.error('   Health checks will now fail, triggering Cloud Run restart');
-    
+    console.error(
+      "💥 FATAL: Database marked unhealthy after repeated query failures",
+    );
+    console.error(
+      "   Health checks will now fail, triggering Cloud Run restart",
+    );
+
     // Exit after brief delay to allow health check to fail
     setTimeout(() => {
-      console.error('   Exiting to allow Cloud Run restart with clean state...');
+      console.error(
+        "   Exiting to allow Cloud Run restart with clean state...",
+      );
       process.exit(1);
     }, 5000);
   }
@@ -269,7 +371,9 @@ export function trackDatabaseError(err: any) {
 // Reset query error count on successful database operation
 export function trackDatabaseSuccess() {
   if (dbQueryErrorCount > 0) {
-    console.log(`✅ Database query succeeded, resetting query error count (was ${dbQueryErrorCount})`);
+    console.log(
+      `✅ Database query succeeded, resetting query error count (was ${dbQueryErrorCount})`,
+    );
   }
   dbQueryErrorCount = 0;
   lastQuerySuccess = Date.now();
@@ -281,30 +385,30 @@ export function trackDatabaseSuccess() {
 // CRITICAL: Health check endpoints FIRST - before ALL middleware
 // /healthz - INSTANT health check endpoint (NO database checks)
 // Cloud Run requires responses within 1 second, so we skip all DB checks
-app.get('/healthz', (_req, res) => {
-  res.status(200).send('OK');
+app.get("/healthz", (_req, res) => {
+  res.status(200).send("OK");
 });
 
 // / - INSTANT health check handler for Cloud Run deployment
 // Returns immediate 200 OK for all non-browser requests
 // Browsers (requesting HTML) get served the app via express.static below
-app.get('/', (req, res, next) => {
-  const accept = req.get('accept') || '';
-  
+app.get("/", (req, res, next) => {
+  const accept = req.get("accept") || "";
+
   // If browser is requesting HTML, serve the app (continue to express.static)
-  if (accept.includes('text/html')) {
+  if (accept.includes("text/html")) {
     return next();
   }
-  
+
   // All other requests (health checks, curl, monitoring) get instant 200 OK
   // NO database checks - Cloud Run requires fast response (<1s)
-  return res.status(200).send('OK');
+  return res.status(200).send("OK");
 });
 
 app.use(express.json());
 
 // CORS Configuration Note:
-// Using Vite proxy in both dev and production (Vite serves frontend on port 5000, 
+// Using Vite proxy in both dev and production (Vite serves frontend on port 5000,
 // proxies /api/* requests to Express on port 9000). This provides same-origin requests
 // and eliminates CORS issues. CORS middleware not needed.
 
@@ -313,43 +417,48 @@ const PgStore = connectPgSimple(session);
 
 // Use the same pool as Drizzle for centralized health tracking
 // Log pool-level errors (idle client failures) but rely on periodic probes for health
-drizzlePool.on('error', (err) => {
-  console.error('PostgreSQL pool error (idle client):', err.message);
+drizzlePool.on("error", (err) => {
+  console.error("PostgreSQL pool error (idle client):", err.message);
   // Don't increment dbErrorCount here - periodic probe will detect failures
 });
 
 // Session middleware - uses SESSION_SECRET from environment
 // If SESSION_SECRET is missing, server will start but validateEnvironment() will fail it later
-const sessionSecret = process.env.SESSION_SECRET || 'temp-secret-for-health-checks-only';
+const sessionSecret =
+  process.env.SESSION_SECRET || "temp-secret-for-health-checks-only";
 
 app.use(
   session({
     store: new PgStore({
       pool: drizzlePool, // Use same pool as Drizzle for unified health tracking
-      tableName: 'session',
+      tableName: "session",
       createTableIfMissing: false, // Don't auto-create - prevents blocking DB queries on startup
       pruneSessionInterval: false, // Disable automatic session pruning to prevent startup blocking
       errorLog: (err) => {
-        console.error('Session store error (non-fatal):', err.message);
+        console.error("Session store error (non-fatal):", err.message);
       },
     }),
-    name: 'rep.sid',
+    name: "rep.sid",
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
+      path: "/",
+      sameSite: "lax",
       secure: !!process.env.REPLIT_DOMAINS,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
-  })
+  }),
 );
 
-declare module 'express-session' {
+declare module "express-session" {
   interface SessionData {
-    user?: { address: string; method: 'EOA' | '1271' | '6492' | 'UNKNOWN'; ts: number };
+    user?: {
+      address: string;
+      method: "EOA" | "1271" | "6492" | "UNKNOWN";
+      ts: number;
+    };
     challenge?: { nonce: string; timestamp: number };
   }
 }
@@ -359,166 +468,185 @@ declare module 'express-session' {
 const reserveRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 5, // Max 5 reserve attempts per hour
-  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '1 hour' },
+  message: { ok: false, error: "rate_limit_exceeded", retryAfter: "1 hour" },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.session?.user?.address, // Only rate limit authenticated users
-  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+  keyGenerator: (req) => req.session?.user?.address || "unauthenticated",
 });
 
 const echoStartRateLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 10, // Max 10 social proof starts per day
-  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '24 hours' },
+  message: { ok: false, error: "rate_limit_exceeded", retryAfter: "24 hours" },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.session?.user?.address,
-  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+  keyGenerator: (req) => req.session?.user?.address || "unauthenticated",
 });
 
 const echoVerifyRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 20, // Max 20 verify attempts per hour
-  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '1 hour' },
+  message: { ok: false, error: "rate_limit_exceeded", retryAfter: "1 hour" },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.session?.user?.address,
-  keyGenerator: (req) => req.session?.user?.address || 'unauthenticated',
+  keyGenerator: (req) => req.session?.user?.address || "unauthenticated",
 });
 
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Max 20 auth attempts per 15 min per IP
-  message: { ok: false, error: 'rate_limit_exceeded', retryAfter: '15 minutes' },
+  message: {
+    ok: false,
+    error: "rate_limit_exceeded",
+    retryAfter: "15 minutes",
+  },
   standardHeaders: true,
   legacyHeaders: false,
   // For auth endpoints, use IP-based limiting (built-in handles IPv6 correctly)
 });
 
 // Auth endpoints
-app.get('/api/auth/challenge', authRateLimiter, async (req, res) => {
+app.get("/api/auth/challenge", authRateLimiter, async (req, res) => {
   try {
     // Generate a cryptographically random nonce
-    const nonce = crypto.randomBytes(32).toString('hex');
+    const nonce = crypto.randomBytes(32).toString("hex");
     const timestamp = Date.now();
-    
+
     // Store in session
     req.session.challenge = { nonce, timestamp };
-    await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
-    
+    await new Promise<void>((resolve, reject) =>
+      req.session.save((err) => (err ? reject(err) : resolve())),
+    );
+
     return res.json({ ok: true, nonce, timestamp });
   } catch (e: any) {
-    console.error('[challenge] error', e);
-    return res.status(500).json({ ok: false, error: 'challenge_failed' });
+    console.error("[challenge] error", e);
+    return res.status(500).json({ ok: false, error: "challenge_failed" });
   }
 });
 
-app.post('/api/auth/verify', authRateLimiter, async (req, res) => {
+app.post("/api/auth/verify", authRateLimiter, async (req, res) => {
   try {
     const { address, message, signature, nonce } = req.body ?? {};
-    
-    if (!address) return res.status(400).json({ ok: false, error: 'missing_address' });
-    if (!message) return res.status(400).json({ ok: false, error: 'missing_message' });
-    if (!signature) return res.status(400).json({ ok: false, error: 'missing_signature' });
-    if (!nonce) return res.status(400).json({ ok: false, error: 'missing_nonce' });
-    
+
+    if (!address)
+      return res.status(400).json({ ok: false, error: "missing_address" });
+    if (!message)
+      return res.status(400).json({ ok: false, error: "missing_message" });
+    if (!signature)
+      return res.status(400).json({ ok: false, error: "missing_signature" });
+    if (!nonce)
+      return res.status(400).json({ ok: false, error: "missing_nonce" });
+
     // Validate nonce exists in session
     const storedChallenge = req.session.challenge;
     if (!storedChallenge) {
-      console.error('[verify] No challenge found in session');
-      return res.status(401).json({ ok: false, error: 'no_challenge' });
+      console.error("[verify] No challenge found in session");
+      return res.status(401).json({ ok: false, error: "no_challenge" });
     }
-    
+
     // Validate nonce matches
     if (storedChallenge.nonce !== nonce) {
-      console.error('[verify] Nonce mismatch');
-      return res.status(401).json({ ok: false, error: 'invalid_nonce' });
+      console.error("[verify] Nonce mismatch");
+      return res.status(401).json({ ok: false, error: "invalid_nonce" });
     }
-    
+
     // Validate challenge freshness (5 minute expiration)
     const CHALLENGE_EXPIRY_MS = 5 * 60 * 1000;
     if (Date.now() - storedChallenge.timestamp > CHALLENGE_EXPIRY_MS) {
-      console.error('[verify] Challenge expired');
-      return res.status(401).json({ ok: false, error: 'challenge_expired' });
+      console.error("[verify] Challenge expired");
+      return res.status(401).json({ ok: false, error: "challenge_expired" });
     }
-    
+
     // Verify the message includes the nonce
     if (!message.includes(nonce)) {
-      console.error('[verify] Message does not contain nonce');
-      return res.status(401).json({ ok: false, error: 'nonce_not_in_message' });
+      console.error("[verify] Message does not contain nonce");
+      return res.status(401).json({ ok: false, error: "nonce_not_in_message" });
     }
-    
+
     // Verify signature using smart wallet verifier (supports EOA, ERC-1271, EIP-6492)
-    console.log('[verify] Attempting signature verification:', { 
-      address, 
+    console.log("[verify] Attempting signature verification:", {
+      address,
       messageLength: message.length,
-      signatureLength: signature.length 
+      signatureLength: signature.length,
     });
-    
+
     // Check if this is an EIP-6492 signature (undeployed smart wallet)
-    const EIP6492_MAGIC_SUFFIX = '6492649264926492649264926492649264926492649264926492649264926492';
+    const EIP6492_MAGIC_SUFFIX =
+      "6492649264926492649264926492649264926492649264926492649264926492";
     const isEIP6492 = signature.toLowerCase().endsWith(EIP6492_MAGIC_SUFFIX);
-    
+
     // Check if address is deployed
     const normalizedAddr = address as `0x${string}`;
     const code = await publicClient.getBytecode({ address: normalizedAddr });
-    const isAddressDeployed = !!code && code !== '0x';
-    console.log('[verify] Signature check:', { isEIP6492, isAddressDeployed });
-    
-    const method = await verifySigSmart({ 
-      address, 
-      message, 
-      signature: signature as `0x${string}` 
+    const isAddressDeployed = !!code && code !== "0x";
+    console.log("[verify] Signature check:", { isEIP6492, isAddressDeployed });
+
+    const method = await verifySigSmart({
+      address,
+      message,
+      signature: signature as `0x${string}`,
     });
-    
-    console.log('[verify] Signature verification result:', method);
-    
+
+    console.log("[verify] Signature verification result:", method);
+
     // Handle UNKNOWN signatures securely:
     // - Only accept UNKNOWN if BOTH conditions are met:
     //   1. Signature has EIP-6492 magic (indicates smart wallet signature)
     //   2. Address is NOT deployed (indicates counterfactual/undeployed wallet)
     // - This prevents attackers from spoofing deployed accounts with fake EIP-6492 signatures
-    if (method === 'UNKNOWN') {
+    if (method === "UNKNOWN") {
       if (isEIP6492 && !isAddressDeployed) {
-        console.warn('[verify] Accepting UNKNOWN signature for undeployed EIP-6492 smart wallet (Coinbase Smart Wallet)');
+        console.warn(
+          "[verify] Accepting UNKNOWN signature for undeployed EIP-6492 smart wallet (Coinbase Smart Wallet)",
+        );
       } else {
-        console.error('[verify] Rejecting UNKNOWN signature:', { 
-          reason: isEIP6492 ? 'deployed_address_verification_failed' : 'not_eip6492_wallet',
+        console.error("[verify] Rejecting UNKNOWN signature:", {
+          reason: isEIP6492
+            ? "deployed_address_verification_failed"
+            : "not_eip6492_wallet",
           isEIP6492,
-          isAddressDeployed
+          isAddressDeployed,
         });
-        return res.status(401).json({ ok: false, error: 'signature_verification_failed' });
+        return res
+          .status(401)
+          .json({ ok: false, error: "signature_verification_failed" });
       }
     }
-    
+
     // Clear the challenge to prevent replay (single-use nonce)
     delete req.session.challenge;
-    
+
     // Signature verified - create session (MUST lowercase for DB compatibility)
     const addr = address.toLowerCase();
     req.session.user = { address: addr, method, ts: Date.now() };
-    await new Promise<void>((resolve, reject) => req.session.save(err => (err ? reject(err) : resolve())));
-    
+    await new Promise<void>((resolve, reject) =>
+      req.session.save((err) => (err ? reject(err) : resolve())),
+    );
+
     return res.json({ ok: true, method, address: addr });
-  } catch (e:any) {
-    console.error('[verify] error', e?.message || e);
+  } catch (e: any) {
+    console.error("[verify] error", e?.message || e);
     return res.status(401).json({ ok: false, error: String(e?.message || e) });
   }
 });
 
-app.get('/api/auth/me', (req, res) => {
-  console.log('[auth/me] Session check:', {
+app.get("/api/auth/me", (req, res) => {
+  console.log("[auth/me] Session check:", {
     hasSession: !!req.session,
     hasUser: !!req.session?.user,
     sessionID: req.sessionID,
-    address: req.session?.user?.address || 'none'
+    address: req.session?.user?.address || "none",
   });
   const u = req.session?.user;
   if (u?.address) return res.json({ ok: true, user: u });
   return res.status(401).json({ ok: false });
 });
 
-app.post('/api/auth/logout', async (req, res) => {
+app.post("/api/auth/logout", async (req, res) => {
   try {
     if (req.session) {
       await new Promise<void>((resolve, reject) => {
@@ -528,56 +656,56 @@ app.post('/api/auth/logout', async (req, res) => {
         });
       });
     }
-    res.clearCookie('rep.sid');
+    res.clearCookie("rep.sid");
     return res.json({ ok: true });
   } catch (e: any) {
-    console.error('[logout] error', e);
-    return res.status(500).json({ ok: false, error: 'logout_failed' });
+    console.error("[logout] error", e);
+    return res.status(500).json({ ok: false, error: "logout_failed" });
   }
 });
 
 // GET /api/rep/check?name=... - Check name availability
-app.get('/api/rep/check', async (req, res) => {
+app.get("/api/rep/check", async (req, res) => {
   try {
-    const name = canonicalizeName(String(req.query.name || ''))
-    
+    const name = canonicalizeName(String(req.query.name || ""));
+
     if (!name || !isValidName(name)) {
-      return res.json({ ok: true, available: false })
+      return res.json({ ok: true, available: false });
     }
 
     const [existing] = await db
       .select()
       .from(reservations)
       .where(eq(reservations.nameLower, name))
-      .limit(1)
+      .limit(1);
 
     return res.json({
       ok: true,
       available: !existing,
-    })
+    });
   } catch (e: any) {
-    console.error('[check] error', e)
-    res.status(500).json({ ok: false, error: 'server_error' })
+    console.error("[check] error", e);
+    res.status(500).json({ ok: false, error: "server_error" });
   }
-})
+});
 
 // GET /api/rep/lookup-wallet?address=0x...
-app.get('/api/rep/lookup-wallet', async (req, res) => {
+app.get("/api/rep/lookup-wallet", async (req, res) => {
   try {
     // Get address from session if authenticated, otherwise from query
-    const queryAddress = toLowerAddress(String(req.query.address || ''))
-    const sessionAddress = req.session?.user?.address
-    const address = sessionAddress || queryAddress
-    
-    if (!address) return res.json({ ok: true, walletFound: false })
+    const queryAddress = toLowerAddress(String(req.query.address || ""));
+    const sessionAddress = req.session?.user?.address;
+    const address = sessionAddress || queryAddress;
+
+    if (!address) return res.json({ ok: true, walletFound: false });
 
     const [row] = await db
       .select()
       .from(reservations)
       .where(eq(reservations.addressLower, address))
-      .limit(1)
+      .limit(1);
 
-    if (!row) return res.json({ ok: true, walletFound: false })
+    if (!row) return res.json({ ok: true, walletFound: false });
 
     return res.json({
       ok: true,
@@ -585,40 +713,44 @@ app.get('/api/rep/lookup-wallet', async (req, res) => {
       address: row.address,
       reservationId: row.id,
       name: row.name,
-    })
-  } catch (e:any) {
-    console.error('[lookup-wallet] error', e)
-    res.status(500).json({ ok: false, error: 'server_error' })
+    });
+  } catch (e: any) {
+    console.error("[lookup-wallet] error", e);
+    res.status(500).json({ ok: false, error: "server_error" });
   }
-})
+});
 
 // POST /api/rep/reserve  { name, address }
-app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
-  console.log('[reserve] ===== RESERVE ENDPOINT HIT =====');
-  console.log('[reserve] Body:', JSON.stringify(req.body));
+app.post("/api/rep/reserve", reserveRateLimiter, async (req, res) => {
+  console.log("[reserve] ===== RESERVE ENDPOINT HIT =====");
+  console.log("[reserve] Body:", JSON.stringify(req.body));
   try {
     // CRITICAL: Enforce session-based authentication
-    const sessionAddress = req.session?.user?.address
-    console.log('[reserve] Session address:', sessionAddress);
+    const sessionAddress = req.session?.user?.address;
+    console.log("[reserve] Session address:", sessionAddress);
     if (!sessionAddress) {
-      return res.status(401).json({ ok: false, error: 'unauthorized' })
+      return res.status(401).json({ ok: false, error: "unauthorized" });
     }
 
-    const rawName = String(req.body?.name || '').trim();
-    
+    const rawName = String(req.body?.name || "").trim();
+
     // Enhanced validation with detailed error codes
     const validation = validateRepName(rawName);
     if (!validation.valid) {
-      console.log('[rep/reserve] Validation failed:', { name: rawName, error: validation.errorCode, message: validation.error });
-      return res.status(400).json({ 
-        ok: false, 
-        error: validation.errorCode || 'invalid_input',
-        message: validation.error 
+      console.log("[rep/reserve] Validation failed:", {
+        name: rawName,
+        error: validation.errorCode,
+        message: validation.error,
+      });
+      return res.status(400).json({
+        ok: false,
+        error: validation.errorCode || "invalid_input",
+        message: validation.error,
       });
     }
-    
+
     const name = canonicalizeName(rawName);
-    
+
     // Use session address, ignore any address from request body
     const address = sessionAddress;
 
@@ -627,15 +759,15 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
       .select()
       .from(reservations)
       .where(eq(reservations.addressLower, address))
-      .limit(1)
+      .limit(1);
 
     if (existingByAddress && existingByAddress.nameLower !== name) {
       // Wallet already owns a different .rep - reject (soulbound identity)
-      return res.status(409).json({ 
-        ok: false, 
-        error: 'wallet_already_has_rep',
-        existingName: existingByAddress.name 
-      })
+      return res.status(409).json({
+        ok: false,
+        error: "wallet_already_has_rep",
+        existingName: existingByAddress.name,
+      });
     }
 
     // Name already exists?
@@ -643,7 +775,7 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
       .select()
       .from(reservations)
       .where(eq(reservations.nameLower, name))
-      .limit(1)
+      .limit(1);
 
     if (existingByName) {
       // If it's owned by the same address → idempotent success
@@ -653,10 +785,10 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
           reservationId: existingByName.id,
           name: existingByName.name,
           address: existingByName.address,
-        })
+        });
       }
       // Otherwise, name taken
-      return res.status(409).json({ ok: false, error: 'name_taken' })
+      return res.status(409).json({ ok: false, error: "name_taken" });
     }
 
     // Insert new reservation - catch unique constraint violations
@@ -669,17 +801,17 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
           address,
           addressLower: address,
         })
-        .returning()
+        .returning();
 
       // Send admin notification email (non-blocking)
-      console.log('[reserve] ===== SENDING EMAIL NOTIFICATION =====');
-      console.log('[reserve] Name:', created.name, 'Address:', created.address);
+      console.log("[reserve] ===== SENDING EMAIL NOTIFICATION =====");
+      console.log("[reserve] Name:", created.name, "Address:", created.address);
       sendAdminNotification(created.name, created.address)
-        .then(result => {
-          console.log('[reserve] Email send result:', result);
+        .then((result) => {
+          console.log("[reserve] Email send result:", result);
         })
-        .catch(err => {
-          console.error('[reserve] Failed to send admin notification:', err);
+        .catch((err) => {
+          console.error("[reserve] Failed to send admin notification:", err);
         });
 
       return res.json({
@@ -687,71 +819,81 @@ app.post('/api/rep/reserve', reserveRateLimiter, async (req, res) => {
         reservationId: created.id,
         name: created.name,
         address: created.address,
-      })
+      });
     } catch (insertError: any) {
       // Handle unique constraint violations from race conditions
-      if (insertError.code === '23505') { // PostgreSQL unique violation
-        return res.status(409).json({ ok: false, error: 'name_taken' })
+      if (insertError.code === "23505") {
+        // PostgreSQL unique violation
+        return res.status(409).json({ ok: false, error: "name_taken" });
       }
-      throw insertError
+      throw insertError;
     }
   } catch (e: any) {
-    console.error('[reserve] error', e)
-    res.status(500).json({ ok: false, error: 'server_error' })
+    console.error("[reserve] error", e);
+    res.status(500).json({ ok: false, error: "server_error" });
   }
 });
 
 // Link Echo (Social Proof) API Routes
 
 // POST /api/echo/start - Generate nonce for social proof verification
-app.post('/api/echo/start', echoStartRateLimiter, async (req, res) => {
+app.post("/api/echo/start", echoStartRateLimiter, async (req, res) => {
   try {
     // Check feature flags
-    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
-      return res.status(403).json({ ok: false, error: 'feature_disabled' });
+    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === "0") {
+      return res.status(403).json({ ok: false, error: "feature_disabled" });
     }
-    
+
     // Require authentication
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
-    
-    const { provider = 'x' } = req.body || {};
-    
+
+    const { provider = "x" } = req.body || {};
+
     // Check provider-specific feature flags
-    if (provider === 'x' && (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === '0')) {
-      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    if (
+      provider === "x" &&
+      (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === "0")
+    ) {
+      return res.status(403).json({ ok: false, error: "provider_unavailable" });
     }
-    if (provider === 'farcaster' && (!process.env.ECHO_FC_ENABLED || process.env.ECHO_FC_ENABLED === '0')) {
-      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    if (
+      provider === "farcaster" &&
+      (!process.env.ECHO_FC_ENABLED || process.env.ECHO_FC_ENABLED === "0")
+    ) {
+      return res.status(403).json({ ok: false, error: "provider_unavailable" });
     }
-    if (provider === 'lens' && (!process.env.ECHO_LENS_ENABLED || process.env.ECHO_LENS_ENABLED === '0')) {
-      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    if (
+      provider === "lens" &&
+      (!process.env.ECHO_LENS_ENABLED || process.env.ECHO_LENS_ENABLED === "0")
+    ) {
+      return res.status(403).json({ ok: false, error: "provider_unavailable" });
     }
-    
+
     // For now, only support X/Twitter
-    if (provider !== 'x') {
-      return res.status(400).json({ ok: false, error: 'provider_unavailable' });
+    if (provider !== "x") {
+      return res.status(400).json({ ok: false, error: "provider_unavailable" });
     }
-    
+
     // Generate random nonce (16 bytes = 32 hex chars)
-    const nonce = crypto.randomBytes(16).toString('hex');
-    
+    const nonce = crypto.randomBytes(16).toString("hex");
+
     // Look up user's .rep name for instructions
     const [reservation] = await db
       .select()
       .from(reservations)
       .where(eq(reservations.addressLower, user.address.toLowerCase()))
       .limit(1);
-    
+
     if (!reservation?.name) {
-      return res.status(400).json({ ok: false, error: 'no_rep_name' });
+      return res.status(400).json({ ok: false, error: "no_rep_name" });
     }
-    
+
     const repName = reservation.name;
     const repLabel = `${repName}.rep`;
-    
+
     // Store nonce in database
     await db.insert(repSocialProofs).values({
       userWallet: user.address.toLowerCase(),
@@ -759,7 +901,7 @@ app.post('/api/echo/start', echoStartRateLimiter, async (req, res) => {
       nonce,
       consumedAt: null,
     });
-    
+
     // Return nonce, repLabel, and instructions
     return res.json({
       ok: true,
@@ -769,42 +911,47 @@ app.post('/api/echo/start', echoStartRateLimiter, async (req, res) => {
       instructions: `Post a public tweet containing: #dotrep and ${nonce} and your ${repLabel} identity`,
     });
   } catch (e: any) {
-    console.error('[echo/start] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'start_error' });
+    console.error("[echo/start] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "start_error" });
   }
 });
 
 // POST /api/echo/verify - Verify tweet URL contains nonce and #dotrep (secure version)
-app.post('/api/echo/verify', echoVerifyRateLimiter, async (req, res) => {
+app.post("/api/echo/verify", echoVerifyRateLimiter, async (req, res) => {
   try {
     // Check feature flags
-    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === '0') {
-      return res.status(403).json({ ok: false, error: 'feature_disabled' });
+    if (!process.env.ECHO_ENABLED || process.env.ECHO_ENABLED === "0") {
+      return res.status(403).json({ ok: false, error: "feature_disabled" });
     }
-    
+
     // Require authentication
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
-    
-    const { provider = 'x', tweetUrl, nonce } = req.body || {};
-    
+
+    const { provider = "x", tweetUrl, nonce } = req.body || {};
+
     // Validate inputs
     if (!tweetUrl || !nonce) {
-      return res.status(400).json({ ok: false, error: 'invalid_input' });
+      return res.status(400).json({ ok: false, error: "invalid_input" });
     }
-    
+
     // For now, only support X/Twitter
-    if (provider !== 'x') {
-      return res.status(400).json({ ok: false, error: 'provider_unavailable' });
+    if (provider !== "x") {
+      return res.status(400).json({ ok: false, error: "provider_unavailable" });
     }
-    
+
     // Check provider-specific feature flags
-    if (provider === 'x' && (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === '0')) {
-      return res.status(403).json({ ok: false, error: 'provider_unavailable' });
+    if (
+      provider === "x" &&
+      (!process.env.ECHO_X_ENABLED || process.env.ECHO_X_ENABLED === "0")
+    ) {
+      return res.status(403).json({ ok: false, error: "provider_unavailable" });
     }
-    
+
     // Find the nonce in database (must be unconsumed and belong to this user)
     const [proof] = await db
       .select()
@@ -814,82 +961,91 @@ app.post('/api/echo/verify', echoVerifyRateLimiter, async (req, res) => {
           eq(repSocialProofs.userWallet, user.address.toLowerCase()),
           eq(repSocialProofs.provider, provider),
           eq(repSocialProofs.nonce, nonce),
-          isNull(repSocialProofs.consumedAt)
-        )
+          isNull(repSocialProofs.consumedAt),
+        ),
       )
       .limit(1);
-    
+
     if (!proof) {
-      return res.status(400).json({ ok: false, error: 'nonce_invalid' });
+      return res.status(400).json({ ok: false, error: "nonce_invalid" });
     }
-    
+
     // Extract handle from tweet URL - support both twitter.com and x.com
-    const handleMatch = tweetUrl.match(/(?:twitter\.com|x\.com)\/([^\/]+)\/status\//);
-    const handle = handleMatch ? handleMatch[1] : 'unknown';
-    
+    const handleMatch = tweetUrl.match(
+      /(?:twitter\.com|x\.com)\/([^\/]+)\/status\//,
+    );
+    const handle = handleMatch ? handleMatch[1] : "unknown";
+
     // Fetch tweet HTML and check contents
-    console.log('[echo/verify] Fetching tweet:', tweetUrl);
+    console.log("[echo/verify] Fetching tweet:", tweetUrl);
     const tweetRes = await fetch(tweetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; .rep verifier)',
+        "User-Agent": "Mozilla/5.0 (compatible; .rep verifier)",
       },
     });
-    
+
     if (!tweetRes.ok) {
-      console.error('[echo/verify] Failed to fetch tweet:', tweetRes.status);
-      return res.status(400).json({ ok: false, error: 'tweet_fetch_fail' });
+      console.error("[echo/verify] Failed to fetch tweet:", tweetRes.status);
+      return res.status(400).json({ ok: false, error: "tweet_fetch_fail" });
     }
-    
+
     const html = await tweetRes.text();
-    
+
     // Squash whitespace and lowercase for simple text search
-    const squashed = html.toLowerCase().replace(/\s+/g, '');
-    
+    const squashed = html.toLowerCase().replace(/\s+/g, "");
+
     // Check if tweet contains #dotrep tag
-    if (!squashed.includes('#dotrep')) {
-      console.error('[echo/verify] #dotrep tag not found in tweet');
-      return res.status(400).json({ ok: false, error: 'tag_not_found' });
+    if (!squashed.includes("#dotrep")) {
+      console.error("[echo/verify] #dotrep tag not found in tweet");
+      return res.status(400).json({ ok: false, error: "tag_not_found" });
     }
-    
+
     // Check if tweet contains the nonce (this proves the user created the tweet)
     if (!squashed.includes(nonce.toLowerCase())) {
-      console.error('[echo/verify] Nonce not found in tweet');
-      return res.status(400).json({ ok: false, error: 'nonce_invalid' });
+      console.error("[echo/verify] Nonce not found in tweet");
+      return res.status(400).json({ ok: false, error: "nonce_invalid" });
     }
-    
+
     // Get user's .rep name and check for repLabel format
     const [reservation] = await db
       .select()
       .from(reservations)
       .where(eq(reservations.addressLower, user.address.toLowerCase()))
       .limit(1);
-    
+
     if (!reservation?.name) {
-      console.error('[echo/verify] User has no .rep name');
-      return res.status(400).json({ ok: false, error: 'no_rep_name' });
+      console.error("[echo/verify] User has no .rep name");
+      return res.status(400).json({ ok: false, error: "no_rep_name" });
     }
-    
+
     const repName = reservation.name;
     const repLabel = `${repName}.rep`;
-    const normalizedRepLabel = repLabel.toLowerCase().replace(/\s+/g, '');
-    
+    const normalizedRepLabel = repLabel.toLowerCase().replace(/\s+/g, "");
+
     // Check if tweet contains the repLabel (e.g., "test.rep")
     if (!squashed.includes(normalizedRepLabel)) {
       // Backward compatibility: also accept legacy ".name" format for migration window
-      const legacyFormat = `.${repName.toLowerCase()}`.replace(/\s+/g, '');
+      const legacyFormat = `.${repName.toLowerCase()}`.replace(/\s+/g, "");
       if (!squashed.includes(legacyFormat)) {
-        console.error('[echo/verify] repLabel not found in tweet. Expected:', repLabel, 'or legacy:', `.${repName}`);
-        return res.status(400).json({ ok: false, error: 'rep_label_not_found' });
+        console.error(
+          "[echo/verify] repLabel not found in tweet. Expected:",
+          repLabel,
+          "or legacy:",
+          `.${repName}`,
+        );
+        return res
+          .status(400)
+          .json({ ok: false, error: "rep_label_not_found" });
       }
-      console.log('[echo/verify] Accepted legacy format:', `.${repName}`);
+      console.log("[echo/verify] Accepted legacy format:", `.${repName}`);
     }
-    
+
     // Mark nonce as consumed
     await db
       .update(repSocialProofs)
       .set({ consumedAt: new Date() })
       .where(eq(repSocialProofs.id, proof.id));
-    
+
     // Save or update social account
     await db
       .insert(repSocialAccounts)
@@ -907,50 +1063,63 @@ app.post('/api/echo/verify', echoVerifyRateLimiter, async (req, res) => {
           verifiedAt: new Date(),
         },
       });
-    
-    console.log('[echo/verify] Social account verified:', { user: user.address, provider, handle });
-    
+
+    console.log("[echo/verify] Social account verified:", {
+      user: user.address,
+      provider,
+      handle,
+    });
+
     return res.json({
       ok: true,
       provider,
       handle,
     });
   } catch (e: any) {
-    console.error('[echo/verify] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'verify_error' });
+    console.error("[echo/verify] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "verify_error" });
   }
 });
 
 // Admin middleware - check if user is admin
-function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const adminWallets = (process.env.ADMIN_WALLETS || '').toLowerCase().split(',').filter(Boolean);
+function isAdmin(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) {
+  const adminWallets = (process.env.ADMIN_WALLETS || "")
+    .toLowerCase()
+    .split(",")
+    .filter(Boolean);
   const userAddress = req.session?.user?.address?.toLowerCase();
-  
-  console.log('[isAdmin] Check:', {
+
+  console.log("[isAdmin] Check:", {
     adminWalletsRaw: process.env.ADMIN_WALLETS,
     adminWallets,
     userAddress,
-    isMatch: adminWallets.includes(userAddress || '')
+    isMatch: adminWallets.includes(userAddress || ""),
   });
-  
+
   if (!userAddress) {
-    return res.status(401).json({ ok: false, error: 'not_authenticated' });
+    return res.status(401).json({ ok: false, error: "not_authenticated" });
   }
-  
+
   if (!adminWallets.includes(userAddress)) {
-    return res.status(403).json({ ok: false, error: 'not_admin' });
+    return res.status(403).json({ ok: false, error: "not_admin" });
   }
-  
+
   next();
 }
 
 // Admin endpoints
-app.get('/api/admin/reservations', isAdmin, async (req, res) => {
+app.get("/api/admin/reservations", isAdmin, async (req, res) => {
   try {
-    const search = String(req.query.search || '').toLowerCase();
+    const search = String(req.query.search || "").toLowerCase();
     const limit = Math.min(Number(req.query.limit) || 50, 100);
     const offset = Number(req.query.offset) || 0;
-    
+
     // Build query based on search
     const results = search
       ? await db
@@ -959,8 +1128,8 @@ app.get('/api/admin/reservations', isAdmin, async (req, res) => {
           .where(
             or(
               like(reservations.nameLower, `%${search}%`),
-              like(reservations.addressLower, `%${search}%`)
-            )
+              like(reservations.addressLower, `%${search}%`),
+            ),
           )
           .orderBy(sql`${reservations.createdAt} DESC`)
           .limit(limit)
@@ -971,12 +1140,12 @@ app.get('/api/admin/reservations', isAdmin, async (req, res) => {
           .orderBy(sql`${reservations.createdAt} DESC`)
           .limit(limit)
           .offset(offset);
-    
+
     // Get total count
     const [countResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(reservations);
-    
+
     return res.json({
       ok: true,
       reservations: results,
@@ -985,28 +1154,28 @@ app.get('/api/admin/reservations', isAdmin, async (req, res) => {
       offset,
     });
   } catch (e: any) {
-    console.error('[admin/reservations] error', e);
-    return res.status(500).json({ ok: false, error: 'server_error' });
+    console.error("[admin/reservations] error", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
   }
 });
 
-app.get('/api/admin/stats', isAdmin, async (req, res) => {
+app.get("/api/admin/stats", isAdmin, async (req, res) => {
   try {
     const [countResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(reservations);
-    
+
     const total = Number(countResult.count);
-    
+
     // Get recent claims (last 24 hours)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const [recentResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(reservations)
       .where(sql`${reservations.createdAt} > ${oneDayAgo}`);
-    
+
     const last24h = Number(recentResult.count);
-    
+
     return res.json({
       ok: true,
       stats: {
@@ -1015,90 +1184,107 @@ app.get('/api/admin/stats', isAdmin, async (req, res) => {
       },
     });
   } catch (e: any) {
-    console.error('[admin/stats] error', e);
-    return res.status(500).json({ ok: false, error: 'server_error' });
+    console.error("[admin/stats] error", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
   }
 });
 
 // Phase 0 Missions API Routes
 
 // Seed missions into database (idempotent)
-app.post('/api/rep_phase0/seed', async (_req, res) => {
+app.post("/api/rep_phase0/seed", async (_req, res) => {
   try {
     await seedMissions();
     return res.json({ ok: true });
   } catch (e: any) {
-    console.error('[phase0/seed] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'seed_failed' });
+    console.error("[phase0/seed] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "seed_failed" });
   }
 });
 
 // Get user's mission state
-app.get('/api/rep_phase0/state', async (req, res) => {
+app.get("/api/rep_phase0/state", async (req, res) => {
   try {
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
-    
+
     const state = await getUserState(user.address);
     return res.json({ ok: true, state });
   } catch (e: any) {
-    console.error('[phase0/state] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'state_error' });
+    console.error("[phase0/state] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "state_error" });
   }
 });
 
 // Update mission progress
-app.post('/api/rep_phase0/progress', async (req, res) => {
+app.post("/api/rep_phase0/progress", async (req, res) => {
   try {
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
-    
+
     const { action, mission, meta } = req.body || {};
-    
+
     if (!action || !mission) {
-      return res.status(400).json({ ok: false, error: 'invalid_input' });
+      return res.status(400).json({ ok: false, error: "invalid_input" });
     }
-    
+
     // Server-side validation for "go-live" mission
-    if (mission === 'go-live' && action === 'complete') {
-      const from = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    if (mission === "go-live" && action === "complete") {
+      const from = new Date(Date.now() - 6 * 24 * 3600 * 1000)
+        .toISOString()
+        .slice(0, 10);
       const days = await countHeartbeatDays(user.address, from);
       if (days < 3) {
-        return res.status(400).json({ ok: false, error: 'require_3_days_login' });
+        return res
+          .status(400)
+          .json({ ok: false, error: "require_3_days_login" });
       }
     }
-    
-    await setProgress(user.address, mission, action === 'complete' ? 'completed' : 'available', meta);
+
+    await setProgress(
+      user.address,
+      mission,
+      action === "complete" ? "completed" : "available",
+      meta,
+    );
     return res.json({ ok: true });
   } catch (e: any) {
-    console.error('[phase0/progress] error', e);
-    return res.status(400).json({ ok: false, error: e?.message || 'progress_error' });
+    console.error("[phase0/progress] error", e);
+    return res
+      .status(400)
+      .json({ ok: false, error: e?.message || "progress_error" });
   }
 });
 
 // Record daily heartbeat
-app.post('/api/rep_phase0/heartbeat', async (req, res) => {
+app.post("/api/rep_phase0/heartbeat", async (req, res) => {
   try {
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
-    
+
     const today = new Date().toISOString().slice(0, 10);
     await recordHeartbeat(user.address, today);
     return res.json({ ok: true });
   } catch (e: any) {
-    console.error('[phase0/heartbeat] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'heartbeat_error' });
+    console.error("[phase0/heartbeat] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "heartbeat_error" });
   }
 });
 
 // Constellation Map API endpoints
-app.get('/api/constellation/signal-map', async (req, res) => {
+app.get("/api/constellation/signal-map", async (req, res) => {
   try {
     if (!process.env.CONSTELLATION_ENABLED) {
       return res.json({ ok: true, enabled: false, data: [] });
@@ -1113,7 +1299,7 @@ app.get('/api/constellation/signal-map', async (req, res) => {
           .from(reservations)
           .where(eq(reservations.addressLower, user.address.toLowerCase()))
           .limit(1);
-        
+
         const repName = lookupRes[0]?.name || null;
         await upsertSignalRow({
           wallet: user.address,
@@ -1121,27 +1307,29 @@ app.get('/api/constellation/signal-map', async (req, res) => {
           seenAt: Date.now(),
         });
       } catch (e) {
-        console.error('[signal-map] Failed to upsert signal:', e);
+        console.error("[signal-map] Failed to upsert signal:", e);
       }
     }
 
     const data = await listActiveNodes(Date.now());
     return res.json({ ok: true, enabled: true, data });
   } catch (e: any) {
-    console.error('[signal-map] error', e);
-    return res.status(500).json({ ok: false, error: e?.message || 'signal_error' });
+    console.error("[signal-map] error", e);
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "signal_error" });
   }
 });
 
-app.post('/api/constellation/beacon', async (req, res) => {
+app.post("/api/constellation/beacon", async (req, res) => {
   try {
     const user = req.session?.user;
     if (!user?.address) {
-      return res.status(401).json({ ok: false, error: 'not_authenticated' });
+      return res.status(401).json({ ok: false, error: "not_authenticated" });
     }
 
     if (!process.env.CONSTELLATION_ENABLED) {
-      return res.status(400).json({ ok: false, error: 'feature_disabled' });
+      return res.status(400).json({ ok: false, error: "feature_disabled" });
     }
 
     const lookupRes = await db
@@ -1149,9 +1337,9 @@ app.post('/api/constellation/beacon', async (req, res) => {
       .from(reservations)
       .where(eq(reservations.addressLower, user.address.toLowerCase()))
       .limit(1);
-    
+
     const repName = lookupRes[0]?.name || null;
-    
+
     await upsertSignalRow({
       wallet: user.address,
       repName,
@@ -1159,57 +1347,67 @@ app.post('/api/constellation/beacon', async (req, res) => {
     });
 
     const awarded = await awardBeacon(user.address, 25);
-    
+
     if (!awarded) {
-      return res.status(400).json({ ok: false, error: 'already_claimed' });
+      return res.status(400).json({ ok: false, error: "already_claimed" });
     }
 
     return res.json({ ok: true, xpAwarded: 25 });
   } catch (e: any) {
-    console.error('[beacon] error', e);
-    return res.status(400).json({ ok: false, error: e?.message || 'beacon_error' });
+    console.error("[beacon] error", e);
+    return res
+      .status(400)
+      .json({ ok: false, error: e?.message || "beacon_error" });
   }
 });
 
 // Additional health check endpoint with environment info
-app.get('/api/health', (_req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'development' }));
+app.get("/api/health", (_req, res) =>
+  res.json({ ok: true, env: process.env.NODE_ENV || "development" }),
+);
 
 // Test endpoint for email - TEMPORARY
-app.get('/api/test-email', async (_req, res) => {
-  console.log('[test-email] Testing SendGrid...');
+app.get("/api/test-email", async (_req, res) => {
+  console.log("[test-email] Testing SendGrid...");
   try {
-    const result = await sendAdminNotification('test-name', '0xTEST_WALLET');
-    console.log('[test-email] Result:', result);
+    const result = await sendAdminNotification("test-name", "0xTEST_WALLET");
+    console.log("[test-email] Result:", result);
     res.json({ ok: true, emailSent: result });
   } catch (error: any) {
-    console.error('[test-email] Error:', error);
+    console.error("[test-email] Error:", error);
     res.json({ ok: false, error: error.message });
   }
 });
 
 // Serve whitepaper as static HTML (works in both dev and production)
-app.get('/whitepaper', (_req, res) => {
-  const whitepaperPath = process.env.NODE_ENV === 'production'
-    ? path.join(__dirname, 'dist', 'whitepaper.html')
-    : path.join(__dirname, 'public', 'whitepaper.html');
+app.get("/whitepaper", (_req, res) => {
+  const whitepaperPath =
+    process.env.NODE_ENV === "production"
+      ? path.join(__dirname, "dist", "whitepaper.html")
+      : path.join(__dirname, "public", "whitepaper.html");
   res.sendFile(whitepaperPath);
 });
 
 // In production, serve static files from the Vite build
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, 'dist');
-  
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "dist");
+
   // Serve static assets including index.html at /
   // This provides fast 200 OK for health checks AND serves the app to users
   app.use(express.static(distPath));
-  
+  // Serve mini app files from dist/mini (must come before SPA fallback)
+  app.use(
+    "/mini",
+    express.static(path.join(distPath, "mini"), { index: "index.html" }),
+  );
+
   // Serve index.html for all non-API routes (SPA routing)
-  app.get('*', (req, res) => {
+  app.get("*", (req, res) => {
     // Skip API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).send('Not found');
+    if (req.path.startsWith("/api/")) {
+      return res.status(404).send("Not found");
     }
-    res.sendFile(path.join(distPath, 'index.html'));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
@@ -1222,99 +1420,118 @@ function validateEnvironment() {
 
   // Critical: Database connection
   if (!process.env.DATABASE_URL) {
-    errors.push('DATABASE_URL is required for database connection');
+    errors.push("DATABASE_URL is required for database connection");
   }
 
   // Critical: Session secret (use a strong secret in production)
-  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'dev-only-not-secret') {
-    if (process.env.NODE_ENV === 'production') {
-      errors.push('SESSION_SECRET must be set to a strong secret in production');
+  if (
+    !process.env.SESSION_SECRET ||
+    process.env.SESSION_SECRET === "dev-only-not-secret"
+  ) {
+    if (process.env.NODE_ENV === "production") {
+      errors.push(
+        "SESSION_SECRET must be set to a strong secret in production",
+      );
     } else {
-      warnings.push('SESSION_SECRET should be set for security (using default dev secret)');
+      warnings.push(
+        "SESSION_SECRET should be set for security (using default dev secret)",
+      );
     }
   }
 
   // Important: Admin configuration
   if (!process.env.ADMIN_WALLETS) {
-    warnings.push('ADMIN_WALLETS not set - admin endpoints will be inaccessible');
+    warnings.push(
+      "ADMIN_WALLETS not set - admin endpoints will be inaccessible",
+    );
   }
 
   // Important: Feature flags for Echo social proof
-  if (process.env.ECHO_ENABLED === '1' && !process.env.ECHO_X_ENABLED) {
-    warnings.push('ECHO_ENABLED is on but ECHO_X_ENABLED is not set - social proof may not work');
+  if (process.env.ECHO_ENABLED === "1" && !process.env.ECHO_X_ENABLED) {
+    warnings.push(
+      "ECHO_ENABLED is on but ECHO_X_ENABLED is not set - social proof may not work",
+    );
   }
 
   // Log results - fail fast if critical configuration missing
   if (errors.length > 0) {
-    console.error('\n❌ CRITICAL ENVIRONMENT ERRORS:');
-    errors.forEach(err => console.error(`  - ${err}`));
-    console.error('\n💥 Cannot start server without required configuration.');
-    console.error('   Set environment variables in deployment secrets and redeploy.\n');
+    console.error("\n❌ CRITICAL ENVIRONMENT ERRORS:");
+    errors.forEach((err) => console.error(`  - ${err}`));
+    console.error("\n💥 Cannot start server without required configuration.");
+    console.error(
+      "   Set environment variables in deployment secrets and redeploy.\n",
+    );
     process.exit(1);
   }
 
   if (warnings.length > 0) {
-    console.warn('\n⚠️  ENVIRONMENT WARNINGS:');
-    warnings.forEach(warn => console.warn(`  - ${warn}`));
-    console.warn('');
+    console.warn("\n⚠️  ENVIRONMENT WARNINGS:");
+    warnings.forEach((warn) => console.warn(`  - ${warn}`));
+    console.warn("");
   }
 
-  console.log('✅ Environment validation passed');
+  console.log("✅ Environment validation passed");
 }
 
 if (import.meta && import.meta.url === `file://${process.argv[1]}`) {
   // Global error handlers - Log but let process crash for Cloud Run restart
-  process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ FATAL: Unhandled Promise Rejection');
-    console.error('   Promise:', promise);
-    console.error('   Reason:', reason);
-    console.error('   Exiting to allow Cloud Run to restart with clean state...');
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("❌ FATAL: Unhandled Promise Rejection");
+    console.error("   Promise:", promise);
+    console.error("   Reason:", reason);
+    console.error(
+      "   Exiting to allow Cloud Run to restart with clean state...",
+    );
     process.exit(1);
   });
 
-  process.on('uncaughtException', (error) => {
-    console.error('❌ FATAL: Uncaught Exception');
-    console.error('   Error:', error);
-    console.error('   Exiting to allow Cloud Run to restart with clean state...');
+  process.on("uncaughtException", (error) => {
+    console.error("❌ FATAL: Uncaught Exception");
+    console.error("   Error:", error);
+    console.error(
+      "   Exiting to allow Cloud Run to restart with clean state...",
+    );
     process.exit(1);
   });
 
-  // Port configuration: 
+  // Port configuration:
   // - Production: Use PORT env var (Cloud Run provides this), default 5000
   // - Development: Use port 9000 (Vite dev server uses 5000)
-  const isProduction = process.env.NODE_ENV === 'production';
-  const port = isProduction 
-    ? Number(process.env.PORT || 5000)
-    : 9000;
+  const isProduction = process.env.NODE_ENV === "production";
+  const port = isProduction ? Number(process.env.PORT || 5000) : 9000;
   // Always bind to 0.0.0.0 for proper port detection in Replit
-  const host = '0.0.0.0';
-  
+  const host = "0.0.0.0";
+
   // CRITICAL: Start server IMMEDIATELY to respond to Cloud Run health checks
   // Validation happens AFTER binding to ensure health endpoint is always accessible
   app.listen(port, host, () => {
-    const displayHost = host === '0.0.0.0' ? 'all interfaces' : host;
-    console.log(`✅ Server listening on ${displayHost}:${port} (${process.env.NODE_ENV || 'development'} mode)`);
-    console.log('   Health check endpoint: /healthz and /');
-    
+    const displayHost = host === "0.0.0.0" ? "all interfaces" : host;
+    console.log(
+      `✅ Server listening on ${displayHost}:${port} (${process.env.NODE_ENV || "development"} mode)`,
+    );
+    console.log("   Health check endpoint: /healthz and /");
+
     // Initialize database health probes AFTER server is listening
     // This ensures health checks respond immediately during startup
     setTimeout(() => {
-      console.log('   Starting database health monitoring...');
+      console.log("   Starting database health monitoring...");
       checkDatabaseHealth();
       // Run database health probe every 15 seconds
       setInterval(checkDatabaseHealth, 15000);
     }, 5000);
-    
+
     // Validate environment AFTER server is listening
     // This ensures Cloud Run can reach health checks even if validation fails
     setTimeout(() => {
       try {
         validateEnvironment();
-        console.log('✅ Server fully initialized and ready');
+        console.log("✅ Server fully initialized and ready");
       } catch (error) {
-        console.error('❌ Environment validation failed after server started');
-        console.error('   Server will respond to health checks but API routes may not work');
-        console.error('   Error:', error);
+        console.error("❌ Environment validation failed after server started");
+        console.error(
+          "   Server will respond to health checks but API routes may not work",
+        );
+        console.error("   Error:", error);
         // In production, exit to trigger restart with correct env vars
         if (isProduction) {
           setTimeout(() => process.exit(1), 5000);
