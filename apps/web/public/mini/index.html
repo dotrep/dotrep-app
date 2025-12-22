@@ -4,30 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>.rep — mini</title>
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+
     <style>
       :root {
-        --bg: #06070a; /* deep near-black */
+        --bg: #06070a;
       }
 
-      html,
-      body {
+      html, body {
         height: 100%;
         margin: 0;
         background: var(--bg);
-        font-family:
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Helvetica,
-          Arial,
-          sans-serif;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
         color: #fff;
       }
 
@@ -39,51 +29,53 @@
         padding: 28px 18px;
         box-sizing: border-box;
         background:
-          radial-gradient(
-            900px 600px at 50% 40%,
-            rgba(120, 180, 255, 0.1),
-            transparent 55%
-          ),
-          radial-gradient(
-            900px 600px at 15% 70%,
-            rgba(255, 160, 80, 0.08),
-            transparent 60%
-          ),
+          radial-gradient(900px 600px at 50% 40%, rgba(120,180,255,0.10), transparent 55%),
+          radial-gradient(900px 600px at 15% 70%, rgba(255,160,80,0.08), transparent 60%),
           var(--bg);
       }
 
       .card {
-        width: min(520px, 92vw);
+        width: min(540px, 92vw);
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 18px;
       }
 
+      /* Eye card — tuned to eliminate JPEG “boxing” edges */
       .eye {
-        width: min(420px, 86vw);
+        width: min(460px, 88vw);
         aspect-ratio: 3 / 4;
-        display: grid;
-        place-items: center;
-        border-radius: 22px;
+        border-radius: 26px;
         overflow: hidden;
         position: relative;
+
+        background: #05060a;
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,0.06),
+          0 22px 70px rgba(0,0,0,0.70);
       }
 
-      /* This overlay hides JPEG-edge rectangles by blending the borders */
+      /* glow behind image to erase seams */
+      .eye::before {
+        content: "";
+        position: absolute;
+        inset: -40px;
+        background: radial-gradient(circle at 50% 45%, rgba(120,180,255,0.22), rgba(0,0,0,0) 62%);
+        filter: blur(18px);
+        opacity: 0.55;
+        pointer-events: none;
+      }
+
+      /* vignette to fade JPEG edges away */
       .eye::after {
         content: "";
         position: absolute;
         inset: 0;
         pointer-events: none;
         background:
-          radial-gradient(
-            closest-side at 50% 45%,
-            rgba(0, 0, 0, 0) 55%,
-            rgba(0, 0, 0, 0.55) 100%
-          ),
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35));
-        mix-blend-mode: multiply;
+          radial-gradient(closest-side at 50% 45%, rgba(0,0,0,0) 54%, rgba(0,0,0,0.78) 100%),
+          linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.45));
       }
 
       .eye img {
@@ -91,7 +83,10 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        filter: contrast(1.02) saturate(1.02);
+        /* critical: hide border pixels */
+        transform: scale(1.04);
+        transform-origin: center;
+        filter: contrast(1.03) saturate(1.03);
       }
 
       .btn {
@@ -101,59 +96,162 @@
         border-radius: 999px;
         padding: 16px 18px;
         font-size: 16px;
-        font-weight: 600;
-        transition:
-          transform 0.08s ease,
-          opacity 0.12s ease;
+        font-weight: 650;
+        transition: transform 0.08s ease, opacity 0.12s ease, filter 0.12s ease;
+        user-select: none;
       }
 
-      .btn:active {
-        transform: translateY(1px);
-      }
+      .btn:active { transform: translateY(1px); }
 
       .btn-primary {
-        background: linear-gradient(
-          90deg,
-          rgba(140, 200, 255, 0.95),
-          rgba(155, 135, 255, 0.95)
-        );
+        background: linear-gradient(90deg, rgba(140,200,255,0.95), rgba(155,135,255,0.95));
         color: #0b0c12;
       }
 
+      .btn-primary:hover { opacity: 0.95; }
+
       .btn-secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.55);
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.35);
         cursor: not-allowed;
+        filter: grayscale(0.2);
       }
 
       .hint {
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.55);
+        color: rgba(255,255,255,0.55);
         text-align: center;
         line-height: 1.4;
+        min-height: 18px;
       }
     </style>
   </head>
+
   <body>
     <div class="wrap">
       <div class="card">
         <div class="eye">
-          <!-- Absolute path is safest -->
+          <!-- Absolute path is safest under /mini -->
           <img src="/mini/miniapp-eye-plate.jpg" alt=".rep eye" />
         </div>
 
-        <button
-          class="btn btn-primary"
-          type="button"
-          onclick="alert('Wallet connect coming next');"
-        >
+        <button id="connectBtn" class="btn btn-primary" type="button">
           Connect Wallet
         </button>
 
-        <button class="btn btn-secondary" type="button" disabled>Claim</button>
+        <button id="claimBtn" class="btn btn-secondary" type="button" disabled>
+          Claim
+        </button>
 
-        <div class="hint">Identity isn’t minted. It’s earned.</div>
+        <div id="hint" class="hint">Identity isn’t minted. It’s earned.</div>
       </div>
     </div>
+
+    <script>
+      let connectedAddress = null;
+
+      const connectBtn = document.getElementById("connectBtn");
+      const claimBtn = document.getElementById("claimBtn");
+      const hintEl = document.getElementById("hint");
+
+      function setHint(msg) {
+        hintEl.textContent = msg;
+      }
+
+      function shortAddr(a) {
+        return a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
+      }
+
+      function enableClaim() {
+        claimBtn.disabled = false;
+        claimBtn.classList.remove("btn-secondary");
+        claimBtn.classList.add("btn-primary");
+        claimBtn.style.cursor = "pointer";
+      }
+
+      async function connectWallet() {
+        try {
+          if (!window.ethereum) {
+            setHint("No wallet detected. Open in Coinbase Wallet in-app browser, or install a browser wallet.");
+            return;
+          }
+
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          connectedAddress = accounts && accounts[0] ? accounts[0] : null;
+
+          if (!connectedAddress) {
+            setHint("Wallet connection failed. Try again.");
+            return;
+          }
+
+          connectBtn.textContent = "Connected: " + shortAddr(connectedAddress);
+          connectBtn.disabled = true;
+          connectBtn.style.opacity = "0.9";
+          connectBtn.style.cursor = "default";
+
+          enableClaim();
+          setHint("Connected. Claim your .rep name.");
+        } catch (err) {
+          console.error(err);
+          setHint("Wallet connection canceled or failed.");
+        }
+      }
+
+      async function claimName() {
+        try {
+          if (!connectedAddress) {
+            setHint("Connect wallet first.");
+            return;
+          }
+
+          const name = prompt("Choose your .rep name (letters/numbers only):");
+          if (!name) return;
+
+          setHint("Checking availability…");
+
+          const checkRes = await fetch(`/api/rep/check?name=${encodeURIComponent(name)}`, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+          });
+
+          const checkJson = await checkRes.json();
+
+          if (!checkJson.ok) {
+            setHint("Invalid name. Use letters/numbers only.");
+            return;
+          }
+          if (!checkJson.available) {
+            setHint("Taken. Try another name.");
+            return;
+          }
+
+          setHint("Reserving…");
+
+          const reserveRes = await fetch(`/api/rep/reserve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ name, walletAddress: connectedAddress })
+          });
+
+          const reserveJson = await reserveRes.json();
+
+          if (!reserveRes.ok || !reserveJson.ok) {
+            setHint(reserveJson?.error ? `Error: ${reserveJson.error}` : "Reserve failed.");
+            return;
+          }
+
+          setHint(`Reserved @${reserveJson.name} ✅`);
+          claimBtn.disabled = true;
+          claimBtn.style.opacity = "0.7";
+          claimBtn.style.cursor = "default";
+        } catch (err) {
+          console.error(err);
+          setHint("Something went wrong. Check console.");
+        }
+      }
+
+      connectBtn.addEventListener("click", connectWallet);
+      claimBtn.addEventListener("click", claimName);
+    </script>
   </body>
 </html>
