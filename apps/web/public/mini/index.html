@@ -1,157 +1,206 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>.rep mini</title>
   <style>
     :root{
-      --bg:#05070c;
-      --btn-radius:999px;
-      --btn-h:72px;
-      --btn-max:640px;
-      --card-radius:28px;
-      --shadow:0 24px 70px rgba(0,0,0,.55);
-      --ring:0 0 0 1px rgba(255,255,255,.06);
-      --text:#e9eefc;
-      --muted:rgba(233,238,252,.7);
+      --bg:#000;
+      --text:#e9ecf6;
+      --muted:rgba(233,236,246,.72);
+      --btnText:#f5f7ff;
+      --btnShadow: 0 12px 30px rgba(0,0,0,.55);
+      --cardBg: rgba(10,12,18,.70);
+      --cardStroke: rgba(255,255,255,.08);
+      --radius: 26px;
     }
-    html, body {
-  margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: #000;
-  color: #eaf0ff;
-  overflow-x: hidden;
-}
-    body {
-  margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: #000;
-  color: #eaf0ff;
-  overflow-x: hidden;
-}
-    .bg {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(900px 700px at 50% 18%, rgba(255,255,255,0.035) 0%, rgba(0,0,0,1) 60%);
-  transform: none;
-  filter: none;
-}
-    .bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(1200px 900px at 50% 25%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%);
-  backdrop-filter: none;
-}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      overflow-x:hidden;
+    }
+    /* Center frame */
     .wrap{
-      position:relative;
-      height:100%;
+      min-height:100%;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      padding: 40px 18px 54px;
     }
-    .stack{
-      width:min(860px, 96vw);
+    .panel{
+      width:min(560px, 92vw);
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:18px;
+      gap: 18px;
     }
+
+    /* Eye card */
     .eyeCard{
-      width:min(680px, 92vw);
-      aspect-ratio: 3 / 4;
-      max-height:min(70vh, 740px);
-      border-radius: var(--card-radius);
-      overflow:hidden;
-      box-shadow: var(--shadow);
-      position:relative;
-      background:#000;
+      width: 100%;
+      border-radius: var(--radius);
+      background: rgba(0,0,0,.35);
+      border: 1px solid var(--cardStroke);
+      box-shadow: 0 24px 70px rgba(0,0,0,.65);
+      padding: 18px 18px 14px;          /* padding prevents “cutoff” */
+      box-sizing:border-box;
     }
-    /* Use a real <img> so it can never be cropped by background sizing rules. */
     .eyeImg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      /* Shift slightly down/right to avoid the top edge feeling clipped */
-      object-position: 58% 60%;
-      user-select:none;
-      pointer-events:none;
+      width: 100%;
+      height: auto;
+      display:block;
+      object-fit: contain;              /* never crop */
+      border-radius: calc(var(--radius) - 10px);
+      /* subtle “down + right” bias without cropping */
+      transform: translate(10px, 12px);
+      max-height: 56vh;                 /* keeps buttons visible on desktop */
     }
-    .eyeCard::after{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(520px 360px at 50% 35%, rgba(120,140,255,.20), rgba(0,0,0,0) 60%),
-        radial-gradient(520px 360px at 55% 55%, rgba(210,120,255,.14), rgba(0,0,0,0) 65%),
-        rgba(0,0,0,.08);
-    }
-    .btnCol{
-      width:min(var(--btn-max), 92vw);
+
+    /* Buttons */
+    .btnStack{
+      width: 100%;
       display:flex;
       flex-direction:column;
-      gap:16px;
-      align-items:center;
+      gap: 14px;
       margin-top: 6px;
     }
     .btn{
-      width:100%;
-      height:var(--btn-h);
-      border-radius: var(--btn-radius);
-      border: none;
+      width: 100%;
+      border: 0;
       cursor:pointer;
-      font-size: 30px;
-      font-weight: 700;
+      border-radius: 999px;
+      padding: 18px 22px;              /* chunky */
+      font-weight: 800;
+      font-size: 26px;
       letter-spacing: .2px;
-      color: rgba(255,255,255,.92);
-      box-shadow: 0 22px 44px rgba(0,0,0,.55), var(--ring);
-      transition: transform .08s ease, filter .08s ease, box-shadow .12s ease;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 0 28px;
+      color: var(--btnText);
+      box-shadow: var(--btnShadow);
       user-select:none;
       -webkit-tap-highlight-color: transparent;
+      transition: transform .08s ease, filter .15s ease, opacity .15s ease;
     }
-    .btn:active{ transform: translateY(1px) scale(.995); filter: brightness(.98); }
-    .btn:focus-visible{ outline: 2px solid rgba(130,160,255,.55); outline-offset: 3px; }
-    .primary{
-      background: linear-gradient(90deg, rgba(108,210,255,1) 0%, rgba(113,160,255,1) 45%, rgba(170,95,255,1) 100%);
+    .btn:active{ transform: translateY(1px) scale(.995); }
+    .btnPrimary{
+      background: linear-gradient(90deg, rgba(115,219,255,1) 0%, rgba(124,151,255,1) 40%, rgba(182,106,255,1) 100%);
     }
-    .secondary{
-      background: linear-gradient(90deg, rgba(108,210,255,.40) 0%, rgba(113,160,255,.32) 45%, rgba(170,95,255,.40) 100%);
-      color: rgba(255,255,255,.82);
+    .btnSecondary{
+      background: linear-gradient(90deg, rgba(75,175,255,.50) 0%, rgba(116,120,255,.45) 55%, rgba(165,96,255,.42) 100%);
+      border: 1px solid rgba(255,255,255,.10);
     }
     .tagline{
-      font-size:14px;
-      color: var(--muted);
       margin-top: 2px;
+      font-size: 13px;
+      color: var(--muted);
       text-align:center;
     }
-    @media (max-width: 520px){
-      :root{ --btn-h:68px; }
-      .btn{ font-size: 28px; }
-      .eyeCard{ max-height: 62vh; }
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(12,14,20,.78);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      box-shadow: 0 18px 45px rgba(0,0,0,.6);
+      max-width: min(520px, 92vw);
+      display:none;
+      z-index: 50;
+    }
+    .toast.show{ display:block; }
+
+    @media (max-width: 420px){
+      .btn{ font-size: 22px; padding: 16px 20px; }
+      .eyeImg{ transform: translate(6px, 10px); max-height: 52vh; }
+      .wrap{ padding-top: 22px; }
     }
   </style>
 </head>
 <body>
-  <div class="bg" aria-hidden="true"></div>
-  <main class="wrap">
-    <section class="stack" aria-label=".rep mini app">
-      <div class="eyeCard" aria-label=".rep eye">
-        <img class="eyeImg" src="/mini/miniapp-eye-plate.jpg" alt="" />
+  <div class="wrap">
+    <div class="panel" role="main" aria-label=".rep mini claim">
+      <div class="eyeCard" aria-hidden="true">
+        <!-- IMPORTANT: keep this file at /mini/index.html and this image at /mini/chameleon-eye.jpg -->
+        <img class="eyeImg" src="./chameleon-eye.jpg?v=10" alt=".rep eye" />
       </div>
 
-      <div class="btnCol">
-        <button class="btn primary" onclick="window.location.href='/claim'">Connect Wallet</button>
-        <button class="btn secondary" onclick="window.location.href='/claim'">Claim</button>
-        <div class="tagline">Identity isn’t minted. It’s earned.</div>
+      <div class="btnStack">
+        <button id="btnConnect" class="btn btnPrimary" type="button">Connect Wallet</button>
+        <button id="btnClaim" class="btn btnSecondary" type="button">Claim</button>
       </div>
-    </section>
-  </main>
+
+      <div class="tagline">Identity isn’t minted. It’s earned.</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Minimal, reliable connect → then deep-link into the real claim UI.
+    const CLAIM_URL = "https://dotrep.io/claim";
+    const toast = document.getElementById("toast");
+    const btnConnect = document.getElementById("btnConnect");
+    const btnClaim = document.getElementById("btnClaim");
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>toast.classList.remove("show"), 3200);
+    }
+
+    async function connectWallet(){
+      const eth = window.ethereum;
+      if(!eth){
+        showToast("No wallet detected. Open in a wallet-enabled browser (Base Wallet / Coinbase Wallet / MetaMask).");
+        return null;
+      }
+      try{
+        const accounts = await eth.request({ method: "eth_requestAccounts" });
+        if(accounts && accounts[0]){
+          showToast("Wallet connected.");
+          return accounts[0];
+        }
+        showToast("No account returned by wallet.");
+        return null;
+      }catch(err){
+        const msg = (err && (err.message || err.toString())) || "Wallet connect failed.";
+        // Common: user rejected the request
+        if(String(msg).toLowerCase().includes("rejected")) showToast("Connection canceled.");
+        else showToast(msg);
+        return null;
+      }
+    }
+
+    btnConnect.addEventListener("click", async ()=>{
+      await connectWallet();
+    });
+
+    btnClaim.addEventListener("click", async ()=>{
+      // If not connected yet, try to connect first; then proceed.
+      const connected = await connectWallet();
+      // Even if already connected, we just deep-link into the real claim page.
+      window.location.href = CLAIM_URL;
+    });
+
+    // If wallet already authorized, we can detect it and skip the toast.
+    (async ()=>{
+      try{
+        const eth = window.ethereum;
+        if(!eth) return;
+        const accs = await eth.request({ method: "eth_accounts" });
+        if(accs && accs.length){
+          // subtle state hint
+          btnConnect.textContent = "Wallet Connected";
+        }
+      }catch(_){}
+    })();
+  </script>
 </body>
 </html>
