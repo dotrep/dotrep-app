@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>.rep mini</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .eye-wrap {
+      width: min(560px, 90vw);
+      display: flex;
+      justify-content: center;
+    }
+    .eye-wrap img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+    .buttons {
+      width: min(420px, 90vw);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    button {
+      height: 64px;
+      border-radius: 999px;
+      border: none;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+    }
+    .primary {
+      background: linear-gradient(90deg, #7dd3fc, #a78bfa);
+    }
+    .secondary {
+      background: linear-gradient(90deg, #334155, #4c1d95);
+    }
+    .tagline {
+      font-size: 14px;
+      opacity: 0.6;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="eye-wrap">
+    <img src="eye.png" alt=".rep eye"/>
+  </div>
+
+  <div class="buttons">
+    <button id="primaryBtn" class="primary">Connect Wallet</button>
+    <button id="claimBtn" class="secondary">Claim</button>
+  </div>
+
+  <div class="tagline">Identity isn’t minted. It’s earned.</div>
+</div>
+
+<script>
+const CLAIM_URL = "https://dotrep.io/claim";
+const primaryBtn = document.getElementById("primaryBtn");
+const claimBtn = document.getElementById("claimBtn");
+
+async function hasConnectedWallet() {
+  if (!window.ethereum) return false;
+  try {
+    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    return accounts && accounts.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function connectAndContinue() {
+  if (!window.ethereum) {
+    window.location.href = CLAIM_URL;
+    return;
+  }
+  try {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    window.location.href = CLAIM_URL;
+  } catch (e) {
+    console.warn("Wallet connect cancelled");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if (await hasConnectedWallet()) {
+    primaryBtn.textContent = "Continue";
+    primaryBtn.onclick = () => window.location.href = CLAIM_URL;
+  } else {
+    primaryBtn.onclick = connectAndContinue;
+  }
+  claimBtn.onclick = () => window.location.href = CLAIM_URL;
+});
+</script>
+
+</body>
+</html>
