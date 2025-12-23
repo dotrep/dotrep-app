@@ -69,11 +69,17 @@
       position:relative;
       background:#000;
     }
-    .eyeCard::before{
-      content:"";
-      position:absolute; inset:0;
-      background: url("/mini/miniapp-eye-plate.jpg") 56% 42%/cover no-repeat;
-      transform: scale(1.06);
+    /* Use a real <img> so it can never be cropped by background sizing rules. */
+    .eyeImg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      /* Shift slightly down/right to avoid the top edge feeling clipped */
+      object-position: 58% 60%;
+      user-select:none;
+      pointer-events:none;
     }
     .eyeCard::after{
       content:"";
@@ -136,7 +142,9 @@
   <div class="bg" aria-hidden="true"></div>
   <main class="wrap">
     <section class="stack" aria-label=".rep mini app">
-      <div class="eyeCard" role="img" aria-label=".rep eye"></div>
+      <div class="eyeCard" aria-label=".rep eye">
+        <img class="eyeImg" src="/mini/miniapp-eye-plate.jpg" alt="" />
+      </div>
 
       <div class="btnCol">
         <button class="btn primary" onclick="window.location.href='/claim'">Connect Wallet</button>
