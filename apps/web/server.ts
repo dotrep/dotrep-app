@@ -1391,28 +1391,38 @@ app.get("/whitepaper", (_req, res) => {
 // In production, serve static files from the Vite build
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "dist");
+  const miniPath = path.join(distPath, "mini");
 
-  // Serve static assets including index.html at /
-  // This provides fast 200 OK for health checks AND serves the app to users
+  /**
+   * 1) MINI APP — FIRST AND EXPLICIT
+   * This prevents falling through to the SPA home page
+   */
+  app.use("/mini", express.static(miniPath, { index: "index.html" }));
+
+  // Explicit handlers so /mini and /mini/ NEVER fall through
+  app.get("/mini", (_req, res) => {
+    res.sendFile(path.join(miniPath, "index.html"));
+  });
+
+  app.get("/mini/", (_req, res) => {
+    res.sendFile(path.join(miniPath, "index.html"));
+  });
+
+  /**
+   * 2) MAIN APP STATIC FILES
+   */
   app.use(express.static(distPath));
-  // Serve mini app files from dist/mini (must come before SPA fallback)
-  app.use(
-    "/mini",
-    express.static(path.join(distPath, "mini"), { index: "index.html" }),
-  );
 
-  // Serve index.html for all non-API routes (SPA routing)
+  /**
+   * 3) SPA FALLBACK — LAST
+   */
   app.get("*", (req, res) => {
-    // Skip API routes
     if (req.path.startsWith("/api/")) {
       return res.status(404).send("Not found");
     }
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
-
-export default app;
-
 // Environment variable validation for production safety
 function validateEnvironment() {
   const errors: string[] = [];
