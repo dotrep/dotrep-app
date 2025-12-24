@@ -32,6 +32,8 @@
       height: auto;
       object-fit: contain;
       display: block;
+      user-select: none;
+      -webkit-user-drag: none;
     }
     .buttons {
       width: min(420px, 90vw);
@@ -44,7 +46,8 @@
       border-radius: 999px;
       border: none;
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 750;
+      letter-spacing: 0.2px;
       cursor: pointer;
       color: #fff;
     }
@@ -85,7 +88,7 @@ async function hasConnectedWallet() {
   if (!window.ethereum) return false;
   try {
     const accounts = await window.ethereum.request({ method: "eth_accounts" });
-    return accounts && accounts.length > 0;
+    return Array.isArray(accounts) && accounts.length > 0;
   } catch {
     return false;
   }
@@ -100,7 +103,7 @@ async function connectAndContinue() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
     window.location.href = CLAIM_URL;
   } catch (e) {
-    console.warn("Wallet connect cancelled");
+    console.warn("[mini] Wallet connect cancelled/rejected", e);
   }
 }
 
