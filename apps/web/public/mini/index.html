@@ -1,122 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>.rep mini</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #fff;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    .container {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 28px;
-      padding: 24px;
-      box-sizing: border-box;
-    }
-    .eye-wrap {
-      width: min(560px, 90vw);
-      display: flex;
-      justify-content: center;
-    }
-    .eye-wrap img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-    .buttons {
-      width: min(420px, 90vw);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    button {
-      height: 64px;
-      border-radius: 999px;
-      border: none;
-      font-size: 20px;
-      font-weight: 750;
-      letter-spacing: 0.2px;
-      cursor: pointer;
-      color: #fff;
-    }
-    .primary {
-      background: linear-gradient(90deg, #7dd3fc, #a78bfa);
-    }
-    .secondary {
-      background: linear-gradient(90deg, #334155, #4c1d95);
-    }
-    .tagline {
-      font-size: 14px;
-      opacity: 0.6;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>.rep — mini</title>
+    <style>
+      :root{
+        --bg:#000;
+        --text:#fff;
+        --muted:rgba(255,255,255,.65);
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%;margin:0}
+      body{
+        background:var(--bg);
+        color:var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+      }
 
-<div class="container">
-  <div class="eye-wrap">
-    <img src="eye.png" alt=".rep eye"/>
-  </div>
+      .wrap{
+        width:100%;
+        max-width:720px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:22px;
+      }
 
-  <div class="buttons">
-    <button id="primaryBtn" class="primary">Connect Wallet</button>
-    <button id="claimBtn" class="secondary">Claim</button>
-  </div>
+      /* Make the eye BIG (and responsive) */
+      .hero{
+        width:min(640px, 92vw);
+        height:auto;
+        display:block;
+        user-select:none;
+        -webkit-user-drag:none;
+        filter: drop-shadow(0 10px 28px rgba(0,0,0,.65));
+      }
 
-  <div class="tagline">Identity isn’t minted. It’s earned.</div>
-</div>
+      .cta{
+        width:min(460px, 92vw);
+        height:74px;
+        border:0;
+        border-radius:999px;
+        cursor:pointer;
+        color:#fff;
+        font-weight:700;
+        font-size:22px;
+        letter-spacing:.2px;
+        background: linear-gradient(90deg, #69d7ff 0%, #7b78ff 45%, #b15bff 100%);
+        box-shadow:
+          0 14px 30px rgba(0,0,0,.55),
+          inset 0 0 0 1px rgba(255,255,255,.16);
+        transition: transform .08s ease, filter .15s ease, box-shadow .15s ease;
+      }
+      .cta:hover{
+        filter: brightness(1.06);
+        box-shadow:
+          0 16px 34px rgba(0,0,0,.60),
+          inset 0 0 0 1px rgba(255,255,255,.20);
+      }
+      .cta:active{ transform: translateY(1px) scale(.995); }
 
-<script>
-const CLAIM_URL = "https://dotrep.io/claim";
-const primaryBtn = document.getElementById("primaryBtn");
-const claimBtn = document.getElementById("claimBtn");
+      .tagline{
+        font-size:12px;
+        line-height:1.3;
+        color:var(--muted);
+        text-align:center;
+        margin-top:-6px;
+      }
 
-async function hasConnectedWallet() {
-  if (!window.ethereum) return false;
-  try {
-    const accounts = await window.ethereum.request({ method: "eth_accounts" });
-    return Array.isArray(accounts) && accounts.length > 0;
-  } catch {
-    return false;
-  }
-}
+      /* Slightly tighter spacing on short heights */
+      @media (max-height: 720px){
+        .wrap{ gap:16px; }
+        .cta{ height:68px; font-size:20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <!-- Put eye-clean.png in the SAME folder as this index.html -->
+      <img class="hero" src="eye-clean.png" alt=".rep eye" />
 
-async function connectAndContinue() {
-  if (!window.ethereum) {
-    window.location.href = CLAIM_URL;
-    return;
-  }
-  try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    window.location.href = CLAIM_URL;
-  } catch (e) {
-    console.warn("[mini] Wallet connect cancelled/rejected", e);
-  }
-}
+      <button id="claimBtn" class="cta" type="button">Claim your .rep</button>
 
-document.addEventListener("DOMContentLoaded", async () => {
-  if (await hasConnectedWallet()) {
-    primaryBtn.textContent = "Continue";
-    primaryBtn.onclick = () => window.location.href = CLAIM_URL;
-  } else {
-    primaryBtn.onclick = connectAndContinue;
-  }
-  claimBtn.onclick = () => window.location.href = CLAIM_URL;
-});
-</script>
+      <div class="tagline">Identity isn’t minted. It’s earned.</div>
+    </main>
 
-</body>
+    <script>
+      // Use absolute URL so it works both locally (file://) and on dotrep.io/mini/
+      const CLAIM_URL = "https://dotrep.io/claim";
+      document.getElementById("claimBtn").addEventListener("click", () => {
+        window.location.href = CLAIM_URL;
+      });
+    </script>
+  </body>
 </html>
