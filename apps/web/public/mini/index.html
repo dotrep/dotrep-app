@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>.rep Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* Video stage */
+    #container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      z-index: 1;
+
+      /* ✅ This is what made your layout “perfect” (eye higher) */
+      padding-bottom: 190px;
+      box-sizing: border-box;
+    }
+
+    img, video {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    video { background: #000; }
+
+    /* UI anchored near bottom-center (your perfect screenshot) */
+    #ui {
+      position: fixed;
+      left: 50%;
+      bottom: 52px;
+      transform: translateX(-50%);
+      z-index: 10;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* ✅ Smaller CTA to match your mock */
+    .cta {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: min(420px, 80vw);
+      height: 56px;
+
+      border-radius: 9999px;
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #fff;
+
+      background: linear-gradient(90deg, #69d2ff 0%, #a060ff 100%);
+      box-shadow:
+        0 10px 30px rgba(106, 149, 255, 0.26),
+        0 2px 0 rgba(255,255,255,0.08) inset;
+
+      transition: transform 0.12s ease, filter 0.12s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cta:hover{
+      filter: brightness(1.06);
+      transform: scale(1.01);
+    }
+
+    .cta:active{
+      transform: scale(0.99);
+      filter: brightness(0.98);
+    }
+
+    .tagline{
+      margin-top: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.68);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="container"></div>
+
+  <div id="ui">
+    <a class="cta" href="https://dotrep.io/claim">Claim your .rep</a>
+    <div class="tagline">Identity isn’t minted. It’s earned.</div>
+  </div>
+
+  <script>
+    const container = document.getElementById("container");
+
+    // Deterministic intro sequence (original behavior)
+    const INTRO_SEQUENCE = ["eye5.mp4", "eye4.mp4"];
+
+    // Random loop pool
+    const LOOP_POOL = ["eye4.mp4", "eye5.mp4"];
+
+    let introIndex = 0;
+
+    function clearContainer() {
+      container.innerHTML = "";
+    }
+
+    function playVideo(src, onEnd) {
+      clearContainer(); // ✅ keeps the flash (this was the “previous version”)
+
+      const video = document.createElement("video");
+      video.src = src;
+      video.autoplay = true;
+      video.muted = true;
+      video.playsInline = true;
+
+      container.appendChild(video);
+
+      video.onended = () => {
+        if (onEnd) onEnd();
+      };
+    }
+
+    function playIntro() {
+      if (introIndex < INTRO_SEQUENCE.length) {
+        playVideo(INTRO_SEQUENCE[introIndex], () => {
+          introIndex++;
+          playIntro();
+        });
+      } else {
+        setTimeout(playRandomLoop, 4000);
+      }
+    }
+
+    function playRandomLoop() {
+      const next = LOOP_POOL[Math.floor(Math.random() * LOOP_POOL.length)];
+      playVideo(next, () => {
+        setTimeout(playRandomLoop, 4000);
+      });
+    }
+
+    // Start playback
+    playIntro();
+  </script>
+
+</body>
+</html>
