@@ -1,0 +1,227 @@
+Goal
+
+Make https://dotrep.io/mini/ serve public/mini/index.html (and its assets) reliably across browsers.
+
+What “404 not found” usually means here
+
+Either:
+
+The server isn’t serving public/ at all in production, or
+
+A catch-all route (*) is intercepting /mini before static middleware, or
+
+dotrep.io is hosted somewhere else and does not proxy /mini to this Replit deployment, or
+
+Next/Vercel behavior: public/mini/index.html is reachable at /mini/index.html but not /mini/.
+
+We will prove which one in <10 minutes using HTTP tests + source inspection.
+
+Step 1 — Confirm what server is actually responding for dotrep.io/mini
+
+Run these from Replit Shell (or any terminal):
+
+curl -i https://dotrep.io/mini
+curl -i https://dotrep.io/mini/
+curl -i https://dotrep.io/mini/index.html
+
+
+Record:
+
+HTTP status (200/301/404)
+
+server header (if present)
+
+Any x-powered-by, x-vercel-*, cf-*, etc.
+
+Response body snippet (first ~200 chars)
+
+Interpretation:
+
+If /mini/index.html returns 200 but /mini/ returns 404 → directory index/redirect issue.
+
+If all return 404 and headers mention Vercel/Cloudflare/etc. → dotrep.io is not hitting Replit at all (routing/proxy issue).
+
+If headers show Express/Node but still 404 → server/catch-all ordering issue.
+
+Step 2 — Confirm the Replit deployment itself serves /mini
+
+Find the current Replit deployment URL (the *.replit.app or *.replit.dev URL) from Deployments page.
+
+Then run:
+
+# Replace with actual deployment URL
+DEPLOY="https://<YOUR-DEPLOY-URL>"
+curl -i "$DEPLOY/mini"
+curl -i "$DEPLOY/mini/"
+curl -i "$DEPLOY/mini/index.html"
+
+
+Interpretation:
+
+If Replit deploy serves /mini/index.html but dotrep.io does not → dotrep.io host routing is the culprit.
+
+If Replit deploy also fails → server config/catch-all is the culprit.
+
+Step 3 — Verify files are exactly where we think
+
+In Replit Shell:
+
+ls -la public
+ls -la public/mini
+
+
+Must show:
+
+public/mini/index.html
+
+public/mini/eye4.mp4
+
+public/mini/eye5.mp4
+
+public/mini/eye-clean.png
+
+If they’re missing, fix the file locations first.
+
+Step 4 — Identify the runtime (Express vs Next vs Vite static)
+
+Check project structure:
+
+ls -la
+cat package.json
+
+
+In package.json, look for:
+
+"next" → Next.js runtime
+
+"express" / server.js / index.js / app.js → Express runtime
+
+"vite" → Vite dev server (production often different)
+
+Also locate server entry:
+
+# common candidates
+ls -la server* *.js *.mjs *.cjs 2>/dev/null
+find . -maxdepth 3 -type f \( -name "server.*" -o -name "app.*" -o -name "index.*" \) | head -n 50
+
+Step 5 — If Express: fix static middleware order (most common)
+
+Search for catch-all routes:
+
+rg "app\.get\(\"\\*\"" -n
+rg "app\.use\(\(req, res" -n
+rg "next\(" -n
+rg "createServer" -n
+
+Required Express fix
+
+In the main server file (where const app = express() exists), ensure these rules:
+
+Static must be mounted BEFORE any catch-all:
+
+import path from "path";
+import express from "express";
+
+const app = express();
+
+app.use(express.static(path.join(process.cwd(), "public")));
+
+
+Add an explicit redirect for /mini:
+
+app.get("/mini", (req, res) => res.redirect(301, "/mini/"));
+
+
+Ensure catch-all is LAST:
+
+app.get("*", (req, res) => res.status(404).send("Not Found"));
+
+
+✅ After change, redeploy.
+
+Verification
+
+From deployment URL:
+
+curl -i "$DEPLOY/mini/"
+curl -I "$DEPLOY/mini/eye4.mp4"
+
+
+Expect 200 for /mini/ and 200 for assets.
+
+Step 6 — If Next.js: correct expectation + add redirect/rewrite
+
+If this is Next:
+
+public/mini/index.html is served at /mini/index.html, not /mini/.
+
+So first verify:
+
+curl -i "$DEPLOY/mini/index.html"
+
+
+If that returns 200 but /mini/ does not, implement redirects in next.config.js:
+
+module.exports = {
+  async redirects() {
+    return [
+      { source: "/mini", destination: "/mini/index.html", permanent: true },
+      { source: "/mini/", destination: "/mini/index.html", permanent: false },
+    ];
+  },
+};
+
+
+Redeploy and re-test.
+
+Step 7 — If dotrep.io is not the Replit deployment: fix routing
+
+If dotrep.io responses show Vercel/Cloudflare/Netlify headers OR the Replit deployment works but dotrep.io doesn’t:
+
+Resolution options (pick the fastest)
+
+Option A (recommended): use a subdomain
+Point mini.dotrep.io to the Replit deployment custom domain feature.
+
+Replit Deployments → Custom Domain → add mini.dotrep.io
+
+Update DNS to the target Replit specifies (CNAME/A record)
+
+Verify https://mini.dotrep.io/ works
+
+Option B: keep dotrep.io/mini via host-level rewrite
+Add a rewrite rule on whatever hosts dotrep.io:
+
+/mini/* → proxy to Replit deployment (preserving path)
+
+/mini → redirect to /mini/
+
+Exact syntax depends on host (Vercel, Netlify, Cloudflare Pages/Workers). The agent must identify the host from headers and implement the proper rewrite.
+
+Step 8 — Final deliverable back to Jason
+
+Agent must return:
+
+Which system was actually serving dotrep.io (proof via headers)
+
+Which URL(s) worked: /mini, /mini/, /mini/index.html on both dotrep.io and Replit deploy
+
+The exact root cause category:
+
+Express static order / catch-all
+
+Next public asset routing
+
+dotrep.io not routed to Replit
+
+missing files
+
+The exact code/config changes made (with file names)
+
+Final verification curl outputs showing 200 for:
+
+/mini/
+
+/mini/index.html
+
+/mini/eye4.mp4
