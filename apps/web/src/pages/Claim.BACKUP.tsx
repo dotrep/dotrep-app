@@ -33,7 +33,6 @@ export default function Claim() {
   const { address, isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
   const { signMessageAsync } = useSignMessage();
-
   const [name, setName] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -49,6 +48,52 @@ export default function Claim() {
       document.documentElement.classList.add("motion-off");
     }
   }, []);
+
+  // ✅ NEW: If the connected wallet already owns a .rep, redirect to dashboard
+  useEffect(() => {
+    let cancelled = false;
+
+    async function redirectIfAlreadyClaimed() {
+      if (!isConnected || !address) return;
+
+      try {
+        const walletAddress = address.toLowerCase();
+
+        const lookupRes = await fetch(
+          `/api/rep/lookup-wallet?address=${encodeURIComponent(walletAddress)}`,
+          { credentials: "include" },
+        );
+
+        let lookupData: any = null;
+        try {
+          lookupData = await lookupRes.json();
+        } catch {
+          lookupData = null;
+        }
+
+        if (cancelled) return;
+
+        if (
+          lookupRes.ok &&
+          lookupData?.ok &&
+          lookupData?.walletFound &&
+          lookupData?.name
+        ) {
+          console.log("[CLAIM] Wallet already has .rep:", lookupData.name);
+          setLocation("/rep-dashboard");
+        }
+      } catch (err) {
+        // Safe to ignore: claim page can still function without auto-redirect
+        console.log("[CLAIM] lookup-wallet failed (safe to ignore)", err);
+      }
+    }
+
+    redirectIfAlreadyClaimed();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, address, setLocation]);
 
   // Real-time availability checking
   useEffect(() => {
@@ -167,9 +212,7 @@ export default function Claim() {
       // Step 2: Check if wallet already has a .rep name (prevent duplicates)
       console.log("[CLAIM] Step 2: Checking if wallet has existing .rep...");
       const lookupRes = await fetch(
-        `/api/rep/lookup-wallet?address=${encodeURIComponent(
-          currentAddress.toLowerCase(),
-        )}`,
+        `/api/rep/lookup-wallet?address=${encodeURIComponent(currentAddress.toLowerCase())}`,
         {
           credentials: "include",
         },
@@ -178,83 +221,15 @@ export default function Claim() {
       const lookupData = await lookupRes.json();
       console.log("[CLAIM] Lookup result:", lookupData);
 
-      // ✅ IMPORTANT FIX:
-      // If wallet already owns a .rep name, we still must CREATE A SESSION
-      // (challenge → sign → verify), otherwise /api/auth/me returns 401 and
-      // the app will flutter between /claim and /rep-dashboard forever.
       if (lookupData.ok && lookupData.walletFound) {
+        // Wallet already has a name - redirect to dashboard
         console.log(
-          "[CLAIM] Wallet already has .rep, logging in + redirecting...",
+          "[CLAIM] Wallet already has .rep, redirecting to dashboard",
         );
-
-        // Step 3: Request server-issued challenge nonce
-        console.log("[CLAIM] Step 3 (LOGIN): Requesting challenge nonce...");
-        const challengeRes = await fetch("/api/auth/challenge", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        if (!challengeRes.ok) {
-          throw new Error("Failed to get authentication challenge");
-        }
-
-        const { nonce, timestamp } = await challengeRes.json();
-        console.log("[CLAIM] Challenge received:", {
-          nonce: nonce ? nonce.substring(0, 10) + "..." : null,
-          timestamp,
-        });
-
-        if (!nonce) throw new Error("No nonce received from server");
-
-        // Step 4: Sign challenge
-        console.log(
-          "[CLAIM] Step 4 (LOGIN): Requesting signature from wallet...",
+        setError(
+          `This wallet already owns ${lookupData.name}.rep - redirecting to dashboard...`,
         );
-        const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${currentAddress.toLowerCase()}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
-
-        const signature = await signMessageAsync({ message: challengeMessage });
-        console.log("[CLAIM] Signature received, length:", signature?.length);
-
-        if (!signature)
-          throw new Error("Signature required to verify wallet ownership");
-
-        // Step 5: Verify signature and create session
-        console.log(
-          "[CLAIM] Step 5 (LOGIN): Verifying signature with server...",
-        );
-        const verifyRes = await fetch("/api/auth/verify", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            address: currentAddress.toLowerCase(),
-            message: challengeMessage,
-            signature,
-            nonce,
-            method: "EOA",
-          }),
-          credentials: "include",
-        });
-
-        if (!verifyRes.ok) {
-          const errorData = await verifyRes.json().catch(() => ({}));
-          console.error("[CLAIM] Verification failed:", errorData);
-          throw new Error(
-            errorData.error || "Failed to verify wallet ownership",
-          );
-        }
-
-        const verifyData = await verifyRes.json();
-        console.log(
-          "[CLAIM] Login verified successfully, method:",
-          verifyData.method,
-        );
-
-        // Optional local storage consistency
-        localStorage.setItem("rep:lastName", lookupData.name);
-        localStorage.setItem("rep:address", currentAddress.toLowerCase());
-
-        console.log("[CLAIM] Redirecting to dashboard...");
-        setLocation("/rep-dashboard");
+        setTimeout(() => setLocation("/rep-dashboard"), 1500);
         return;
       }
 
@@ -273,23 +248,23 @@ export default function Claim() {
 
       const { nonce, timestamp } = await challengeRes.json();
       console.log("[CLAIM] Challenge received:", {
-        nonce: nonce ? nonce.substring(0, 10) + "..." : null,
+        nonce: nonce.substring(0, 10) + "...",
         timestamp,
       });
 
       if (!nonce) throw new Error("No nonce received from server");
 
-      // Step 4: Sign challenge message
+      // Step 4: Sign challenge message with nonce to prove wallet ownership
       console.log("[CLAIM] Step 4: Requesting signature from wallet...");
       const challengeMessage = `Sign this message to verify your .rep identity.\n\nAddress: ${currentAddress.toLowerCase()}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
       const signature = await signMessageAsync({ message: challengeMessage });
-      console.log("[CLAIM] Signature received, length:", signature?.length);
+      console.log("[CLAIM] Signature received, length:", signature.length);
 
       if (!signature)
         throw new Error("Signature required to verify wallet ownership");
 
-      // Step 5: Verify signature
+      // Step 5: Create session with verified signature
       console.log("[CLAIM] Step 5: Verifying signature with server...");
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
@@ -305,7 +280,7 @@ export default function Claim() {
       });
 
       if (!verifyRes.ok) {
-        const errorData = await verifyRes.json().catch(() => ({}));
+        const errorData = await verifyRes.json();
         console.error("[CLAIM] Verification failed:", errorData);
         throw new Error(errorData.error || "Failed to verify wallet ownership");
       }
@@ -337,7 +312,7 @@ export default function Claim() {
         throw new Error(reserveData.error || "Failed to reserve name");
       }
 
-      // Step 7: Store reservation info and redirect
+      // Step 7: Store reservation info and redirect to dashboard
       console.log(
         "[CLAIM] Step 7: Name reserved successfully! Redirecting to dashboard...",
       );
@@ -346,7 +321,6 @@ export default function Claim() {
         localStorage.setItem("rep:reservationId", reserveData.reservationId);
         localStorage.setItem("rep:address", currentAddress.toLowerCase());
       }
-
       setLocation("/rep-dashboard");
     } catch (err: any) {
       console.error("[CLAIM] Error:", err);
@@ -473,9 +447,7 @@ export default function Claim() {
                 isClaiming ||
                 (isConnected && !canClaim && !!name)
               }
-              className={`claim-button ${
-                canClaim ? "claim-button-active" : "claim-button-disabled"
-              }`}
+              className={`claim-button ${canClaim ? "claim-button-active" : "claim-button-disabled"}`}
             >
               {getButtonText()}
             </button>

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "start": "node server/server.js"
+    "start": "node server/server.cjs"
   },
   "dependencies": {
     "@metamask/sdk": "^0.28.2",

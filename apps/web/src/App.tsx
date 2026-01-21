@@ -1,14 +1,16 @@
 import React from "react";
 import { Route, Switch } from "wouter";
-import { WagmiProvider } from 'wagmi';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { wagmiConfig } from './config/wagmi';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { wagmiConfig } from "./config/wagmi";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import Claim from "./pages/Claim";
 import Wallet from "./pages/Wallet";
 import RepDashboard from "./pages/RepDashboard";
+import RepDashboardV2 from "./pages/RepDashboardV2";
 import Admin from "./pages/Admin";
 import Missions from "./pages/Missions";
 import Map from "./pages/Map";
@@ -27,6 +29,7 @@ export default function App() {
             <Route path="/discover" component={Discover} />
             <Route path="/wallet" component={Wallet} />
             <Route path="/rep-dashboard" component={RepDashboard} />
+            <Route path="/rep-dashboard-v2" component={RepDashboardV2} />
             <Route path="/missions" component={Missions} />
             <Route path="/map" component={Map} />
             <Route path="/admin" component={Admin} />
