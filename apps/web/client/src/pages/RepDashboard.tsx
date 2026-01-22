@@ -1,347 +1,308 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useAccount } from 'wagmi';
-import { useQuery } from '@tanstack/react-query';
-import WalletTab from '../components/WalletTab';
-import FsnMessageTab from '../components/FsnMessageTab';
-import VaultUpload from '../components/VaultUpload';
-import ChatDashboard from '../components/ChatSystem/ChatDashboard';
-import PulseGauge from '../components/PulseGauge';
-import { SEOHead } from '../components/SEOHead';
+import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "wouter";
+import { useAccount } from "wagmi";
+import "./rep-dashboard.css";
 
-const generateParticles = (count: number) => Array.from({ length: count }, (_, i) => ({
-  left: Math.random() * 100,
-  top: Math.random() * 100,
-  size: 3 + Math.random() * 6,
-  delay: Math.random() * 5,
-  duration: 8 + Math.random() * 12,
-  color: i % 3 === 0 ? 'rgba(0, 212, 170, 0.4)' : i % 3 === 1 ? 'rgba(0, 82, 255, 0.35)' : 'rgba(255, 107, 53, 0.3)',
-}));
+const generateParticles = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    size: 3 + Math.random() * 6,
+    delay: Math.random() * 5,
+    duration: 8 + Math.random() * 12,
+    color:
+      i % 3 === 0
+        ? "rgba(0, 212, 170, 0.4)"
+        : i % 3 === 1
+          ? "rgba(0, 82, 255, 0.35)"
+          : "rgba(255, 107, 53, 0.3)",
+  }));
 
-export function RepDashboard() {
+export default function RepDashboard() {
+  const particles = useMemo(() => generateParticles(30), []);
   const [, setLocation] = useLocation();
   const { address, isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<'wallet' | 'messages' | 'vault' | 'chat'>('wallet');
-  const [repName, setRepName] = useState('');
-  const [userId, setUserId] = useState<number>(1);
-  const particles = generateParticles(30);
 
-  // Check session
-  const { data: sessionData, isLoading: sessionLoading } = useQuery({
-    queryKey: ['/api/auth/me'],
-    retry: false,
-  });
-
-  // Fetch user stats for pulse gauge
-  const { data: userStats } = useQuery({
-    queryKey: ['/api/user/stats'],
-    enabled: !!sessionData?.ok,
-    refetchInterval: 5000,
-  });
+  const [repName, setRepName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    if (!sessionLoading && !sessionData?.ok) {
-      // No valid session, redirect to claim
-      setLocation('/claim');
-      return;
+    const preferredMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+    if (preferredMotion.matches) {
+      document.documentElement.classList.add("motion-off");
     }
-    
-    if (sessionData?.ok) {
-      setRepName(sessionData.repName);
-      // Generate userId from reservation ID
-      const rid = sessionData.userId || sessionData.repName;
-      const hash = rid.split('').reduce((acc: number, char: string, idx: number) => 
-        acc + char.charCodeAt(0) * (idx + 1), 0
+  }, []);
+
+  useEffect(() => {
+    checkAuthAndLookup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, isConnected]);
+
+  const checkAuthAndLookup = async () => {
+    setIsLoading(true);
+
+    try {
+      // ✅ 1) Prefer wallet address (does NOT depend on cookies)
+      let walletAddress = address?.toLowerCase() || "";
+
+      // ✅ 2) If no wallet connected, try session (optional fallback)
+      if (!walletAddress) {
+        try {
+          const sessionRes = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            setSession(sessionData);
+            walletAddress = String(sessionData?.address || "").toLowerCase();
+          } else {
+            // do not redirect yet — we might still get a wallet later
+            setSession(null);
+          }
+        } catch {
+          setSession(null);
+        }
+      }
+
+      // ✅ 3) If we still have no address, send to claim
+      if (!walletAddress) {
+        console.log(
+          "[DASHBOARD] No wallet or session address — redirecting to /claim",
+        );
+        setLocation("/claim");
+        return;
+      }
+
+      // ✅ 4) Lookup .rep name (this should be the real gate)
+      const lookupRes = await fetch(
+        `/api/rep/lookup-wallet?address=${encodeURIComponent(walletAddress)}`,
+        { credentials: "include" },
       );
-      setUserId(Math.abs(hash));
+
+      const lookupData = await lookupRes.json();
+      console.log("[DASHBOARD] Lookup result:", lookupData);
+
+      if (!lookupData.ok || !lookupData.walletFound) {
+        console.log("[DASHBOARD] No .rep found — redirecting to /claim");
+        setLocation("/claim");
+        return;
+      }
+
+      setRepName(lookupData.name);
+    } catch (error) {
+      console.error("[DASHBOARD] Error:", error);
+      setLocation("/claim");
+    } finally {
+      setIsLoading(false);
     }
-  }, [sessionData, sessionLoading, setLocation]);
+  };
 
-  if (sessionLoading || !repName) {
-    return null;
-  }
+  const formatAddress = (addr: string) =>
+    `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
 
-  return (
-    <>
-      <SEOHead 
-        title={`${repName}.rep - Dashboard`}
-        description="Manage your .rep identity, wallet, messages, and vault"
-      />
-      <div style={styles.dashboardPage}>
-        <div style={styles.particleBg}>
-          {particles.map((p, i) => (
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        localStorage.removeItem("rep:lastName");
+        localStorage.removeItem("rep:reservationId");
+        localStorage.removeItem("rep:address");
+        setLocation("/");
+      } else {
+        alert("Logout failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("[DASHBOARD] Logout error:", error);
+      alert("Logout failed. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="rep-dashboard">
+        <div className="particle-bg" aria-hidden="true">
+          {particles.map((particle, i) => (
             <div
               key={i}
+              className="particle"
               style={{
-                ...styles.particle,
-                left: `${p.left}%`,
-                top: `${p.top}%`,
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                background: p.color,
-                animationDelay: `${p.delay}s`,
-                animationDuration: `${p.duration}s`,
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                background: particle.color,
+                animationDelay: `${particle.delay}s`,
+                animationDuration: `${particle.duration}s`,
               }}
             />
           ))}
         </div>
+        <div className="dashboard-container">
+          <div className="loading-spinner">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
-        <style>{`
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0) scale(1);
-              opacity: 0.3;
-            }
-            50% {
-              transform: translateY(-100px) scale(1.1);
-              opacity: 0.6;
-            }
-          }
-        `}</style>
+  return (
+    <div className="rep-dashboard">
+      <div className="particle-bg" aria-hidden="true">
+        {particles.map((particle, i) => (
+          <div
+            key={i}
+            className="particle"
+            style={{
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              background: particle.color,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+            }}
+          />
+        ))}
+      </div>
 
-        <div style={styles.dashboardContainer}>
-          <div style={styles.header}>
-            <h1 style={styles.headerTitle}>
-              {repName}<span style={styles.repSuffix}>.rep</span>
-            </h1>
-            {isConnected && address && (
-              <div style={styles.walletPill}>
-                {address.slice(0, 6)}...{address.slice(-4)}
-              </div>
-            )}
+      <div className="dashboard-container">
+        <header className="dashboard-header">
+          <div className="dashboard-logo">
+            <span className="logo-dot">.</span>
+            <span className="logo-text">rep</span>
           </div>
 
-          {/* Pulse Gauge Hero Section */}
-          <div style={styles.pulseHero}>
-            <div style={styles.pulseContainer}>
-              <h2 style={styles.pulseTitle}>Your Pulse</h2>
-              <PulseGauge pulseScore={userStats?.pulseScore || 55} isTabActive={true} />
-              <div style={styles.statsRow}>
-                <div style={styles.statItem}>
-                  <span style={styles.statValue}>{userStats?.xpPoints || 0}</span>
-                  <span style={styles.statLabel}>XP</span>
-                </div>
-                <div style={styles.statItem}>
-                  <span style={styles.statValue}>{userStats?.signalsSent || 0}</span>
-                  <span style={styles.statLabel}>Signals</span>
-                </div>
-                <div style={styles.statItem}>
-                  <span style={styles.statValue}>{userStats?.currentLoginStreak || 0}</span>
-                  <span style={styles.statLabel}>Streak</span>
-                </div>
+          {isConnected && address && (
+            <div className="wallet-badge">
+              <div className="wallet-indicator"></div>
+              <span className="wallet-address">{formatAddress(address)}</span>
+            </div>
+          )}
+        </header>
+
+        <main className="dashboard-main">
+          <div className="identity-hero">
+            <div className="identity-glow"></div>
+            <h1 className="identity-name">
+              <span className="name-dot">.</span>
+              <span className="name-text">{repName}</span>
+            </h1>
+            <p className="identity-subtitle">Your onchain identity on Base</p>
+          </div>
+
+          <div className="dashboard-grid">
+            <div className="dashboard-card">
+              <div className="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M12 6v6l4 2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </div>
+              <h3 className="card-title">Pulse Score</h3>
+              <p className="card-value">55</p>
+              <p className="card-label">Base activity score</p>
+            </div>
+
+            <div className="dashboard-card">
+              <div className="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3 className="card-title">Signals</h3>
+              <p className="card-value">0</p>
+              <p className="card-label">Messages sent</p>
+            </div>
+
+            <div className="dashboard-card">
+              <div className="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3 className="card-title">XP Points</h3>
+              <p className="card-value">100</p>
+              <p className="card-label">Claimed bonus</p>
+            </div>
+
+            <div className="dashboard-card">
+              <div className="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3 className="card-title">Wallet</h3>
+              <p className="card-value">
+                {isConnected && address
+                  ? formatAddress(address)
+                  : "Not connected"}
+              </p>
+              <p className="card-label">Base Network</p>
             </div>
           </div>
 
-          <div style={styles.tabNav}>
+          <div className="dashboard-actions">
             <button
-              onClick={() => setActiveTab('wallet')}
-              style={activeTab === 'wallet' ? styles.tabButtonActive : styles.tabButton}
+              className="action-button action-button-primary"
+              onClick={() => setLocation("/missions")}
             >
-              💰 Wallet
+              View Missions
             </button>
             <button
-              onClick={() => setActiveTab('messages')}
-              style={activeTab === 'messages' ? styles.tabButtonActive : styles.tabButton}
+              className="action-button action-button-secondary"
+              onClick={() => setLocation("/")}
             >
-              💬 Messages
+              Back to Home
             </button>
             <button
-              onClick={() => setActiveTab('vault')}
-              style={activeTab === 'vault' ? styles.tabButtonActive : styles.tabButton}
+              className="action-button action-button-secondary"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              🔐 Vault
-            </button>
-            <button
-              onClick={() => setActiveTab('chat')}
-              style={activeTab === 'chat' ? styles.tabButtonActive : styles.tabButton}
-            >
-              🤖 Chat
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
-
-          <div style={styles.tabContent}>
-            {activeTab === 'wallet' && (
-              <WalletTab userId={userId} fsnName={repName} />
-            )}
-            {activeTab === 'messages' && (
-              <FsnMessageTab userId={userId} fsnName={repName} />
-            )}
-            {activeTab === 'vault' && (
-              <div style={styles.vaultContainer}>
-                <h2 style={styles.vaultTitle}>Secure File Storage</h2>
-                <p style={styles.vaultDesc}>
-                  Upload files with client-side encryption. Your files are encrypted before leaving your device.
-                </p>
-                <VaultUpload 
-                  onUploadComplete={(result) => {
-                    console.log('Upload complete:', result);
-                  }}
-                  onUploadError={(error) => {
-                    console.error('Upload error:', error);
-                  }}
-                />
-              </div>
-            )}
-            {activeTab === 'chat' && (
-              <ChatDashboard userId={userId} userFsn={repName} />
-            )}
-          </div>
-        </div>
+        </main>
       </div>
-    </>
+    </div>
   );
 }
-
-const styles = {
-  dashboardPage: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    padding: '20px',
-  },
-  particleBg: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none' as const,
-  },
-  particle: {
-    position: 'absolute' as const,
-    borderRadius: '50%',
-    animation: 'float 20s infinite ease-in-out',
-  },
-  dashboardContainer: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    position: 'relative' as const,
-    zIndex: 1,
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '32px',
-    flexWrap: 'wrap' as const,
-    gap: '16px',
-  },
-  headerTitle: {
-    fontSize: '36px',
-    fontWeight: 700,
-    color: '#00d4aa',
-    margin: 0,
-  },
-  repSuffix: {
-    color: '#0052ff',
-  },
-  walletPill: {
-    padding: '8px 16px',
-    background: 'rgba(0, 82, 255, 0.2)',
-    border: '1px solid rgba(0, 82, 255, 0.4)',
-    borderRadius: '20px',
-    color: '#0052ff',
-    fontSize: '14px',
-    fontWeight: 600,
-  },
-  tabNav: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '24px',
-    flexWrap: 'wrap' as const,
-  },
-  tabButton: {
-    padding: '12px 24px',
-    background: 'rgba(30, 41, 59, 0.5)',
-    border: '2px solid #334155',
-    borderRadius: '12px',
-    color: '#94a3b8',
-    fontSize: '16px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-  },
-  tabButtonActive: {
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 82, 255, 0.2) 100%)',
-    border: '2px solid #00d4aa',
-    borderRadius: '12px',
-    color: '#00d4aa',
-    fontSize: '16px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    boxShadow: '0 0 20px rgba(0, 212, 170, 0.3)',
-  },
-  tabContent: {
-    background: 'rgba(30, 41, 59, 0.3)',
-    borderRadius: '16px',
-    padding: '24px',
-    minHeight: '500px',
-  },
-  vaultContainer: {
-    maxWidth: '800px',
-    margin: '0 auto',
-  },
-  vaultTitle: {
-    fontSize: '28px',
-    fontWeight: 700,
-    background: 'linear-gradient(90deg, #00d4aa 0%, #0052ff 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    marginBottom: '12px',
-  },
-  vaultDesc: {
-    fontSize: '16px',
-    color: '#94a3b8',
-    marginBottom: '32px',
-  },
-  pulseHero: {
-    background: 'linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 82, 255, 0.1) 100%)',
-    borderRadius: '20px',
-    padding: '40px 20px',
-    marginBottom: '32px',
-    border: '2px solid rgba(0, 212, 170, 0.2)',
-    boxShadow: '0 0 40px rgba(0, 212, 170, 0.1)',
-  } as const,
-  pulseContainer: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: '24px',
-  },
-  pulseTitle: {
-    fontSize: '24px',
-    fontWeight: 700,
-    background: 'linear-gradient(90deg, #00d4aa 0%, #0052ff 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    margin: 0,
-  } as const,
-  statsRow: {
-    display: 'flex',
-    gap: '40px',
-    justifyContent: 'center',
-    flexWrap: 'wrap' as const,
-  },
-  statItem: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: '8px',
-  },
-  statValue: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: '#00d4aa',
-  },
-  statLabel: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '1px',
-  },
-};

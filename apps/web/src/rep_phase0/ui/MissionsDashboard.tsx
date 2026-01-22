@@ -42,7 +42,6 @@ export default function MissionsDashboard() {
       });
 
       if (!sessionRes.ok) {
-        console.log('[MISSIONS] No session found, redirecting to claim');
         setLocation('/claim');
         return;
       }
@@ -51,7 +50,6 @@ export default function MissionsDashboard() {
       const walletAddress = address?.toLowerCase() || sessionData.address?.toLowerCase();
       
       if (!walletAddress) {
-        console.log('[MISSIONS] No wallet address, redirecting to claim');
         setLocation('/claim');
         return;
       }
@@ -64,7 +62,6 @@ export default function MissionsDashboard() {
       const lookupData = await lookupRes.json();
 
       if (!lookupData.ok || !lookupData.walletFound) {
-        console.log('[MISSIONS] No .rep found, redirecting to claim');
         setLocation('/claim');
         return;
       }
@@ -76,7 +73,6 @@ export default function MissionsDashboard() {
       await recordHeartbeat();
       await loadState();
     } catch (error) {
-      console.error('[MISSIONS] Auth check error:', error);
       setLocation('/claim');
     } finally {
       setLoading(false);
@@ -90,7 +86,7 @@ export default function MissionsDashboard() {
         credentials: 'include',
       });
     } catch (e) {
-      console.error('Failed to record heartbeat:', e);
+      // Silent fail
     }
   };
 

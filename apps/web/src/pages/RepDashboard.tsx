@@ -18,10 +18,11 @@ const generateParticles = (count: number) =>
           : "rgba(255, 107, 53, 0.3)",
   }));
 
-export default function RepDashboard2() {
+export default function RepDashboard() {
   const particles = useMemo(() => generateParticles(30), []);
   const [, setLocation] = useLocation();
   const { address, isConnected } = useAccount();
+
   const [repName, setRepName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
@@ -37,47 +38,56 @@ export default function RepDashboard2() {
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    checkAuthAndLookup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, isConnected]);
 
-  const checkAuth = async () => {
+  const checkAuthAndLookup = async () => {
     setIsLoading(true);
+
     try {
-      const sessionRes = await fetch("/api/auth/me", {
-        credentials: "include",
-      });
+      // ✅ 1) Prefer wallet address (does NOT depend on cookies)
+      let walletAddress = address?.toLowerCase() || "";
 
-      if (!sessionRes.ok) {
-        console.log("[DASHBOARD] No session found, redirecting to claim");
-        setLocation("/claim");
-        return;
-      }
-
-      const sessionData = await sessionRes.json();
-      setSession(sessionData);
-      console.log("[DASHBOARD] Session found:", sessionData);
-
-      const walletAddress =
-        address?.toLowerCase() || sessionData.address?.toLowerCase();
-
+      // ✅ 2) If no wallet connected, try session (optional fallback)
       if (!walletAddress) {
-        console.log("[DASHBOARD] No wallet address, redirecting to claim");
+        try {
+          const sessionRes = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            setSession(sessionData);
+            walletAddress = String(sessionData?.address || "").toLowerCase();
+          } else {
+            // do not redirect yet — we might still get a wallet later
+            setSession(null);
+          }
+        } catch {
+          setSession(null);
+        }
+      }
+
+      // ✅ 3) If we still have no address, send to claim
+      if (!walletAddress) {
+        console.log(
+          "[DASHBOARD] No wallet or session address — redirecting to /claim",
+        );
         setLocation("/claim");
         return;
       }
 
+      // ✅ 4) Lookup .rep name (this should be the real gate)
       const lookupRes = await fetch(
         `/api/rep/lookup-wallet?address=${encodeURIComponent(walletAddress)}`,
-        {
-          credentials: "include",
-        },
+        { credentials: "include" },
       );
 
       const lookupData = await lookupRes.json();
       console.log("[DASHBOARD] Lookup result:", lookupData);
 
       if (!lookupData.ok || !lookupData.walletFound) {
-        console.log("[DASHBOARD] No .rep found, redirecting to claim");
+        console.log("[DASHBOARD] No .rep found — redirecting to /claim");
         setLocation("/claim");
         return;
       }
@@ -91,9 +101,8 @@ export default function RepDashboard2() {
     }
   };
 
-  const formatAddress = (addr: string) => {
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
-  };
+  const formatAddress = (addr: string) =>
+    `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -104,13 +113,11 @@ export default function RepDashboard2() {
       });
 
       if (res.ok) {
-        console.log("[DASHBOARD] Logout successful");
         localStorage.removeItem("rep:lastName");
         localStorage.removeItem("rep:reservationId");
         localStorage.removeItem("rep:address");
         setLocation("/");
       } else {
-        console.error("[DASHBOARD] Logout failed");
         alert("Logout failed. Please try again.");
       }
     } catch (error) {
@@ -174,6 +181,7 @@ export default function RepDashboard2() {
             <span className="logo-dot">.</span>
             <span className="logo-text">rep</span>
           </div>
+
           {isConnected && address && (
             <div className="wallet-badge">
               <div className="wallet-indicator"></div>
