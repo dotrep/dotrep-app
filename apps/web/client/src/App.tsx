@@ -11,7 +11,7 @@ import { Web3Provider } from "@/components/Web3Provider";
 import { SignedInHeader } from "@/components/SignedInHeader";
 // @ts-ignore
 import { XPProvider } from "./context/XPContext";
-// @ts-ignore  
+// @ts-ignore
 import { ShopProvider } from "./context/ShopContext";
 import { useState, useRef, useEffect } from "react";
 import "./styles/universal-background.css";
@@ -47,7 +47,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import ClaimFSN from "@/pages/ClaimFSN";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
-import { RepDashboard } from "@/pages/RepDashboard";
+import { RepDashboardV2 } from "@/pages/RepDashboardV2";
 import "./styles/dashboard-extensions.css";
 import "./styles/debug-panel.css";
 
@@ -55,7 +55,8 @@ import "./styles/debug-panel.css";
 import WalletExplorer from "./wallet";
 
 const AdminProtectedRoute = ({ component: Component, ...rest }: any) => {
-  const isAdminLoggedIn = localStorage.getItem("fsn_admin_logged_in") === "true";
+  const isAdminLoggedIn =
+    localStorage.getItem("fsn_admin_logged_in") === "true";
   if (!isAdminLoggedIn) return <Redirect to="/admin-login" />;
   return <Component {...rest} />;
 };
@@ -82,11 +83,13 @@ function Router() {
       <Route path="/xp-dashboard" component={XPDashboard} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/admin">
-        {(params) => <AdminProtectedRoute component={AdminDashboard} params={params} />}
+        {(params) => (
+          <AdminProtectedRoute component={AdminDashboard} params={params} />
+        )}
       </Route>
       {/* ✅ add a route for the wallet explorer */}
       <Route path="/wallet" component={WalletExplorer} />
-      <Route path="/rep-dashboard" component={RepDashboard} />
+      <Route path="/rep-dashboard" component={RepDashboard2} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
@@ -246,7 +249,9 @@ const ChatIntegration = () => {
 
 function App() {
   React.useEffect(() => {
-    errorHandler.addListener((err) => console.warn("Global error handled:", err));
+    errorHandler.addListener((err) =>
+      console.warn("Global error handled:", err),
+    );
   }, []);
 
   return (
@@ -276,4 +281,3 @@ function App() {
 }
 
 export default App;
-
