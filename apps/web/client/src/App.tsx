@@ -47,7 +47,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import ClaimFSN from "@/pages/ClaimFSN";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
-import { RepDashboardV2 } from "@/pages/RepDashboardV2";
+import RepDashboardV2 from "@/pages/RepDashboardV2";
 import "./styles/dashboard-extensions.css";
 import "./styles/debug-panel.css";
 
