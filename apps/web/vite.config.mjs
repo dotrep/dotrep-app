@@ -2,6 +2,15 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+const allowedHosts = [
+  ".replit.dev",
+  process.env.REPLIT_DEV_DOMAIN,
+  ...(process.env.REPLIT_DOMAINS
+    ? process.env.REPLIT_DOMAINS.split(/[;,]/).map(s => s.trim()).filter(Boolean)
+    : []),
+  "localhost",
+].filter(Boolean);
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -13,41 +22,37 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5000,
-    strictPort: false,
-    allowedHosts: ['.replit.dev', 'localhost'],
+    strictPort: true,
+    allowedHosts,
+
     hmr: {
       protocol: "wss",
-      host: process.env.REPLIT_DEV_DOMAIN || 'localhost',
+      host: process.env.REPLIT_DEV_DOMAIN || "localhost",
       clientPort: 443,
     },
+
     proxy: {
-      '/api': {
-        target: 'http://localhost:9000',
-        changeOrigin: false,
-        secure: false,
+      "/api": {
+        target: "http://127.0.0.1:9000",
+        changeOrigin: true,
         ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        },
       },
-      '/whitepaper': {
-        target: 'http://localhost:9000',
-        changeOrigin: false,
-        secure: false,
+      "/whitepaper": {
+        target: "http://127.0.0.1:9000",
+        changeOrigin: true,
+      },
+
+      // ✅ THIS IS THE MISSING PIECE
+      "/manifold-proxy": {
+        target: "http://127.0.0.1:9000",
+        changeOrigin: true,
+        ws: true,
       },
     },
   },
   preview: {
     host: "0.0.0.0",
     port: 5000,
-    allowedHosts: ['.replit.dev', 'localhost'],
+    allowedHosts,
   },
 });

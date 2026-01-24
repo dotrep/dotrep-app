@@ -289,6 +289,15 @@ async function verifySigSmart({
 }
 
 const app = express();
+
+app.get("/manifold-proxy/health", (_req, res) => {
+  return res.status(200).json({
+    ok: true,
+    mode: process.env.NODE_ENV || "development",
+    note: "Upstream manifold health is not required in dev",
+  });
+});
+
 app.set("trust proxy", 1);
 
 // Health state tracking for critical subsystems
