@@ -1,0 +1,111 @@
+.wp-page {
+  min-height: 100vh;
+  background: radial-gradient(1200px 700px at 50% 0%, rgba(50, 80, 180, 0.18), rgba(0, 0, 0, 0)) ,
+              #070a0f;
+  color: #e9eef7;
+}
+
+.wp-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(7, 10, 15, 0.55);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wp-topbar-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.wp-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.wp-navlink {
+  color: rgba(233, 238, 247, 0.78);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.wp-navlink:hover {
+  color: rgba(233, 238, 247, 1);
+}
+
+.wp-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(233, 238, 247, 0.9);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.wp-main {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 18px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.wp-card {
+  border-radius: 22px;
+  padding: 26px 26px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45);
+}
+
+.wp-hero {
+  padding: 30px 30px;
+}
+
+.wp-title {
+  margin: 0 0 10px;
+  font-size: 42px;
+  letter-spacing: -0.02em;
+}
+
+.wp-lede {
+  margin: 0 0 16px;
+  color: rgba(233, 238, 247, 0.78);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 72ch;
+}
+
+.wp-highlight {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 150, 0.25);
+  background: rgba(0, 255, 150, 0.06);
+  color: rgba(140, 255, 190, 0.95);
+  font-weight: 600;
+}
+
+.wp-card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.wp-card p {
+  margin: 10px 0;
+  color: rgba(233, 238, 247, 0.78);
+  line-height: 1.7;
+}
